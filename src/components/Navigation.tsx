@@ -9,8 +9,8 @@ export default function Navigation() {
   return (
     <header className="segment fixed inset-x-0 top-3 z-50 px-3 sm:top-4">
       <GlassFilter lens={lens} />
-      <div ref={bar} data-lens={lens ? '' : undefined} className="glass mx-auto flex max-w-[calc(48rem-2.5rem)] items-center justify-between rounded-[1.75rem] py-1.5 pr-1.5 pl-5">
-        <a href="#top" className="text-[15px] font-semibold tracking-tight whitespace-nowrap">
+      <div ref={bar} data-lens={lens ? '' : undefined} className="glass mx-auto flex max-w-[calc(48rem-2.5rem)] items-center justify-between rounded-[1.75rem] py-2 pr-2 pl-5 sm:pl-6">
+        <a href="#top" className="text-lg font-semibold tracking-tight whitespace-nowrap sm:text-2xl">
           Adithya Shankaran
         </a>
         <div className="flex items-center gap-1 text-sm">

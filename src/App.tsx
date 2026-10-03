@@ -29,7 +29,7 @@ export default function App() {
       <main id="top" className="segment mx-auto max-w-3xl px-5 pt-32">
         <section aria-labelledby="name-heading">
           <p className="font-mono text-sm text-accent">{profile.role} · {profile.company}</p>
-          <h1 id="name-heading" className="mt-3 text-[clamp(1.9rem,5.5vw,3rem)] leading-tight font-bold tracking-tight">
+          <h1 id="name-heading" className="mt-3 text-[clamp(1.6rem,4.2vw,2.4rem)] leading-tight font-bold tracking-tight">
             {profile.headline.map((part, index) => (
               <span key={part} className={index % 2 ? 'text-accent' : undefined}>{part}</span>
             ))}

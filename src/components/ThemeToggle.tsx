@@ -54,7 +54,7 @@ export default function ThemeToggle() {
       </svg>
       <svg
         viewBox="0 0 24 24"
-        className={`absolute size-[18px] text-indigo-500 ${ready ? 'transition duration-500' : ''} ${theme === 'dark' ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'}`}
+        className={`absolute size-[18px] text-blue-600 ${ready ? 'transition duration-500' : ''} ${theme === 'dark' ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'}`}
         fill="currentColor"
         aria-hidden="true"
       >
