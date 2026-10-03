@@ -16,7 +16,7 @@ export default function GlassFilter() {
     <svg className="absolute h-0 w-0" aria-hidden="true" focusable="false">
       <filter id="liquid-glass" x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
         <feImage href={lensMap} x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map" />
-        <feDisplacementMap in="SourceGraphic" in2="map" scale="-28" xChannelSelector="R" yChannelSelector="G" result="bent" />
+        <feDisplacementMap in="SourceGraphic" in2="map" scale="-12" xChannelSelector="R" yChannelSelector="G" result="bent" />
         <feGaussianBlur in="bent" stdDeviation="0.6" />
       </filter>
     </svg>

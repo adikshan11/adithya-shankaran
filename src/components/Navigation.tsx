@@ -9,8 +9,8 @@ const sections = [
 
 export default function Navigation() {
   return (
-    <header className="fixed inset-x-0 top-4 z-50 flex justify-center px-4">
-      <div className="glass flex w-full max-w-3xl items-center justify-between rounded-full py-1.5 pr-1.5 pl-5">
+    <header className="fixed inset-x-0 top-4 z-50">
+      <div className="glass mx-auto flex max-w-[calc(48rem-2.5rem)] items-center justify-between rounded-full py-1.5 pr-1.5 pl-5 max-sm:mx-3">
         <a href="#top" className="text-sm font-bold tracking-tight" aria-label="Adithya Shankaran, back to top">
           adithya<span className="text-accent">.</span>
         </a>

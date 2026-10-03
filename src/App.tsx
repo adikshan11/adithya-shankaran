@@ -13,7 +13,7 @@ export default function App() {
         Skip to content
       </a>
       <Navigation />
-      <main id="top" className="mx-auto max-w-3xl px-5 pt-36">
+      <main id="top" className="mx-auto max-w-3xl px-5 pt-32">
         <section aria-labelledby="name-heading">
           <p className="font-mono text-sm text-accent">{profile.role} · {profile.company}</p>
           <h1 id="name-heading" className="mt-3 text-5xl font-extrabold tracking-tight sm:text-7xl">
@@ -33,7 +33,7 @@ export default function App() {
               </a>
             ))}
           </div>
-          <div className="card mt-12 overflow-hidden">
+          <div className="card mt-10 overflow-hidden">
             <p className="flex items-center gap-2 border-b border-line px-5 py-2.5 font-mono text-xs text-muted">
               <span className="size-2 rounded-full bg-emerald-500" aria-hidden="true" />
               run_report.json · status: <span className="text-emerald-500">SUCCEEDED</span>
@@ -50,7 +50,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="about" aria-labelledby="about-heading" className="py-16">
+        <section id="about" aria-labelledby="about-heading" className="py-10">
           <SectionHeading id="about-heading" step="01" stage="ingest · about" title="About" />
           {profile.about.map((paragraph) => (
             <p key={paragraph} className="mt-4 max-w-2xl leading-relaxed text-muted">{paragraph}</p>
@@ -60,7 +60,7 @@ export default function App() {
         <Experience />
         <Projects />
 
-        <section aria-labelledby="skills-heading" className="py-16">
+        <section aria-labelledby="skills-heading" className="py-10">
           <SectionHeading id="skills-heading" step="04" stage="toolbox" title="Skills" />
           <dl className="mt-6 space-y-4">
             {skills.map((skill) => (
@@ -74,7 +74,7 @@ export default function App() {
           </dl>
         </section>
 
-        <section aria-labelledby="education-heading" className="grid gap-8 py-16 sm:grid-cols-2">
+        <section aria-labelledby="education-heading" className="grid gap-8 py-10 sm:grid-cols-2">
           <div>
             <h2 id="education-heading" className="text-2xl font-bold tracking-tight">Education</h2>
             <ul className="mt-6 space-y-4">
@@ -95,7 +95,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="contact" aria-labelledby="contact-heading" className="py-16">
+        <section id="contact" aria-labelledby="contact-heading" className="py-10">
           <SectionHeading id="contact-heading" step="05" stage="sink · contact" title="Let’s talk" />
           <p className="mt-4 text-muted">Open to data engineering and data platform roles, especially in Bengaluru, Pune and Hyderabad.</p>
           <div className="mt-6 flex flex-wrap gap-3">

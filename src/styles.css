@@ -62,7 +62,7 @@
   .glass {
     position: relative;
     isolation: isolate;
-    background: color-mix(in srgb, var(--color-card) 55%, transparent);
+    background: color-mix(in srgb, var(--color-card) 68%, transparent);
     -webkit-backdrop-filter: blur(14px) saturate(170%);
     backdrop-filter: blur(14px) saturate(170%);
     box-shadow:
@@ -89,7 +89,7 @@
   }
 
   .refract .glass {
-    backdrop-filter: url(#liquid-glass) blur(1.5px) saturate(180%) brightness(1.04);
+    backdrop-filter: url(#liquid-glass) blur(6px) saturate(180%) brightness(1.04);
   }
 
   .card {
