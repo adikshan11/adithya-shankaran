@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adithya Shankaran · Data Engineer</title>
+  <meta name="description" content="Adithya Shankaran, data engineer building Spark, BigQuery and dbt platforms on Google Cloud, with Generative AI work.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    try {
+      const saved = localStorage.getItem("theme");
+      if (saved) document.documentElement.dataset.theme = saved;
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="#top">adithya<span>.</span></a>
+    <nav>
+      <a href="#ingest">About</a>
+      <a href="#transform">Experience</a>
+      <a href="#serve">Projects</a>
+      <a href="#contact">Contact</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle light and dark theme">◐</button>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="eyebrow mono">$ whoami</p>
+      <h1>Adithya Shankaran</h1>
+      <p class="lead">
+        Data engineer at <strong>Xebia</strong>. I build and run data pipelines on Google Cloud
+        with Apache Spark, BigQuery and dbt, and I bring Generative AI into data work.
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="Adithya_Shankaran_Resume.pdf" target="_blank" rel="noopener">Resume</a>
+        <a class="btn" href="https://github.com/adikshan11" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn" href="https://www.linkedin.com/in/adithya-shankaran" target="_blank" rel="noopener">LinkedIn</a>
+        <a class="btn" href="mailto:adikshan11@gmail.com">Email</a>
+      </div>
+
+      <div class="run-report" aria-label="Key results">
+        <div class="run-header mono"><span class="dot ok"></span> run_report.json · status: <span class="ok-text">SUCCEEDED</span></div>
+        <dl>
+          <div><dt>13</dt><dd>e-commerce sources migrated to Spark on Google Cloud</dd></div>
+          <div><dt>616</dt><dd>scheduled pipelines on the template I'm consolidating</dd></div>
+          <div><dt>98%</dt><dd>run-cost cut on a top-cost Spark pipeline</dd></div>
+          <div><dt>32 TB</dt><dd>backfill, 1,455 missing records found and repaired</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section id="ingest" class="stage">
+      <p class="stage-label mono"><span>01</span> ingest · about</p>
+      <h2>About</h2>
+      <p>
+        I started in machine learning and Generative AI at Xebia, building RAG tools that pull clean
+        data out of messy documents. Since 2025 I work on the e-commerce data platform of a global retail
+        client: migrating ingestion to Spark on Google Cloud, cutting pipeline cost, and making data
+        quality something CI enforces instead of something people remember.
+      </p>
+      <p>
+        I use AI coding assistants daily, as tools I direct and review, not a replacement for knowing the
+        system. Outside work I play keys; I won KIIT's K-STAR instrumental music competition.
+      </p>
+    </section>
+
+    <section id="transform" class="stage">
+      <p class="stage-label mono"><span>02</span> transform · experience</p>
+      <h2>Experience</h2>
+
+      <article class="job">
+        <div class="job-head">
+          <h3>Xebia <span class="muted">· Junior Consultant, Data Engineer</span></h3>
+          <p class="mono muted">Aug 2024 – present · Gurugram</p>
+        </div>
+
+        <h4>Levi Strauss &amp; Co. (client) <span class="muted mono">Sep 2025 – present</span></h4>
+        <ul>
+          <li>Led the migration of 13 e-commerce data sources from Databricks to Spark on Google Cloud (Dataproc) and BigQuery, validating every pipeline against legacy output.</li>
+          <li>Leading the consolidation of the Dataproc template behind 616 scheduled pipelines into one reusable framework component; found that batches killed by their time limit were reported as succeeded, and shipped task timeouts with alerts in the shared Vertex AI framework.</li>
+          <li>Cut a top-cost Spark pipeline's run cost by 98% and ended its 4-hour timeouts by pruning joins and partitions.</li>
+          <li>Owned data correctness for marketing analytics: a 32 TB dbt backfill that repaired 1,455 missing records across 4,200 hourly source checks, plus a CI gate blocking dbt models without Dataplex checks.</li>
+          <li>Designed change data capture for order data with Datastream and BigQuery snapshot and change views.</li>
+        </ul>
+
+        <h4>Generative AI and AI-native engineering <span class="muted mono">Aug 2024 – present</span></h4>
+        <ul>
+          <li>Built RAG document extraction with LLMs and Weaviate/ChromaDB: a resume parser and a bank-statement PDF-to-Excel extractor for complex tables, with a Streamlit chatbot on top.</li>
+          <li>Built a Terraform linter on Claude (AWS Bedrock) for security and Well-Architected checks; selected for Xebia's Forward Deployed Engineer program.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section id="serve" class="stage">
+      <p class="stage-label mono"><span>03</span> serve · projects</p>
+      <h2>Projects</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>NYC Taxi Lakehouse</h3>
+          <p>Delta Lake lakehouse that ingests 9.5M trips, quarantines 3.9% bad records through 6 business rules, stops bad loads with a 7-check quality gate, and serves dbt marts with 63 tests, 53 generated by a profiling agent.</p>
+          <ul class="tags"><li>PySpark</li><li>Delta Lake</li><li>dbt</li><li>DuckDB</li><li>Airflow</li></ul>
+          <a class="link" href="https://github.com/adikshan11/lakehouse-dq-agent" target="_blank" rel="noopener">Code →</a>
+        </article>
+        <article class="card">
+          <h3>Underwriting Risk Assessment</h3>
+          <p>Team project in Xebia's X-AI Practitioner+ program: an underwriting risk app built AI-natively with GitHub Copilot custom agents, skills, rules and hooks.</p>
+          <ul class="tags"><li>Python</li><li>LLMs</li><li>GitHub Copilot</li></ul>
+        </article>
+        <article class="card">
+          <h3>IaC Linter</h3>
+          <p>Analyzer that uses Claude on AWS Bedrock to check Terraform for security issues and AWS Well-Architected gaps, and applies fixes with backups.</p>
+          <ul class="tags"><li>Python</li><li>AWS Bedrock</li><li>Terraform</li></ul>
+          <a class="link" href="https://github.com/XI4684-AdithyaShankaran/Iac-Linter" target="_blank" rel="noopener">Code →</a>
+        </article>
+        <article class="card">
+          <h3>Bookmark'd</h3>
+          <p>Book discovery platform, a four-member final-year project; I built search, reviews and JWT login in React over a PostgreSQL and Redis backend.</p>
+          <ul class="tags"><li>React</li><li>PostgreSQL</li><li>Redis</li></ul>
+          <a class="link" href="https://bkmrkd-frontend.vercel.app" target="_blank" rel="noopener">Live →</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="stage">
+      <p class="stage-label mono"><span>04</span> toolbox</p>
+      <h2>Skills</h2>
+      <dl class="skills">
+        <div><dt>Data engineering</dt><dd>Apache Spark, PySpark, SQL, dbt, Delta Lake, Databricks, CDC, data modeling, data quality, Airflow</dd></div>
+        <div><dt>Google Cloud</dt><dd>BigQuery, Dataproc, Vertex AI Pipelines, Dataplex, Datastream, Dataflow, Pub/Sub</dd></div>
+        <div><dt>AI</dt><dd>LLMs, RAG, Weaviate, ChromaDB, GitHub Copilot, Claude Code, MCP</dd></div>
+        <div><dt>Tools</dt><dd>Python, Git, GitHub, CI/CD, Docker, Terraform, PostgreSQL</dd></div>
+      </dl>
+    </section>
+
+    <section id="contact" class="stage contact">
+      <p class="stage-label mono"><span>05</span> sink · contact</p>
+      <h2>Let's talk</h2>
+      <p>Open to data engineering and data platform roles, especially in Bengaluru, Pune and Hyderabad.</p>
+      <div class="cta">
+        <a class="btn primary" href="mailto:adikshan11@gmail.com">adikshan11@gmail.com</a>
+        <a class="btn" href="https://leetcode.com/u/adikshan11/" target="_blank" rel="noopener">LeetCode</a>
+        <a class="btn" href="https://www.codechef.com/users/adithyashan_11" target="_blank" rel="noopener">CodeChef</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mono muted">© <span id="year"></span> Adithya Shankaran · B.Tech CSCE, KIIT</footer>
+  <script src="main.js"></script>
+</body>
+</html>
