@@ -3,6 +3,7 @@ import GlassFilter from './components/GlassFilter';
 import Navigation from './components/Navigation';
 import Projects from './components/Projects';
 import SectionHeading from './components/SectionHeading';
+import SocialLinks from './components/SocialLinks';
 import { education, highlights, metrics, profile, skills } from './content';
 
 export default function App() {
@@ -16,27 +17,20 @@ export default function App() {
       <main id="top" className="mx-auto max-w-3xl px-5 pt-32">
         <section aria-labelledby="name-heading">
           <p className="font-mono text-sm text-accent">{profile.role} · {profile.company}</p>
-          <h1 id="name-heading" className="mt-3 text-5xl font-extrabold tracking-tight sm:text-7xl">
+          <h1 id="name-heading" className="mt-3 text-[clamp(2.25rem,9vw,4.5rem)] leading-[1.05] font-extrabold tracking-tight">
             {profile.name}
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">{profile.intro}</p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <a href="/Adithya_Shankaran_Resume.pdf" className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-paper transition hover:opacity-90">
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <a href="/Adithya_Shankaran_Resume.pdf" className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-paper transition hover:opacity-90">
               Resume
             </a>
-            <a href={`mailto:${profile.email}`} className="rounded-full border border-line bg-card px-5 py-2.5 text-sm font-semibold transition hover:border-accent">
-              Email
-            </a>
-            {profile.links.map((link) => (
-              <a key={link.href} href={link.href} className="rounded-full border border-line bg-card px-5 py-2.5 text-sm font-semibold transition hover:border-accent">
-                {link.label}
-              </a>
-            ))}
+            <SocialLinks />
           </div>
           <div className="card mt-10 overflow-hidden">
-            <p className="flex items-center gap-2 border-b border-line px-5 py-2.5 font-mono text-xs text-muted">
-              <span className="size-2 rounded-full bg-emerald-500" aria-hidden="true" />
-              run_report.json · status: <span className="text-emerald-500">SUCCEEDED</span>
+            <p className="flex items-center gap-2 border-b border-line px-5 py-2.5 font-mono text-xs whitespace-nowrap text-muted">
+              <span className="size-2 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
+              run_report.json<span className="max-[340px]:hidden"> · status:</span> <span className="text-emerald-500">SUCCEEDED</span>
             </p>
             <dl className="grid grid-cols-2 sm:grid-cols-4">
               {metrics.map((metric) => (
@@ -90,27 +84,32 @@ export default function App() {
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Highlights</h2>
             <ul className="mt-6 list-disc space-y-2 pl-4 text-sm text-muted marker:text-accent">
-              {highlights.map((item) => <li key={item}>{item}</li>)}
+              {highlights.map((item) => (
+                <li key={item.text}>
+                  {item.text}
+                  {item.links?.map((link) => (
+                    <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className="ml-2 font-semibold text-accent hover:underline">
+                      {link.label}
+                    </a>
+                  ))}
+                </li>
+              ))}
             </ul>
           </div>
         </section>
 
-        <section id="contact" aria-labelledby="contact-heading" className="py-10">
+        <section id="contact" aria-labelledby="contact-heading" className="card my-10 flex flex-col items-center px-6 py-10 text-center">
           <SectionHeading id="contact-heading" step="05" stage="sink · contact" title="Let’s talk" />
-          <p className="mt-4 text-muted">Open to data engineering and data platform roles, especially in Bengaluru, Pune and Hyderabad.</p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <a href={`mailto:${profile.email}`} className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-paper transition hover:opacity-90">
-              {profile.email}
-            </a>
-            {profile.codingProfiles.map((link) => (
-              <a key={link.href} href={link.href} className="rounded-full border border-line bg-card px-5 py-2.5 text-sm font-semibold transition hover:border-accent">
-                {link.label}
-              </a>
-            ))}
+          <p className="mt-3 max-w-md text-muted">Open to data engineering and data platform roles, especially in Bengaluru, Pune and Hyderabad.</p>
+          <a href={`mailto:${profile.email}`} className="mt-6 max-w-full truncate rounded-full bg-accent px-6 py-3 font-semibold text-paper transition hover:opacity-90">
+            {profile.email}
+          </a>
+          <div className="mt-5">
+            <SocialLinks />
           </div>
         </section>
       </main>
-      <footer className="mx-auto flex max-w-3xl justify-between border-t border-line px-5 py-8 font-mono text-xs text-muted">
+      <footer className="mx-auto flex max-w-3xl flex-wrap justify-between gap-2 border-t border-line px-5 py-8 font-mono text-xs text-muted">
         <span>© 2026 {profile.name}</span>
         <span>{profile.location}</span>
       </footer>

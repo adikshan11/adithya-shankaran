@@ -6,14 +6,12 @@ export const profile = {
   email: 'adikshan11@gmail.com',
   intro:
     'I build and run data platforms on Google Cloud: Spark ingestion, BigQuery, dbt and the quality gates around them. I also bring Generative AI into data work, as tools I direct and review.',
-  links: [
-    { label: 'GitHub', href: 'https://github.com/adikshan11' },
-    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/adithya-shankaran' },
-  ],
-  codingProfiles: [
-    { label: 'LeetCode', href: 'https://leetcode.com/u/adikshan11/' },
-    { label: 'CodeChef', href: 'https://www.codechef.com/users/adithyashan_11' },
-  ],
+  socials: [
+    { label: 'Email', href: 'mailto:adikshan11@gmail.com', icon: 'mail' },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/adithya-shankaran', icon: 'linkedin' },
+    { label: 'GitHub', href: 'https://github.com/adikshan11', icon: 'github' },
+    { label: 'X', href: 'https://x.com/adithyashan11', icon: 'x' },
+  ] as const,
   about: [
     'I started in machine learning and Generative AI at Xebia, building RAG tools that pull clean data out of messy documents. Since 2025 I work on the e-commerce data platform of Levi Strauss & Co.: migrating ingestion to Spark on Google Cloud, cutting pipeline cost, and making data quality something CI enforces instead of something people remember.',
     'I use AI coding assistants daily, as tools I direct and review, not a replacement for knowing the system. Outside work I play keys; I won KIIT’s K-STAR instrumental music competition.',
@@ -122,9 +120,15 @@ export const education = [
   { school: 'Delhi Public School Surat', detail: '12th Standard CBSE · 81.2%', period: '2020' },
 ];
 
-export const highlights = [
-  'GitHub Copilot X-AI Practitioner+, Xebia (2026)',
-  '151 problems solved on LeetCode · CodeChef highest rating 1614',
-  'Mentor, Xebia Tech-AI-Thon · NSS Community Lead',
-  'Winner, K-STAR instrumental music competition, KIIT',
+export const highlights: { text: string; links?: { label: string; href: string }[] }[] = [
+  { text: 'GitHub Copilot X-AI Practitioner+, Xebia (2026)' },
+  {
+    text: '151 problems solved on LeetCode · CodeChef highest rating 1614',
+    links: [
+      { label: 'LeetCode', href: 'https://leetcode.com/u/adikshan11/' },
+      { label: 'CodeChef', href: 'https://www.codechef.com/users/adithyashan_11' },
+    ],
+  },
+  { text: 'Mentor, Xebia Tech-AI-Thon · NSS Community Lead' },
+  { text: 'Winner, K-STAR instrumental music competition, KIIT' },
 ];
