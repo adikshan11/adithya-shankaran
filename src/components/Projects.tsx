@@ -4,7 +4,7 @@ import SectionHeading from './SectionHeading';
 export default function Projects() {
   return (
     <section id="projects" aria-labelledby="projects-heading" className="py-8">
-      <SectionHeading id="projects-heading" step="03" stage="serve · projects" title="Projects" />
+      <SectionHeading id="projects-heading" step="03" title="Projects" />
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {projects.map((project) => (
           <article

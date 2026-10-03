@@ -41,9 +41,11 @@
   body {
     @apply bg-paper font-sans text-ink antialiased;
     background-image:
-      radial-gradient(48rem 28rem at 12% -6%, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 70%),
-      radial-gradient(40rem 26rem at 95% 8%, color-mix(in srgb, #7c4dff 10%, transparent), transparent 70%);
-    background-repeat: no-repeat;
+      linear-gradient(to bottom, transparent, var(--color-paper) 42rem),
+      radial-gradient(56rem 30rem at 50% -8rem, color-mix(in srgb, var(--color-accent) 14%, transparent), transparent 70%),
+      radial-gradient(circle, color-mix(in srgb, var(--color-muted) 32%, transparent) 1px, transparent 1.5px);
+    background-size: 100% 100%, 100% 100%, 22px 22px;
+    background-repeat: no-repeat, no-repeat, repeat;
   }
 
   ::selection {

@@ -13,6 +13,13 @@ describe('portfolio', () => {
     expect(screen.getByRole('link', { name: 'Resume' }).getAttribute('href')).toContain('.pdf');
   });
 
+  it('opens the piano keys from the piano word', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'piano' }));
+    expect(screen.getByRole('dialog', { name: 'Piano' })).not.toBeNull();
+    expect(screen.getAllByRole('button', { name: /^Play / })).toHaveLength(13);
+  });
+
   it('persists the theme and restores it on the next visit', () => {
     const view = render(<App />);
     const toggle = screen.getByRole('button', { name: 'Dark theme' });

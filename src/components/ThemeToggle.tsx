@@ -38,17 +38,27 @@ export default function ThemeToggle() {
       aria-label="Dark theme"
       aria-pressed={theme === 'dark'}
       onClick={toggle}
-      className="grid size-9 place-items-center rounded-full text-muted transition hover:bg-accent-soft hover:text-accent"
+      className="relative grid size-9 place-items-center overflow-hidden rounded-full transition hover:bg-accent-soft"
     >
-      <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-        {theme === 'dark' ? (
-          <>
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" />
-          </>
-        ) : (
-          <path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z" />
-        )}
+      <svg
+        viewBox="0 0 24 24"
+        className={`absolute size-[18px] text-amber-400 ${ready ? 'transition duration-500' : ''} ${theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'}`}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="4" fill="currentColor" />
+        <path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" />
+      </svg>
+      <svg
+        viewBox="0 0 24 24"
+        className={`absolute size-[18px] text-indigo-500 ${ready ? 'transition duration-500' : ''} ${theme === 'dark' ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'}`}
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z" />
       </svg>
     </button>
   );

@@ -1,6 +1,7 @@
 import Experience from './components/Experience';
 import Navigation from './components/Navigation';
 import PianoKeys from './components/PianoKeys';
+import Rich from './components/Rich';
 import Projects from './components/Projects';
 import SectionHeading from './components/SectionHeading';
 import SocialLinks from './components/SocialLinks';
@@ -24,7 +25,7 @@ export default function App() {
               <span key={part} className={index % 2 ? 'text-accent' : undefined}>{part}</span>
             ))}
           </p>
-          <p className="mt-3 text-lg leading-relaxed text-muted">{profile.intro}</p>
+          <p className="mt-3 text-lg leading-relaxed text-muted"><Rich text={profile.intro} /></p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <a href="/Adithya_Shankaran_Resume.pdf" className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-paper transition hover:opacity-90">
               Resume
@@ -44,10 +45,7 @@ export default function App() {
             <p className="mt-1.5 leading-relaxed font-medium">{profile.now}</p>
           </div>
           <div className="card mt-10 overflow-hidden">
-            <p className="flex items-center gap-2 border-b border-line px-5 py-2.5 font-mono text-xs whitespace-nowrap text-muted">
-              <span className="size-2 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
-              run_report.json<span className="max-[340px]:hidden"> · status:</span> <span className="text-emerald-500">SUCCEEDED</span>
-            </p>
+            <p className="border-b border-line px-5 py-2.5 text-xs font-semibold tracking-wider text-muted">IMPACT</p>
             <dl className="grid grid-cols-2 sm:grid-cols-4">
               {metrics.map((metric) => (
                 <div key={metric.value} className="border-line p-5 not-last:border-r max-sm:nth-2:border-r-0 max-sm:nth-[-n+2]:border-b">
@@ -61,11 +59,10 @@ export default function App() {
         </section>
 
         <section id="about" aria-labelledby="about-heading" className="pt-14 pb-8">
-          <SectionHeading id="about-heading" step="01" stage="ingest · about" title="About" />
+          <SectionHeading id="about-heading" step="01" title="About" />
           {profile.about.map((paragraph, index) => (
-            <p key={paragraph} className="mt-4 leading-relaxed text-muted">
-              {paragraph}
-              {index === profile.about.length - 1 && <PianoKeys />}
+            <p key={paragraph} className={`relative mt-4 leading-relaxed text-muted ${index === profile.about.length - 1 ? 'border-t border-line pt-4' : ''}`}>
+              <Rich text={paragraph} slots={{ piano: <PianoKeys /> }} />
             </p>
           ))}
         </section>
@@ -74,7 +71,7 @@ export default function App() {
         <Projects />
 
         <section aria-labelledby="skills-heading" className="py-8">
-          <SectionHeading id="skills-heading" step="04" stage="toolbox" title="Skills" />
+          <SectionHeading id="skills-heading" step="04" title="Skills" />
           <dl className="mt-6 space-y-4">
             {skills.map((skill) => (
               <div key={skill.group} className="grid gap-2 sm:grid-cols-[10rem_1fr]">
@@ -118,8 +115,8 @@ export default function App() {
         </section>
 
         <section id="contact" aria-labelledby="contact-heading" className="card my-8 flex flex-col items-center px-6 py-10 text-center">
-          <SectionHeading id="contact-heading" step="05" stage="sink · contact" title="Let’s talk" />
-          <p className="mt-3 max-w-md text-muted">Open to data engineering and data platform roles, especially in Bengaluru, Pune and Hyderabad.</p>
+          <SectionHeading id="contact-heading" step="05" title="Let’s connect" />
+          <p className="mt-3 max-w-md text-muted">Open to data engineering and data platform roles: on-site, hybrid or remote. Email reaches me fastest.</p>
           <ul className="mt-6 grid w-full max-w-md gap-2 text-left">
             {profile.socials.map((social) => (
               <li key={social.label}>

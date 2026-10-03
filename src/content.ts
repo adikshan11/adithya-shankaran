@@ -6,7 +6,7 @@ export const profile = {
   email: 'adikshan11@gmail.com',
   headline: ['I make ', 'data pipelines', ' cheaper to run and ', 'numbers', ' you can trust.'],
   intro:
-    'Data engineer at Xebia, working on the e-commerce data platform of Levi Strauss & Co. on Google Cloud: Spark, BigQuery, dbt and the quality checks around them.',
+    'Data engineer at **Xebia**, building an enterprise e-commerce data platform on **Google Cloud** with **Spark**, **BigQuery**, **dbt** and the quality checks around them.',
   focus: ['Spark migrations', 'Pipeline cost', 'Data quality'],
   now: 'Consolidating the Dataproc template behind 616 scheduled pipelines into one reusable framework component. Selected for Xebia’s Forward Deployed Engineer program, starting October 2026.',
   socials: [
@@ -16,9 +16,10 @@ export const profile = {
     { label: 'X', handle: '@adithyashan11', href: 'https://x.com/adithyashan11', icon: 'x' },
   ] as const,
   about: [
-    'I joined Xebia in 2024 after my B.Tech at KIIT and started on the Generative AI side, building retrieval tools that pull structured data out of messy documents. A year later I moved to data engineering for Levi Strauss & Co., moving their e-commerce data onto Google Cloud.',
-    'The work I enjoy most is the investigation: a job that reports success but did nothing, a backfill missing one hour a day, a pipeline that costs fifty times what it should. Most of my best work started as a number that did not add up.',
-    'Outside work I play the piano; I hold Grade 8 in Electronic Keyboard from Trinity College London.',
+    'I work on the e-commerce data platform of client **Levi Strauss & Co.** I moved **13 sources** off Databricks onto **Spark on Google Cloud**, and I am now consolidating the **Dataproc template** that **616 scheduled pipelines** run on.',
+    'Most of my best work started as a number that did not add up: a pipeline costing far more than it should (its run cost is now **98% lower**), batches killed by their time limit yet reported as **succeeded**, and a **32 TB** backfill that had left **1,455 records** missing.',
+    'Before data engineering I built **RAG** tools at Xebia that turn messy documents, like resumes and bank statements, into clean tables.',
+    'Away from pipelines I play the [piano], cheer for **Real Madrid**, and lose more hours to **Minecraft** than I should.',
   ],
 };
 
@@ -44,8 +45,8 @@ export const experience = {
   location: 'Gurugram, India',
   roles: [
     {
-      title: 'Levi Strauss & Co.',
-      context: 'Client · e-commerce data platform',
+      title: 'Data Engineering',
+      context: 'Client: Levi Strauss & Co.',
       start: '2025-09',
       stack: ['GCP', 'Apache Spark', 'BigQuery', 'dbt', 'Vertex AI'],
       points: [
@@ -58,7 +59,7 @@ export const experience = {
     },
     {
       title: 'Generative AI',
-      context: 'Internal',
+      context: 'Internal projects',
       start: '2024-08',
       stack: ['Python', 'LLMs', 'RAG'],
       points: [
