@@ -2,6 +2,7 @@ import Experience from './components/Experience';
 import GlassFilter from './components/GlassFilter';
 import Navigation from './components/Navigation';
 import Projects from './components/Projects';
+import SectionHeading from './components/SectionHeading';
 import { education, highlights, metrics, profile, skills } from './content';
 
 export default function App() {
@@ -32,22 +33,35 @@ export default function App() {
               </a>
             ))}
           </div>
-          <dl className="card mt-12 grid grid-cols-2 overflow-hidden sm:grid-cols-4">
-            {metrics.map((metric) => (
-              <div key={metric.value} className="border-line p-5 not-last:border-r max-sm:nth-2:border-r-0 max-sm:nth-[-n+2]:border-b">
-                <dt className="sr-only">{metric.label}</dt>
-                <dd className="text-3xl font-bold tracking-tight">{metric.value}</dd>
-                <dd className="mt-1 text-xs leading-snug text-muted">{metric.label}</dd>
-              </div>
-            ))}
-          </dl>
+          <div className="card mt-12 overflow-hidden">
+            <p className="flex items-center gap-2 border-b border-line px-5 py-2.5 font-mono text-xs text-muted">
+              <span className="size-2 rounded-full bg-emerald-500" aria-hidden="true" />
+              run_report.json · status: <span className="text-emerald-500">SUCCEEDED</span>
+            </p>
+            <dl className="grid grid-cols-2 sm:grid-cols-4">
+              {metrics.map((metric) => (
+                <div key={metric.value} className="border-line p-5 not-last:border-r max-sm:nth-2:border-r-0 max-sm:nth-[-n+2]:border-b">
+                  <dt className="sr-only">{metric.label}</dt>
+                  <dd className="text-3xl font-bold tracking-tight">{metric.value}</dd>
+                  <dd className="mt-1 text-xs leading-snug text-muted">{metric.label}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
+
+        <section id="about" aria-labelledby="about-heading" className="py-16">
+          <SectionHeading id="about-heading" step="01" stage="ingest · about" title="About" />
+          {profile.about.map((paragraph) => (
+            <p key={paragraph} className="mt-4 max-w-2xl leading-relaxed text-muted">{paragraph}</p>
+          ))}
         </section>
 
         <Experience />
         <Projects />
 
         <section aria-labelledby="skills-heading" className="py-16">
-          <h2 id="skills-heading" className="text-2xl font-bold tracking-tight">Skills</h2>
+          <SectionHeading id="skills-heading" step="04" stage="toolbox" title="Skills" />
           <dl className="mt-6 space-y-4">
             {skills.map((skill) => (
               <div key={skill.group} className="grid gap-2 sm:grid-cols-[10rem_1fr]">
@@ -81,12 +95,19 @@ export default function App() {
           </div>
         </section>
 
-        <section id="contact" aria-labelledby="contact-heading" className="card my-16 p-8 text-center">
-          <h2 id="contact-heading" className="text-2xl font-bold tracking-tight">Let’s talk</h2>
-          <p className="mt-2 text-muted">Open to data engineering and data platform roles in Bengaluru, Pune and Hyderabad.</p>
-          <a href={`mailto:${profile.email}`} className="mt-5 inline-block rounded-full bg-accent px-6 py-3 font-semibold text-paper transition hover:opacity-90">
-            {profile.email}
-          </a>
+        <section id="contact" aria-labelledby="contact-heading" className="py-16">
+          <SectionHeading id="contact-heading" step="05" stage="sink · contact" title="Let’s talk" />
+          <p className="mt-4 text-muted">Open to data engineering and data platform roles, especially in Bengaluru, Pune and Hyderabad.</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <a href={`mailto:${profile.email}`} className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-paper transition hover:opacity-90">
+              {profile.email}
+            </a>
+            {profile.codingProfiles.map((link) => (
+              <a key={link.href} href={link.href} className="rounded-full border border-line bg-card px-5 py-2.5 text-sm font-semibold transition hover:border-accent">
+                {link.label}
+              </a>
+            ))}
+          </div>
         </section>
       </main>
       <footer className="mx-auto flex max-w-3xl justify-between border-t border-line px-5 py-8 font-mono text-xs text-muted">

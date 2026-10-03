@@ -1,9 +1,10 @@
 import { experience } from '../content';
+import SectionHeading from './SectionHeading';
 
 export default function Experience() {
   return (
     <section id="experience" aria-labelledby="experience-heading" className="py-16">
-      <h2 id="experience-heading" className="text-2xl font-bold tracking-tight">Experience</h2>
+      <SectionHeading id="experience-heading" step="02" stage="transform · experience" title="Experience" />
       <article className="card mt-6 p-6 sm:p-8">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>

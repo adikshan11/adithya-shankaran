@@ -9,7 +9,14 @@ export const profile = {
   links: [
     { label: 'GitHub', href: 'https://github.com/adikshan11' },
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/adithya-shankaran' },
+  ],
+  codingProfiles: [
     { label: 'LeetCode', href: 'https://leetcode.com/u/adikshan11/' },
+    { label: 'CodeChef', href: 'https://www.codechef.com/users/adithyashan_11' },
+  ],
+  about: [
+    'I started in machine learning and Generative AI at Xebia, building RAG tools that pull clean data out of messy documents. Since 2025 I work on the e-commerce data platform of Levi Strauss & Co.: migrating ingestion to Spark on Google Cloud, cutting pipeline cost, and making data quality something CI enforces instead of something people remember.',
+    'I use AI coding assistants daily, as tools I direct and review, not a replacement for knowing the system. Outside work I play keys; I won KIIT’s K-STAR instrumental music competition.',
   ],
 };
 
