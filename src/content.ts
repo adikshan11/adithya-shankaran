@@ -4,13 +4,16 @@ export const profile = {
   company: 'Xebia',
   location: 'Surat, Gujarat',
   email: 'adikshan11@gmail.com',
+  headline: ['I make ', 'data pipelines', ' cheaper to run and ', 'numbers', ' you can trust.'],
   intro:
-    'I build and run data platforms on Google Cloud, and I care most about two things: what a pipeline costs, and whether its numbers are right.',
+    'Data engineer at Xebia, working on the e-commerce data platform of Levi Strauss & Co. on Google Cloud: Spark, BigQuery, dbt and the quality checks around them.',
+  focus: ['Spark migrations', 'Pipeline cost', 'Data quality'],
+  now: 'Consolidating the Dataproc template behind 616 scheduled pipelines into one reusable framework component. Selected for Xebia’s Forward Deployed Engineer program, starting October 2026.',
   socials: [
-    { label: 'Email', href: 'mailto:adikshan11@gmail.com', icon: 'mail' },
-    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/adithya-shankaran', icon: 'linkedin' },
-    { label: 'GitHub', href: 'https://github.com/adikshan11', icon: 'github' },
-    { label: 'X', href: 'https://x.com/adithyashan11', icon: 'x' },
+    { label: 'Email', handle: 'adikshan11@gmail.com', href: 'mailto:adikshan11@gmail.com', icon: 'mail' },
+    { label: 'LinkedIn', handle: 'adithya-shankaran', href: 'https://www.linkedin.com/in/adithya-shankaran', icon: 'linkedin' },
+    { label: 'GitHub', handle: '@adikshan11', href: 'https://github.com/adikshan11', icon: 'github' },
+    { label: 'X', handle: '@adithyashan11', href: 'https://x.com/adithyashan11', icon: 'x' },
   ] as const,
   about: [
     'I joined Xebia in 2024 after my B.Tech at KIIT and started on the Generative AI side, building retrieval tools that pull structured data out of messy documents. A year later I moved to data engineering for Levi Strauss & Co., moving their e-commerce data onto Google Cloud.',
@@ -29,41 +32,53 @@ export const metrics = [
 export type Role = {
   title: string;
   context: string;
-  period: string;
+  start: string;
   stack: string[];
-  points: string[];
+  points: { topic: string; text: string }[];
 };
 
 export const experience = {
   company: 'Xebia',
   title: 'Junior Consultant, Data Engineer',
-  period: 'Aug 2024 – Present',
+  start: '2024-08',
   location: 'Gurugram, India',
   roles: [
     {
       title: 'Levi Strauss & Co.',
       context: 'Client · e-commerce data platform',
-      period: 'Sep 2025 – Present',
+      start: '2025-09',
       stack: ['GCP', 'Apache Spark', 'BigQuery', 'dbt', 'Vertex AI'],
       points: [
-        'Migrated 13 e-commerce sources from Databricks to Spark on Google Cloud and BigQuery.',
-        'Cut a top-cost Spark pipeline’s run cost by 98%; right-sized 29 more.',
-        'Leading the consolidation of the Dataproc template behind 616 pipelines.',
-        'Repaired 1,455 missing records in a 32 TB dbt backfill.',
+        { topic: 'Migration', text: 'moved 13 e-commerce sources from Databricks to Spark on Google Cloud and BigQuery, each checked against the legacy output.' },
+        { topic: 'Pipeline cost', text: 'ended a top-cost Spark pipeline’s repeated 4-hour timeouts and cut its run cost by 98%; right-sized 29 more.' },
+        { topic: 'Silent failures', text: 'found batches killed by their time limit were reported as succeeded; shipped task timeouts with alerts.' },
+        { topic: 'Template', text: 'leading the consolidation of the Dataproc template behind 616 pipelines into one reusable component.' },
+        { topic: 'Backfill', text: 'a 32 TB dbt backfill that found and repaired 1,455 missing records.' },
       ],
     },
     {
       title: 'Generative AI',
       context: 'Internal',
-      period: 'Aug 2024 – Present',
+      start: '2024-08',
       stack: ['Python', 'LLMs', 'RAG'],
       points: [
-        'RAG document extraction with Weaviate and ChromaDB.',
-        'Terraform linter on Claude via AWS Bedrock; selected for the Forward Deployed Engineer program.',
+        { topic: 'RAG extraction', text: 'resume parser and bank-statement PDF-to-Excel extractor on Weaviate and ChromaDB.' },
+        { topic: 'IaC Linter', text: 'Terraform security and Well-Architected checks with Claude on AWS Bedrock.' },
       ],
     },
   ] satisfies Role[],
 };
+
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export function tenure(start: string, today = new Date()) {
+  const [year, month] = start.split('-').map(Number);
+  const total = (today.getFullYear() - year) * 12 + today.getMonth() + 1 - month + 1;
+  const years = Math.floor(total / 12);
+  const months = total % 12;
+  const parts = [years && `${years} yr${years > 1 ? 's' : ''}`, months && `${months} mo${months > 1 ? 's' : ''}`].filter(Boolean);
+  return `${monthNames[month - 1]} ${year} – Present · ${parts.join(' ')}`;
+}
 
 export type Project = {
   name: string;
