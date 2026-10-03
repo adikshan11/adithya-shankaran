@@ -1,6 +1,6 @@
 # Adithya Shankaran
 
-Personal portfolio built with React, TypeScript and Vite. Plain CSS, a self-hosted Inter font and a small theme control. No UI kit or backend.
+Personal portfolio built with React, TypeScript, Vite and Tailwind CSS, prerendered to static HTML at build time. Self-hosted Inter font, a Liquid Glass navigation bar (SVG displacement in Chromium, frosted blur elsewhere) and a light/dark theme. No UI kit or backend.
 
 ## Development
 
@@ -15,8 +15,9 @@ Personal portfolio built with React, TypeScript and Vite. Plain CSS, a self-host
 - `src/App.tsx` contains the introduction, toolkit and contact details.
 - `src/components` contains navigation, experience, projects and theme control.
 - `src/styles.css` contains visual tokens and responsive styles.
-- Replace the resume PDF at the repository root when it changes. Vite includes it in the build.
+- `src/content.ts` holds every claim on the page; keep it in step with the resume.
+- Replace `public/Adithya_Shankaran_Resume.pdf` when the resume changes; it is served at `/Adithya_Shankaran_Resume.pdf`.
 
 ## Deployment
 
-Import the repository into Vercel, choose the Vite preset, use `npm run build` and set the output directory to `dist`. No server, database or environment variables are needed.
+Deployed on Vercel as `adithya-shankaran` (https://adithya-shankaran.vercel.app). Build command `npm run build`, output directory `dist`. No server, database or environment variables are needed.

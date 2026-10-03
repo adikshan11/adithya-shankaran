@@ -1,4 +1,3 @@
-import resumeUrl from '../Adithya_Shankaran_Resume.pdf?url';
 import Experience from './components/Experience';
 import GlassFilter from './components/GlassFilter';
 import Navigation from './components/Navigation';
@@ -21,7 +20,7 @@ export default function App() {
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">{profile.intro}</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a href={resumeUrl} className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-paper transition hover:opacity-90">
+            <a href="/Adithya_Shankaran_Resume.pdf" className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-paper transition hover:opacity-90">
               Resume
             </a>
             <a href={`mailto:${profile.email}`} className="rounded-full border border-line bg-card px-5 py-2.5 text-sm font-semibold transition hover:border-accent">
