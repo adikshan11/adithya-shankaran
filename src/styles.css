@@ -27,8 +27,8 @@
   :root[data-theme="dark"] {
     --color-accent: #b7aefa;
     --color-accent-soft: #221f33;
-    --color-ink: #eeedf3;
-    --color-muted: #a5a3b3;
+    --color-ink: #f6f5fa;
+    --color-muted: #c9c7d4;
     --color-line: #27252f;
     --color-paper: #0d0c11;
     --color-card: #16151c;
