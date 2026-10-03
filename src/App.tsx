@@ -1,51 +1,99 @@
 import resumeUrl from '../Adithya_Shankaran_Resume.pdf?url';
-import Navigation from './components/Navigation';
 import Experience from './components/Experience';
+import GlassFilter from './components/GlassFilter';
+import Navigation from './components/Navigation';
 import Projects from './components/Projects';
+import { education, highlights, metrics, profile, skills } from './content';
 
 export default function App() {
   return (
     <>
-      <a className="skip-link" href="#top">Skip to content</a>
+      <GlassFilter />
+      <a href="#top" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60]">
+        Skip to content
+      </a>
       <Navigation />
-      <main id="top" tabIndex={-1}>
-        <section className="hero" aria-labelledby="name-heading">
-          <h1 id="name-heading">Adithya Shankaran</h1>
-          <p className="hero-role">Data engineer at Xebia.</p>
-          <p className="intro">I build and operate data pipelines on Google Cloud, working across
-            Spark, BigQuery and dbt. My focus is shared infrastructure, data reliability,
-            and AI tools that help people work with complex systems.</p>
-          <div className="hero-links">
-            <a className="resume-link" href={resumeUrl}>Resume</a>
-            <a href="https://github.com/adikshan11">GitHub</a>
-            <a href="https://www.linkedin.com/in/adithya-shankaran">LinkedIn</a>
-            <a href="mailto:adikshan11@gmail.com">Email</a>
+      <main id="top" className="mx-auto max-w-3xl px-5 pt-36">
+        <section aria-labelledby="name-heading">
+          <p className="font-mono text-sm text-accent">{profile.role} · {profile.company}</p>
+          <h1 id="name-heading" className="mt-3 text-5xl font-extrabold tracking-tight sm:text-7xl">
+            {profile.name}
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">{profile.intro}</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a href={resumeUrl} className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-paper transition hover:opacity-90">
+              Resume
+            </a>
+            <a href={`mailto:${profile.email}`} className="rounded-full border border-line bg-card px-5 py-2.5 text-sm font-semibold transition hover:border-accent">
+              Email
+            </a>
+            {profile.links.map((link) => (
+              <a key={link.href} href={link.href} className="rounded-full border border-line bg-card px-5 py-2.5 text-sm font-semibold transition hover:border-accent">
+                {link.label}
+              </a>
+            ))}
           </div>
-          <p className="current-work"><strong>At work</strong> I’m consolidating reusable Spark pipeline
-            components and improving timeout handling and data-quality checks for a retail data platform.</p>
-          <p className="personal-note">Away from the terminal, I play keys. I won KIIT’s K-STAR instrumental music competition.</p>
-        </section>
-        <Experience />
-        <Projects />
-        <section className="section" aria-labelledby="toolkit-heading">
-          <h2 id="toolkit-heading">Toolkit</h2>
-          <dl className="toolkit">
-            <div><dt>Data</dt><dd>Python, SQL, Apache Spark, dbt, Delta Lake, Databricks, CDC, Airflow</dd></div>
-            <div><dt>Cloud</dt><dd>BigQuery, Dataproc, Vertex AI Pipelines, Dataplex, Datastream, Pub/Sub</dd></div>
-            <div><dt>AI &amp; tooling</dt><dd>LLMs, RAG, vector databases, GitHub Copilot, MCP, Docker, Terraform, CI/CD</dd></div>
+          <dl className="card mt-12 grid grid-cols-2 overflow-hidden sm:grid-cols-4">
+            {metrics.map((metric) => (
+              <div key={metric.value} className="border-line p-5 not-last:border-r max-sm:nth-2:border-r-0 max-sm:nth-[-n+2]:border-b">
+                <dt className="sr-only">{metric.label}</dt>
+                <dd className="text-3xl font-bold tracking-tight">{metric.value}</dd>
+                <dd className="mt-1 text-xs leading-snug text-muted">{metric.label}</dd>
+              </div>
+            ))}
           </dl>
         </section>
-        <section id="contact" className="section contact" aria-labelledby="contact-heading">
-          <h2 id="contact-heading">Get in touch</h2>
-          <p>Open to data engineering and data platform roles in Bengaluru, Pune and Hyderabad.</p>
-          <a className="email-link" href="mailto:adikshan11@gmail.com">adikshan11@gmail.com</a>
-          <div className="other-links">
-            <a href="https://leetcode.com/u/adikshan11/">LeetCode</a>
-            <a href="https://www.codechef.com/users/adithyashan_11">CodeChef</a>
+
+        <Experience />
+        <Projects />
+
+        <section aria-labelledby="skills-heading" className="py-16">
+          <h2 id="skills-heading" className="text-2xl font-bold tracking-tight">Skills</h2>
+          <dl className="mt-6 space-y-4">
+            {skills.map((skill) => (
+              <div key={skill.group} className="grid gap-2 sm:grid-cols-[10rem_1fr]">
+                <dt className="font-semibold">{skill.group}</dt>
+                <dd className="flex flex-wrap gap-1.5">
+                  {skill.items.map((item) => <span key={item} className="chip">{item}</span>)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        <section aria-labelledby="education-heading" className="grid gap-8 py-16 sm:grid-cols-2">
+          <div>
+            <h2 id="education-heading" className="text-2xl font-bold tracking-tight">Education</h2>
+            <ul className="mt-6 space-y-4">
+              {education.map((entry) => (
+                <li key={entry.school}>
+                  <p className="font-semibold">{entry.school}</p>
+                  <p className="text-sm text-muted">{entry.detail}</p>
+                  <p className="font-mono text-xs text-muted">{entry.period}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Highlights</h2>
+            <ul className="mt-6 list-disc space-y-2 pl-4 text-sm text-muted marker:text-accent">
+              {highlights.map((item) => <li key={item}>{item}</li>)}
+            </ul>
           </div>
         </section>
+
+        <section id="contact" aria-labelledby="contact-heading" className="card my-16 p-8 text-center">
+          <h2 id="contact-heading" className="text-2xl font-bold tracking-tight">Let’s talk</h2>
+          <p className="mt-2 text-muted">Open to data engineering and data platform roles in Bengaluru, Pune and Hyderabad.</p>
+          <a href={`mailto:${profile.email}`} className="mt-5 inline-block rounded-full bg-accent px-6 py-3 font-semibold text-paper transition hover:opacity-90">
+            {profile.email}
+          </a>
+        </section>
       </main>
-      <footer><span>© {new Date().getFullYear()} Adithya Shankaran</span><span>B.Tech CSCE · KIIT</span></footer>
+      <footer className="mx-auto flex max-w-3xl justify-between border-t border-line px-5 py-8 font-mono text-xs text-muted">
+        <span>© 2026 {profile.name}</span>
+        <span>{profile.location}</span>
+      </footer>
     </>
   );
 }

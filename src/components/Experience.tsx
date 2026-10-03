@@ -1,31 +1,36 @@
+import { experience } from '../content';
+
 export default function Experience() {
   return (
-    <section id="experience" className="section" aria-labelledby="experience-heading">
-      <h2 id="experience-heading">Experience</h2>
-      <article className="experience">
-        <div className="experience-heading">
-          <div><h3>Xebia</h3><p>Junior Consultant · Data Engineer</p></div>
-          <p className="dates">Aug 2024 – present<br />Gurugram, India</p>
+    <section id="experience" aria-labelledby="experience-heading" className="py-16">
+      <h2 id="experience-heading" className="text-2xl font-bold tracking-tight">Experience</h2>
+      <article className="card mt-6 p-6 sm:p-8">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <h3 className="text-lg font-semibold">{experience.company}</h3>
+            <p className="text-sm text-muted">{experience.title}</p>
+          </div>
+          <p className="font-mono text-xs text-muted">{experience.period} · {experience.location}</p>
         </div>
-        <div className="role">
-          <h4>Retail data platform</h4>
-          <p className="dates">Client engagement · Sep 2025 – present</p>
-          <ul>
-            <li>Moving legacy ingestion to Spark on Google Cloud and BigQuery, validating results against the original pipelines.</li>
-            <li>Consolidating Dataproc pipeline components into a reusable framework, with execution limits and failure reporting.</li>
-            <li>Investigating source freshness, validating dbt backfills, and integrating Dataplex quality checks into CI.</li>
-            <li>Improving expensive Spark workloads through join and partition pruning.</li>
-          </ul>
-        </div>
-        <div className="role">
-          <h4>Generative AI &amp; developer tools</h4>
-          <p className="dates">Aug 2024 – present</p>
-          <ul>
-            <li>Built RAG and structured extraction tools for resumes and bank statements using LLMs and vector databases.</li>
-            <li>Built a Terraform analyzer using AWS Bedrock to identify security and architecture gaps.</li>
-            <li>Work with Copilot custom agents, skills and MCP-assisted workflows; selected for Xebia’s Forward Deployed Engineer program.</li>
-          </ul>
-        </div>
+        <ol className="mt-6 space-y-8 border-l border-line pl-6">
+          {experience.roles.map((role) => (
+            <li key={role.title} className="relative">
+              <span className="absolute top-1.5 -left-[29px] size-2.5 rounded-full bg-accent ring-4 ring-card" aria-hidden="true" />
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h4 className="font-semibold">
+                  {role.title} <span className="font-normal text-muted">· {role.context}</span>
+                </h4>
+                <p className="font-mono text-xs text-muted">{role.period}</p>
+              </div>
+              <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Stack">
+                {role.stack.map((item) => <li key={item} className="chip">{item}</li>)}
+              </ul>
+              <ul className="mt-3 list-disc space-y-2 pl-4 text-[15px] leading-relaxed text-muted marker:text-accent">
+                {role.points.map((point) => <li key={point}>{point}</li>)}
+              </ul>
+            </li>
+          ))}
+        </ol>
       </article>
     </section>
   );
