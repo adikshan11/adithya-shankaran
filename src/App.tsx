@@ -29,14 +29,11 @@ export default function App() {
       <main id="top" className="segment mx-auto max-w-3xl px-5 pt-32">
         <section aria-labelledby="name-heading">
           <p className="font-mono text-sm text-accent">{profile.role} · {profile.company}</p>
-          <h1 id="name-heading" className="mt-3 text-[clamp(2.25rem,9vw,4.5rem)] leading-[1.05] font-extrabold tracking-tight">
-            {profile.name}
-          </h1>
-          <p className="mt-6 text-2xl leading-snug font-bold tracking-tight sm:text-3xl">
+          <h1 id="name-heading" className="mt-3 text-[clamp(1.9rem,5.5vw,3rem)] leading-tight font-bold tracking-tight">
             {profile.headline.map((part, index) => (
               <span key={part} className={index % 2 ? 'text-accent' : undefined}>{part}</span>
             ))}
-          </p>
+          </h1>
           {profile.intro.map((paragraph, index) => (
             <p key={paragraph} className={`relative leading-relaxed text-muted ${index === 0 ? 'mt-4 text-lg' : 'mt-3'}`}>
               <Rich text={paragraph} slots={{ piano: <PianoKeys /> }} />
@@ -65,7 +62,7 @@ export default function App() {
                   href={href}
                   target={href.startsWith('http') ? '_blank' : undefined}
                   rel={href.startsWith('http') ? 'noreferrer' : undefined}
-                  className="card flex items-center gap-3 px-4 py-3 transition hover:text-accent"
+                  className="card lift flex items-center gap-3 px-4 py-3 hover:text-accent"
                 >
                   <Icon className="size-[18px] shrink-0 text-muted" />
                   <span className="text-sm font-semibold">{label}</span>

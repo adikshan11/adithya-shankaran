@@ -8,7 +8,7 @@ export const profile = {
   intro: [
     'Data engineer at **Xebia**. On client engagements I build data platforms on **Google Cloud**: **Spark** ingestion, **BigQuery**, **dbt**, and the quality checks that keep the numbers honest.',
     'Most of my best work started as a number that did not add up: batches reported **succeeded** after their time limit killed them, a Spark pipeline whose run cost I cut by **98%**, and a **32 TB** backfill that had left **1,455 records** missing.',
-    'Away from pipelines I play the [piano], cheer for **Real Madrid**, and lose more hours to **Minecraft** than I should.',
+    'Away from pipelines I play the [piano], cheer for Real Madrid, and lose more hours to Minecraft than I should.',
   ],
   status: [
     { label: 'Live', text: 'Consolidating the Dataproc template behind 616 scheduled pipelines into one reusable component' },

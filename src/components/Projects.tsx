@@ -9,7 +9,7 @@ export default function Projects() {
         {projects.map((project) => (
           <article
             key={project.name}
-            className="card flex flex-col gap-3 p-5 transition hover:-translate-y-0.5 hover:border-accent"
+            className="card lift flex flex-col gap-3 p-5"
           >
             <h3 className="font-semibold">{project.name}</h3>
             <p className="flex-1 text-sm leading-relaxed text-muted">{project.summary}</p>

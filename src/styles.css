@@ -12,28 +12,28 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "JetBrains Mono", monospace;
-  --color-accent: #5b3cc4;
-  --color-accent-soft: #ece8fc;
+  --color-accent: #6a5acd;
+  --color-accent-soft: #efedfb;
   --color-ink: #16151d;
   --color-muted: #5f5d6b;
   --color-line: #e4e2ec;
   --color-paper: #f7f6fa;
   --color-card: #ffffff;
-  --color-glow-a: rgb(196 181 253 / 0.55);
-  --color-glow-b: rgb(253 186 116 / 0.35);
+  --color-glow-a: rgb(196 181 253 / 0.28);
+  --color-glow-b: rgb(253 186 116 / 0.16);
 }
 
 @layer base {
   :root[data-theme="dark"] {
-    --color-accent: #a99bfa;
-    --color-accent-soft: #241f3d;
+    --color-accent: #b7aefa;
+    --color-accent-soft: #221f33;
     --color-ink: #eeedf3;
     --color-muted: #a5a3b3;
     --color-line: #27252f;
     --color-paper: #0d0c11;
     --color-card: #16151c;
-    --color-glow-a: rgb(124 77 255 / 0.28);
-    --color-glow-b: rgb(59 130 246 / 0.16);
+    --color-glow-a: rgb(124 105 230 / 0.10);
+    --color-glow-b: rgb(80 140 230 / 0.07);
     color-scheme: dark;
   }
 
@@ -135,6 +135,17 @@
   .refract .glass[data-lens] {
     background: color-mix(in srgb, var(--color-paper) 55%, transparent);
     backdrop-filter: url(#liquid-glass) blur(5px) saturate(170%);
+  }
+
+  .lift {
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+
+  .lift:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 45%, transparent),
+      0 12px 28px -14px color-mix(in srgb, var(--color-accent) 40%, transparent);
   }
 
   .chip {

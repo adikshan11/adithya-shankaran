@@ -57,7 +57,7 @@ export default function PianoKeys() {
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="font-semibold text-ink underline decoration-accent decoration-2 underline-offset-4 transition hover:text-accent"
+        className="underline decoration-accent/60 decoration-dotted underline-offset-4 transition hover:text-accent"
       >
         piano
       </button>

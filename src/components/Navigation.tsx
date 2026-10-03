@@ -27,8 +27,8 @@ export default function Navigation() {
       <GlassFilter lens={lens} />
       <div ref={bar} data-lens={lens ? '' : undefined} className="glass mx-auto max-w-[calc(48rem-2.5rem)] rounded-[1.75rem] py-1.5 pr-1.5 pl-5">
         <div className="flex items-center justify-between">
-          <a href="#top" className="text-sm font-bold tracking-tight" aria-label="Adithya Shankaran, back to top">
-            adithya<span className="text-accent">.</span>
+          <a href="#top" className="text-[15px] font-semibold tracking-tight whitespace-nowrap">
+            Adithya Shankaran
           </a>
           <nav aria-label="Main navigation" className="flex items-center gap-1 text-sm">
             <div className="hidden items-center gap-1 sm:flex">
