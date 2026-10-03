@@ -1,7 +1,7 @@
 import { profile } from '../content';
 import { GitHubIcon, LinkedInIcon, MailIcon, XIcon } from './Icons';
 
-const icons = { mail: MailIcon, linkedin: LinkedInIcon, github: GitHubIcon, x: XIcon };
+export const icons = { mail: MailIcon, linkedin: LinkedInIcon, github: GitHubIcon, x: XIcon };
 
 export default function SocialLinks() {
   return (
@@ -16,7 +16,7 @@ export default function SocialLinks() {
               aria-label={social.label}
               target={external ? '_blank' : undefined}
               rel={external ? 'noreferrer' : undefined}
-              className="grid size-11 place-items-center rounded-full border border-line bg-card text-muted transition hover:border-accent hover:text-accent"
+              className="glass grid size-11 place-items-center rounded-full text-muted transition hover:text-accent"
             >
               <Icon className="size-[18px]" />
             </a>

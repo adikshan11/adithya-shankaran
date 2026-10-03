@@ -7,8 +7,10 @@ export const profile = {
   headline: ['I make ', 'data pipelines', ' cheaper to run and ', 'numbers', ' you can trust.'],
   intro:
     'Data engineer at **Xebia**, building an enterprise e-commerce data platform on **Google Cloud** with **Spark**, **BigQuery**, **dbt** and the quality checks around them.',
-  focus: ['Spark migrations', 'Pipeline cost', 'Data quality'],
-  now: 'Consolidating the Dataproc template behind 616 scheduled pipelines into one reusable framework component. Selected for Xebia’s Forward Deployed Engineer program, starting October 2026.',
+  status: [
+    { label: 'Now', text: 'Consolidating the Dataproc template behind 616 scheduled pipelines into one reusable component' },
+    { label: 'Next', text: 'Xebia’s Forward Deployed Engineer program, from October 2026' },
+  ],
   socials: [
     { label: 'Email', handle: 'adikshan11@gmail.com', href: 'mailto:adikshan11@gmail.com', icon: 'mail' },
     { label: 'LinkedIn', handle: 'adithya-shankaran', href: 'https://www.linkedin.com/in/adithya-shankaran', icon: 'linkedin' },
@@ -81,6 +83,39 @@ export function tenure(start: string, today = new Date()) {
   return `${monthNames[month - 1]} ${year} – Present · ${parts.join(' ')}`;
 }
 
+export const principles = [
+  {
+    kind: 'Reliability',
+    title: 'A green run is a claim, not proof',
+    text: 'Dataproc batches cut off by their time limit ended **CANCELLED** while the pipeline still reported **SUCCEEDED**. Every task now has a timeout, the workload’s own terminal state decides success, and a timeout raises an alert.',
+  },
+  {
+    kind: 'Cost',
+    title: 'Cost is a design input',
+    text: 'Prune partitions and joins before adding executors, and size clusters from measured runs, not defaults. That turned a pipeline with repeated 4-hour timeouts into one that costs **98% less**.',
+  },
+  {
+    kind: 'Data quality',
+    title: 'Quality is enforced, not remembered',
+    text: 'CI blocks a dbt model that ships without **Dataplex** checks, and every check is replayed against years of production data before it goes live, so its thresholds can actually fire.',
+  },
+  {
+    kind: 'Architecture',
+    title: 'Move changes, not tables',
+    text: 'I designed change data capture for order data with **Datastream** into BigQuery, with snapshot and change views on top, to replace third-party replication.',
+  },
+  {
+    kind: 'AI',
+    title: 'Retrieve before you generate',
+    text: 'Document extraction grounded in retrieved context from **Weaviate** and **ChromaDB**, so the model answers from the document in front of it rather than from memory.',
+  },
+  {
+    kind: 'AI',
+    title: 'Agents get guardrails',
+    text: 'Coding agents reach BigQuery through a **read-only MCP server** with a per-query cost cap, and pushes or merges always stop for a human. Custom agents, skills and hooks keep them on the team’s rules.',
+  },
+];
+
 export type Project = {
   name: string;
   summary: string;
@@ -127,7 +162,7 @@ export const projects: Project[] = [
 export const skills = [
   { group: 'Data engineering', items: ['Apache Spark', 'PySpark', 'SQL', 'dbt', 'Delta Lake', 'Databricks', 'CDC', 'Data modeling', 'Data quality', 'Airflow'] },
   { group: 'Google Cloud', items: ['BigQuery', 'Dataproc', 'Vertex AI Pipelines', 'Dataplex', 'Datastream', 'Dataflow', 'Pub/Sub'] },
-  { group: 'AI', items: ['LLMs', 'RAG', 'Weaviate', 'ChromaDB', 'GitHub Copilot', 'Claude Code', 'MCP'] },
+  { group: 'AI', items: ['LLMs', 'RAG', 'Vector databases', 'Weaviate', 'ChromaDB', 'AI agents', 'MCP', 'Amazon Bedrock', 'Gemini API', 'GitHub Copilot', 'Claude Code'] },
   { group: 'Tools', items: ['Python', 'Git', 'CI/CD', 'Docker', 'Terraform', 'PostgreSQL', 'React'] },
 ];
 

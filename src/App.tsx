@@ -1,10 +1,12 @@
 import Experience from './components/Experience';
 import Navigation from './components/Navigation';
 import PianoKeys from './components/PianoKeys';
-import Rich from './components/Rich';
+import Principles from './components/Principles';
 import Projects from './components/Projects';
+import Rich from './components/Rich';
 import SectionHeading from './components/SectionHeading';
-import SocialLinks from './components/SocialLinks';
+import SocialLinks, { icons } from './components/SocialLinks';
+import StatusBoard from './components/StatusBoard';
 import { education, highlights, metrics, profile, skills } from './content';
 
 export default function App() {
@@ -13,6 +15,10 @@ export default function App() {
       <a href="#top" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60]">
         Skip to content
       </a>
+      <div className="aurora" aria-hidden="true">
+        <span />
+        <span />
+      </div>
       <Navigation />
       <main id="top" className="segment mx-auto max-w-3xl px-5 pt-32">
         <section aria-labelledby="name-heading">
@@ -32,19 +38,8 @@ export default function App() {
             </a>
             <SocialLinks />
           </div>
-          <ul className="mt-8 flex flex-wrap gap-2" aria-label="Focus">
-            {profile.focus.map((item) => (
-              <li key={item} className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium">{item}</li>
-            ))}
-          </ul>
-          <div className="mt-6 rounded-2xl bg-[#0b57d0] px-5 py-4 text-white">
-            <p className="flex items-center gap-2 text-xs font-bold tracking-wider text-white/80">
-              <span className="size-1.5 animate-pulse rounded-full bg-white" aria-hidden="true" />
-              NOW
-            </p>
-            <p className="mt-1.5 leading-relaxed font-medium">{profile.now}</p>
-          </div>
-          <div className="card mt-10 overflow-hidden">
+          <StatusBoard />
+          <div className="card mt-4 overflow-hidden">
             <p className="border-b border-line px-5 py-2.5 text-xs font-semibold tracking-wider text-muted">IMPACT</p>
             <dl className="grid grid-cols-2 sm:grid-cols-4">
               {metrics.map((metric) => (
@@ -68,10 +63,11 @@ export default function App() {
         </section>
 
         <Experience />
+        <Principles />
         <Projects />
 
         <section aria-labelledby="skills-heading" className="py-8">
-          <SectionHeading id="skills-heading" step="04" title="Skills" />
+          <SectionHeading id="skills-heading" step="05" title="Skills" />
           <dl className="mt-6 space-y-4">
             {skills.map((skill) => (
               <div key={skill.group} className="grid gap-2 sm:grid-cols-[10rem_1fr]">
@@ -114,23 +110,27 @@ export default function App() {
           </div>
         </section>
 
-        <section id="contact" aria-labelledby="contact-heading" className="card my-8 flex flex-col items-center px-6 py-10 text-center">
-          <SectionHeading id="contact-heading" step="05" title="Let’s connect" />
-          <p className="mt-3 max-w-md text-muted">Open to data engineering and data platform roles: on-site, hybrid or remote. Email reaches me fastest.</p>
-          <ul className="mt-6 grid w-full max-w-md gap-2 text-left">
-            {profile.socials.map((social) => (
-              <li key={social.label}>
-                <a
-                  href={social.href}
-                  target={social.href.startsWith('http') ? '_blank' : undefined}
-                  rel={social.href.startsWith('http') ? 'noreferrer' : undefined}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-line px-4 py-3 transition hover:border-accent"
-                >
-                  <span className="font-semibold">{social.label}</span>
-                  <span className="truncate text-accent">{social.handle}</span>
-                </a>
-              </li>
-            ))}
+        <section id="contact" aria-labelledby="contact-heading" className="py-8">
+          <SectionHeading id="contact-heading" step="06" title="Let’s connect" />
+          <p className="mt-3 text-muted">Open to data engineering and data platform roles: on-site, hybrid or remote. Email reaches me fastest.</p>
+          <ul className="mt-5 grid gap-2 sm:grid-cols-2">
+            {profile.socials.map((social) => {
+              const Icon = icons[social.icon];
+              return (
+                <li key={social.label}>
+                  <a
+                    href={social.href}
+                    target={social.href.startsWith('http') ? '_blank' : undefined}
+                    rel={social.href.startsWith('http') ? 'noreferrer' : undefined}
+                    className="card flex items-center gap-3 px-4 py-3 transition hover:text-accent"
+                  >
+                    <Icon className="size-[18px] shrink-0 text-muted" />
+                    <span className="text-sm font-semibold">{social.label}</span>
+                    <span className="ml-auto truncate text-sm text-muted">{social.handle}</span>
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </section>
       </main>
