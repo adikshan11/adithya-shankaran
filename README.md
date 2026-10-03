@@ -1,14 +1,22 @@
-# adikshan11 portfolio
+# Adithya Shankaran
 
-Personal site of Adithya Shankaran, data engineer. Plain HTML, CSS and a few lines of JavaScript: no build step, so Vercel serves the folder as is.
+Personal portfolio built with React, TypeScript and Vite. Plain CSS, a self-hosted Inter font and a small theme control. No UI kit or backend.
 
-## Deploy
+## Development
 
-1. Push this folder to `github.com/adikshan11/portfolio`.
-2. In Vercel: Add New → Project → import the repo → Framework preset "Other" → Deploy.
-3. Every push to `main` redeploys automatically.
+- Use Node.js 24 and install dependencies with `npm ci`.
+- `npm run dev` starts the development server.
+- `npm test` checks the main heading, navigation and saved theme.
+- `npm run build` type-checks the project and creates the static site in `dist`.
+- `npm run preview` serves the production build locally.
 
-## Update
+## Structure
 
-- Content lives in `index.html`; colours and layout in `style.css`.
-- Replace `Adithya_Shankaran_Resume.pdf` with the latest resume when it changes.
+- `src/App.tsx` contains the introduction, toolkit and contact details.
+- `src/components` contains navigation, experience, projects and theme control.
+- `src/styles.css` contains visual tokens and responsive styles.
+- Replace the resume PDF at the repository root when it changes. Vite includes it in the build.
+
+## Deployment
+
+Import the repository into Vercel, choose the Vite preset, use `npm run build` and set the output directory to `dist`. No server, database or environment variables are needed.
