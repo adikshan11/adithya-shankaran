@@ -33,6 +33,14 @@ export function XIcon({ className }: IconProps) {
   );
 }
 
+export function CodeIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" />
+    </svg>
+  );
+}
+
 export function MenuIcon({ open, className }: IconProps & { open: boolean }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">

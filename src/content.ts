@@ -5,10 +5,13 @@ export const profile = {
   location: 'Surat, Gujarat',
   email: 'adikshan11@gmail.com',
   headline: ['I make ', 'data pipelines', ' cheaper to run and ', 'numbers', ' you can trust.'],
-  intro:
-    'Data engineer at **Xebia**, building an enterprise e-commerce data platform on **Google Cloud** with **Spark**, **BigQuery**, **dbt** and the quality checks around them.',
+  intro: [
+    'Data engineer at **Xebia**. On client engagements I build data platforms on **Google Cloud**: **Spark** ingestion, **BigQuery**, **dbt**, and the quality checks that keep the numbers honest.',
+    'Most of my best work started as a number that did not add up: batches reported **succeeded** after their time limit killed them, a Spark pipeline whose run cost I cut by **98%**, and a **32 TB** backfill that had left **1,455 records** missing.',
+    'Away from pipelines I play the [piano], cheer for **Real Madrid**, and lose more hours to **Minecraft** than I should.',
+  ],
   status: [
-    { label: 'Now', text: 'Consolidating the Dataproc template behind 616 scheduled pipelines into one reusable component' },
+    { label: 'Live', text: 'Consolidating the Dataproc template behind 616 scheduled pipelines into one reusable component' },
     { label: 'Next', text: 'Xebia’s Forward Deployed Engineer program, from October 2026' },
   ],
   socials: [
@@ -17,20 +20,11 @@ export const profile = {
     { label: 'GitHub', handle: '@adikshan11', href: 'https://github.com/adikshan11', icon: 'github' },
     { label: 'X', handle: '@adithyashan11', href: 'https://x.com/adithyashan11', icon: 'x' },
   ] as const,
-  about: [
-    'I work on the e-commerce data platform of client **Levi Strauss & Co.** I moved **13 sources** off Databricks onto **Spark on Google Cloud**, and I am now consolidating the **Dataproc template** that **616 scheduled pipelines** run on.',
-    'Most of my best work started as a number that did not add up: a pipeline costing far more than it should (its run cost is now **98% lower**), batches killed by their time limit yet reported as **succeeded**, and a **32 TB** backfill that had left **1,455 records** missing.',
-    'Before data engineering I built **RAG** tools at Xebia that turn messy documents, like resumes and bank statements, into clean tables.',
-    'Away from pipelines I play the [piano], cheer for **Real Madrid**, and lose more hours to **Minecraft** than I should.',
+  coding: [
+    { label: 'LeetCode', handle: '151 solved', href: 'https://leetcode.com/u/adikshan11/' },
+    { label: 'CodeChef', handle: 'Rating 1614', href: 'https://www.codechef.com/users/adithyashan_11' },
   ],
 };
-
-export const metrics = [
-  { value: '13', label: 'e-commerce sources I migrated to Spark on Google Cloud' },
-  { value: '616', label: 'scheduled pipelines on the template I am consolidating' },
-  { value: '98%', label: 'run-cost cut on a top-cost Spark pipeline I optimised' },
-  { value: '1,455', label: 'missing records found and repaired in a 32 TB backfill' },
-];
 
 export type Role = {
   title: string;
@@ -48,11 +42,11 @@ export const experience = {
   roles: [
     {
       title: 'Data Engineering',
-      context: 'Client: Levi Strauss & Co.',
+      context: 'Client engagement · Levi Strauss & Co.',
       start: '2025-09',
-      stack: ['GCP', 'Apache Spark', 'BigQuery', 'dbt', 'Vertex AI'],
+      stack: ['GCP', 'Apache Spark', 'Dataproc', 'BigQuery', 'dbt', 'Vertex AI', 'Dataplex'],
       points: [
-        { topic: 'Migration', text: 'moved 13 e-commerce sources from Databricks to Spark on Google Cloud and BigQuery, each checked against the legacy output.' },
+        { topic: 'Migration', text: 'moved 13 e-commerce sources from Databricks to Spark on Dataproc and BigQuery, each validated against the legacy output.' },
         { topic: 'Pipeline cost', text: 'ended a top-cost Spark pipeline’s repeated 4-hour timeouts and cut its run cost by 98%; right-sized 29 more.' },
         { topic: 'Silent failures', text: 'found batches killed by their time limit were reported as succeeded; shipped task timeouts with alerts.' },
         { topic: 'Template', text: 'leading the consolidation of the Dataproc template behind 616 pipelines into one reusable component.' },
@@ -157,28 +151,4 @@ export const projects: Project[] = [
       { label: 'Code', href: 'https://github.com/BREACH1247/bkmrkd_frontend' },
     ],
   },
-];
-
-export const skills = [
-  { group: 'Data engineering', items: ['Apache Spark', 'PySpark', 'SQL', 'dbt', 'Delta Lake', 'Databricks', 'CDC', 'Data modeling', 'Data quality', 'Airflow'] },
-  { group: 'Google Cloud', items: ['BigQuery', 'Dataproc', 'Vertex AI Pipelines', 'Dataplex', 'Datastream', 'Dataflow', 'Pub/Sub'] },
-  { group: 'AI', items: ['LLMs', 'RAG', 'Vector databases', 'Weaviate', 'ChromaDB', 'AI agents', 'MCP', 'Amazon Bedrock', 'Gemini API', 'GitHub Copilot', 'Claude Code'] },
-  { group: 'Tools', items: ['Python', 'Git', 'CI/CD', 'Docker', 'Terraform', 'PostgreSQL', 'React'] },
-];
-
-export const education = [
-  { school: 'Kalinga Institute of Industrial Technology', detail: 'B.Tech, Computer Science & Communication Engineering · 8.32 CGPA', period: '2020 – 2024' },
-  { school: 'Delhi Public School Surat', detail: '12th Standard CBSE · 81.2%', period: '2020' },
-];
-
-export const highlights: { text: string; links?: { label: string; href: string }[] }[] = [
-  { text: 'GitHub Copilot X-AI Practitioner+, Xebia (2026)' },
-  {
-    text: '151 problems solved on LeetCode · CodeChef highest rating 1614',
-    links: [
-      { label: 'LeetCode', href: 'https://leetcode.com/u/adikshan11/' },
-      { label: 'CodeChef', href: 'https://www.codechef.com/users/adithyashan_11' },
-    ],
-  },
-  { text: 'Mentor, Xebia Tech-AI-Thon · NSS Community Lead' },
 ];

@@ -25,13 +25,13 @@ export default function StatusBoard() {
     <dl className="card mt-8 divide-y divide-line overflow-hidden">
       {profile.status.map((row) => (
         <div key={row.label} className="flex gap-4 px-5 py-3">
-          <dt className="w-20 shrink-0 font-mono text-xs leading-6 text-accent uppercase">{row.label}</dt>
+          <dt className="w-12 shrink-0 sm:w-20 font-mono text-xs leading-6 text-accent uppercase">{row.label}</dt>
           <dd className="text-[15px] leading-6">{row.text}</dd>
         </div>
       ))}
       {track && (
         <div className="flex items-center gap-4 px-5 py-3">
-          <dt className="flex w-20 shrink-0 items-center gap-1.5 font-mono text-xs text-accent uppercase">
+          <dt className="flex w-12 shrink-0 sm:w-20 items-center gap-1.5 font-mono text-xs text-accent uppercase">
             {track.playing && <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" aria-hidden="true" />}
             {track.playing ? 'Playing' : 'Last'}
           </dt>

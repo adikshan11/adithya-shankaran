@@ -3,8 +3,8 @@ import SectionHeading from './SectionHeading';
 
 export default function Experience() {
   return (
-    <section id="experience" aria-labelledby="experience-heading" className="py-8">
-      <SectionHeading id="experience-heading" step="02" title="Experience" />
+    <section id="experience" aria-labelledby="experience-heading" className="pt-14 pb-8">
+      <SectionHeading id="experience-heading" step="01" title="Experience" />
       <article className="card mt-6 p-6 sm:p-8">
         <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
           <div>

@@ -4,8 +4,8 @@ import { MenuIcon } from './Icons';
 import ThemeToggle from './ThemeToggle';
 
 const sections = [
-  { label: 'About', href: '#about' },
   { label: 'Experience', href: '#experience' },
+  { label: 'How I build', href: '#principles' },
   { label: 'Projects', href: '#projects' },
   { label: 'Contact', href: '#contact' },
 ];
