@@ -14,26 +14,28 @@
   --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "JetBrains Mono", monospace;
   --color-accent: #2563eb;
   --color-accent-soft: #e8effd;
-  --color-ink: #16151d;
-  --color-muted: #5f5d6b;
-  --color-line: #e4e2ec;
-  --color-paper: #f7f6fa;
+  --color-ink: #16181d;
+  --color-muted: #5d626c;
+  --color-line: #e4e6eb;
+  --color-paper: #f7f8fa;
   --color-card: #ffffff;
-  --color-glow-a: rgb(147 197 253 / 0.30);
-  --color-glow-b: rgb(165 243 252 / 0.20);
+  --color-glow-a: rgb(147 197 253 / 0.18);
+  --color-glow-b: rgb(165 243 252 / 0.12);
+  --color-now: #1d4ed8;
 }
 
 @layer base {
   :root[data-theme="dark"] {
     --color-accent: #8fb8ff;
     --color-accent-soft: #1b2638;
-    --color-ink: #f6f5fa;
-    --color-muted: #c9c7d4;
-    --color-line: #27252f;
-    --color-paper: #0d0c11;
-    --color-card: #16151c;
-    --color-glow-a: rgb(96 140 230 / 0.10);
-    --color-glow-b: rgb(80 170 220 / 0.07);
+    --color-ink: #f2f3f5;
+    --color-muted: #c2c5cc;
+    --color-line: #26282d;
+    --color-paper: #121316;
+    --color-card: #0c0d0f;
+    --color-glow-a: rgb(96 140 230 / 0.06);
+    --color-glow-b: rgb(80 170 220 / 0.04);
+    --color-now: #0b47a8;
     color-scheme: dark;
   }
 
@@ -44,11 +46,6 @@
 
   body {
     @apply bg-paper font-sans text-ink antialiased;
-    background-image:
-      linear-gradient(to bottom, transparent, var(--color-paper) 36rem),
-      radial-gradient(circle, color-mix(in srgb, var(--color-muted) 30%, transparent) 1px, transparent 1.5px);
-    background-size: 100% 100%, 22px 22px;
-    background-repeat: no-repeat, repeat;
   }
 
   ::selection {
@@ -118,9 +115,9 @@
   [data-theme="dark"] .card {
     box-shadow:
       inset 0 0 0 1px rgb(255 255 255 / 0.07),
-      inset 1px 1.5px 0 -0.5px rgb(255 255 255 / 0.22),
-      inset -1px -1.5px 0 -0.5px rgb(255 255 255 / 0.08),
-      0 8px 24px -12px rgb(0 0 0 / 0.6);
+      inset 1px 1.5px 0 -0.5px rgb(255 255 255 / 0.16),
+      inset -1px -1.5px 0 -0.5px rgb(255 255 255 / 0.05),
+      0 8px 24px -12px rgb(0 0 0 / 0.7);
   }
 
   .glass {

@@ -84,6 +84,13 @@ export function tenure(start: string, end?: string, today = new Date()) {
   return `${monthNames[month - 1]} ${year} – ${until} · ${parts.join(' ')}`;
 }
 
+export const metrics = [
+  { value: '13', label: 'e-commerce sources migrated to Spark on Google Cloud' },
+  { value: '616', label: 'scheduled pipelines on the template I am consolidating' },
+  { value: '98%', label: 'run-cost cut on a top-cost Spark pipeline' },
+  { value: '1,455', label: 'missing records found and repaired in a 32 TB backfill' },
+];
+
 export const principles = [
   {
     kind: 'Reliability',

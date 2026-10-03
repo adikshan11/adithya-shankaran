@@ -26,7 +26,7 @@ export default function App() {
         <span />
       </div>
       <Navigation />
-      <main id="top" className="segment mx-auto max-w-3xl px-5 pt-32">
+      <main id="top" className="segment mx-auto max-w-5xl px-5 pt-32">
         <section aria-labelledby="name-heading">
           <p className="font-mono text-sm text-accent">{profile.role} · {profile.company}</p>
           <h1 id="name-heading" className="mt-3 text-[clamp(1.6rem,4.2vw,2.4rem)] leading-tight font-bold tracking-tight">
@@ -73,7 +73,7 @@ export default function App() {
           </ul>
         </section>
       </main>
-      <footer className="segment mx-auto flex max-w-3xl flex-wrap justify-between gap-2 border-t border-line px-5 py-8 font-mono text-xs text-muted">
+      <footer className="segment mx-auto flex max-w-5xl flex-wrap justify-between gap-2 border-t border-line px-5 py-8 font-mono text-xs text-muted">
         <span>© 2026 {profile.name}</span>
         <span>{profile.location}</span>
       </footer>

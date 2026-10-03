@@ -22,25 +22,28 @@ export default function StatusBoard() {
   }, []);
 
   return (
-    <dl className="card mt-8 divide-y divide-line overflow-hidden">
-      {profile.status.map((row) => (
-        <div key={row.label} className="flex gap-4 px-5 py-3">
-          <dt className="w-16 shrink-0 sm:w-20 font-mono text-xs leading-6 text-accent uppercase">{row.label}</dt>
-          <dd className="text-[15px] leading-6">{row.text}</dd>
+    <dl className="mt-8 space-y-3 rounded-2xl bg-now px-5 py-4 text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.12),inset_1px_1.5px_0_-0.5px_rgb(255_255_255/0.35)]">
+      {profile.status.map((row, index) => (
+        <div key={row.label}>
+          <dt className="flex items-center gap-2 text-xs font-bold tracking-wider text-white/75 uppercase">
+            {index === 0 && <span className="size-1.5 animate-pulse rounded-full bg-emerald-300" aria-hidden="true" />}
+            {row.label}
+          </dt>
+          <dd className="mt-0.5 leading-relaxed font-medium">{row.text}</dd>
         </div>
       ))}
       {track && (
-        <div className="flex items-center gap-4 px-5 py-3">
-          <dt className="flex w-16 shrink-0 sm:w-20 items-center gap-1.5 font-mono text-xs text-accent uppercase">
-            {track.playing && <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" aria-hidden="true" />}
-            {track.playing ? 'Playing' : 'Last'}
+        <div>
+          <dt className="flex items-center gap-2 text-xs font-bold tracking-wider text-white/75 uppercase">
+            {track.playing && <span className="size-1.5 animate-pulse rounded-full bg-emerald-300" aria-hidden="true" />}
+            {track.playing ? 'Listening' : 'Last played'}
           </dt>
-          <dd className="min-w-0">
-            <a href={track.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:text-accent">
+          <dd className="mt-1">
+            <a href={track.url} target="_blank" rel="noreferrer" className="flex min-w-0 items-center gap-3 hover:underline">
               {track.image && <img src={track.image} alt="" width={32} height={32} className="size-8 rounded" />}
-              <span className="min-w-0 truncate text-[15px]">
+              <span className="min-w-0 truncate">
                 <span className="font-medium">{track.title}</span>
-                <span className="text-muted"> · {track.artist}</span>
+                <span className="text-white/75"> · {track.artist}</span>
               </span>
             </a>
           </dd>
