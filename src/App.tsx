@@ -47,14 +47,6 @@ export default function App() {
           {profile.about.map((paragraph) => (
             <p key={paragraph} className="mt-4 leading-relaxed text-muted">{paragraph}</p>
           ))}
-          <div className="card mt-6 flex items-start gap-4 p-5">
-            <span className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-soft text-xl text-accent" aria-hidden="true">♪</span>
-            <div>
-              <p className="font-semibold">{profile.music.title}</p>
-              <p className="font-mono text-xs text-muted">{profile.music.detail}</p>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{profile.music.text}</p>
-            </div>
-          </div>
         </section>
 
         <Experience />

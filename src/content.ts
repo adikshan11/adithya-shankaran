@@ -15,12 +15,8 @@ export const profile = {
   about: [
     'I joined Xebia in 2024 after my B.Tech at KIIT and started on the Generative AI side, building retrieval tools that pull structured data out of messy documents. A year later I moved to data engineering for Levi Strauss & Co., moving their e-commerce data onto Google Cloud.',
     'The work I enjoy most is the investigation: a job that reports success but did nothing, a backfill missing one hour a day, a pipeline that costs fifty times what it should. Most of my best work started as a number that did not add up.',
+    'Outside work I play the piano; I hold Grade 8 in Electronic Keyboard from Trinity College London.',
   ],
-  music: {
-    title: 'Pianist',
-    detail: 'Grade 8, Electronic Keyboard · Trinity College London',
-    text: 'Outside data, I am a pianist. I hold Grade 8 in Electronic Keyboard from Trinity College London, the highest of its graded exams.',
-  },
 };
 
 export const metrics = [
