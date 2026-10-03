@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import GlassFilter, { useLens } from './GlassFilter';
 import { MenuIcon } from './Icons';
 import ThemeToggle from './ThemeToggle';
 
@@ -11,6 +12,8 @@ const sections = [
 
 export default function Navigation() {
   const [open, setOpen] = useState(false);
+  const bar = useRef<HTMLDivElement>(null);
+  const lens = useLens(bar);
 
   useEffect(() => {
     if (!open) return;
@@ -20,8 +23,9 @@ export default function Navigation() {
   }, [open]);
 
   return (
-    <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-4">
-      <div className="glass mx-auto max-w-[calc(48rem-2.5rem)] rounded-[1.75rem] py-1.5 pr-1.5 pl-5">
+    <header className="segment fixed inset-x-0 top-3 z-50 px-3 sm:top-4">
+      <GlassFilter lens={lens} />
+      <div ref={bar} data-lens={lens ? '' : undefined} className="glass mx-auto max-w-[calc(48rem-2.5rem)] rounded-[1.75rem] py-1.5 pr-1.5 pl-5">
         <div className="flex items-center justify-between">
           <a href="#top" className="text-sm font-bold tracking-tight" aria-label="Adithya Shankaran, back to top">
             adithya<span className="text-accent">.</span>

@@ -5,7 +5,7 @@ export const profile = {
   location: 'Surat, Gujarat',
   email: 'adikshan11@gmail.com',
   intro:
-    'I build and run data platforms on Google Cloud: Spark ingestion, BigQuery, dbt and the quality gates around them. I also bring Generative AI into data work, as tools I direct and review.',
+    'I build and run data platforms on Google Cloud, and I care most about two things: what a pipeline costs, and whether its numbers are right.',
   socials: [
     { label: 'Email', href: 'mailto:adikshan11@gmail.com', icon: 'mail' },
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/adithya-shankaran', icon: 'linkedin' },
@@ -13,9 +13,14 @@ export const profile = {
     { label: 'X', href: 'https://x.com/adithyashan11', icon: 'x' },
   ] as const,
   about: [
-    'I started in machine learning and Generative AI at Xebia, building RAG tools that pull clean data out of messy documents. Since 2025 I work on the e-commerce data platform of Levi Strauss & Co.: migrating ingestion to Spark on Google Cloud, cutting pipeline cost, and making data quality something CI enforces instead of something people remember.',
-    'I use AI coding assistants daily, as tools I direct and review, not a replacement for knowing the system. Outside work I play keys; I won KIIT’s K-STAR instrumental music competition.',
+    'I joined Xebia in 2024 after my B.Tech at KIIT and started on the Generative AI side, building retrieval tools that pull structured data out of messy documents. A year later I moved to data engineering for Levi Strauss & Co., moving their e-commerce data onto Google Cloud.',
+    'The work I enjoy most is the investigation: a job that reports success but did nothing, a backfill missing one hour a day, a pipeline that costs fifty times what it should. Most of my best work started as a number that did not add up.',
   ],
+  music: {
+    title: 'Pianist',
+    detail: 'Grade 8, Electronic Keyboard · Trinity College London',
+    text: 'Outside data, I am a pianist. I hold Grade 8 in Electronic Keyboard from Trinity College London, the highest of its graded exams.',
+  },
 };
 
 export const metrics = [
@@ -45,21 +50,20 @@ export const experience = {
       period: 'Sep 2025 – Present',
       stack: ['GCP', 'Apache Spark', 'BigQuery', 'dbt', 'Vertex AI'],
       points: [
-        'Led the migration of 13 e-commerce data sources from Databricks to Spark on Google Cloud (Dataproc) and BigQuery, validating each pipeline against legacy output.',
-        'Leading the consolidation of the Dataproc template behind 616 scheduled pipelines into one reusable framework component; found that batches killed by their time limit were reported as succeeded, and shipped task timeouts with alerts.',
-        'Cut a top-cost Spark pipeline’s run cost by 98% and ended its repeated 4-hour timeouts by pruning joins and partitions; right-sized clusters for 29 pipelines.',
-        'Owned data correctness for marketing analytics: a 32 TB dbt backfill that found and repaired 1,455 missing records across 4,200 hourly source checks, plus a CI gate blocking dbt models without Dataplex checks.',
-        'Designed change data capture for order data with Datastream and BigQuery snapshot and change views, to replace Qlik replication.',
+        'Migrated 13 e-commerce sources from Databricks to Spark on Google Cloud and BigQuery.',
+        'Cut a top-cost Spark pipeline’s run cost by 98%; right-sized 29 more.',
+        'Leading the consolidation of the Dataproc template behind 616 pipelines.',
+        'Repaired 1,455 missing records in a 32 TB dbt backfill.',
       ],
     },
     {
-      title: 'Generative AI and AI-native engineering',
+      title: 'Generative AI',
       context: 'Internal',
       period: 'Aug 2024 – Present',
-      stack: ['Python', 'LLMs', 'RAG', 'GitHub Copilot'],
+      stack: ['Python', 'LLMs', 'RAG'],
       points: [
-        'Built RAG document extraction with LLMs and Weaviate/ChromaDB: a resume parser and a bank-statement PDF-to-Excel extractor for complex tables, queried through a Streamlit chatbot.',
-        'Built a Terraform linter on Claude (AWS Bedrock) for security and Well-Architected checks; selected for Xebia’s Forward Deployed Engineer program.',
+        'RAG document extraction with Weaviate and ChromaDB.',
+        'Terraform linter on Claude via AWS Bedrock; selected for the Forward Deployed Engineer program.',
       ],
     },
   ] satisfies Role[],
@@ -130,5 +134,4 @@ export const highlights: { text: string; links?: { label: string; href: string }
     ],
   },
   { text: 'Mentor, Xebia Tech-AI-Thon · NSS Community Lead' },
-  { text: 'Winner, K-STAR instrumental music competition, KIIT' },
 ];

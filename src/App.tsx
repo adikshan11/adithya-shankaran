@@ -1,5 +1,4 @@
 import Experience from './components/Experience';
-import GlassFilter from './components/GlassFilter';
 import Navigation from './components/Navigation';
 import Projects from './components/Projects';
 import SectionHeading from './components/SectionHeading';
@@ -9,18 +8,17 @@ import { education, highlights, metrics, profile, skills } from './content';
 export default function App() {
   return (
     <>
-      <GlassFilter />
       <a href="#top" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60]">
         Skip to content
       </a>
       <Navigation />
-      <main id="top" className="mx-auto max-w-3xl px-5 pt-32">
+      <main id="top" className="segment mx-auto max-w-3xl px-5 pt-32">
         <section aria-labelledby="name-heading">
           <p className="font-mono text-sm text-accent">{profile.role} · {profile.company}</p>
           <h1 id="name-heading" className="mt-3 text-[clamp(2.25rem,9vw,4.5rem)] leading-[1.05] font-extrabold tracking-tight">
             {profile.name}
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">{profile.intro}</p>
+          <p className="mt-6 text-lg leading-relaxed text-muted sm:text-xl">{profile.intro}</p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <a href="/Adithya_Shankaran_Resume.pdf" className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-paper transition hover:opacity-90">
               Resume
@@ -44,17 +42,25 @@ export default function App() {
           </div>
         </section>
 
-        <section id="about" aria-labelledby="about-heading" className="py-10">
+        <section id="about" aria-labelledby="about-heading" className="pt-14 pb-8">
           <SectionHeading id="about-heading" step="01" stage="ingest · about" title="About" />
           {profile.about.map((paragraph) => (
-            <p key={paragraph} className="mt-4 max-w-2xl leading-relaxed text-muted">{paragraph}</p>
+            <p key={paragraph} className="mt-4 leading-relaxed text-muted">{paragraph}</p>
           ))}
+          <div className="card mt-6 flex items-start gap-4 p-5">
+            <span className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-soft text-xl text-accent" aria-hidden="true">♪</span>
+            <div>
+              <p className="font-semibold">{profile.music.title}</p>
+              <p className="font-mono text-xs text-muted">{profile.music.detail}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{profile.music.text}</p>
+            </div>
+          </div>
         </section>
 
         <Experience />
         <Projects />
 
-        <section aria-labelledby="skills-heading" className="py-10">
+        <section aria-labelledby="skills-heading" className="py-8">
           <SectionHeading id="skills-heading" step="04" stage="toolbox" title="Skills" />
           <dl className="mt-6 space-y-4">
             {skills.map((skill) => (
@@ -68,7 +74,7 @@ export default function App() {
           </dl>
         </section>
 
-        <section aria-labelledby="education-heading" className="grid gap-8 py-10 sm:grid-cols-2">
+        <section aria-labelledby="education-heading" className="grid gap-8 py-8 sm:grid-cols-2">
           <div>
             <h2 id="education-heading" className="text-2xl font-bold tracking-tight">Education</h2>
             <ul className="mt-6 space-y-4">
@@ -98,7 +104,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="contact" aria-labelledby="contact-heading" className="card my-10 flex flex-col items-center px-6 py-10 text-center">
+        <section id="contact" aria-labelledby="contact-heading" className="card my-8 flex flex-col items-center px-6 py-10 text-center">
           <SectionHeading id="contact-heading" step="05" stage="sink · contact" title="Let’s talk" />
           <p className="mt-3 max-w-md text-muted">Open to data engineering and data platform roles, especially in Bengaluru, Pune and Hyderabad.</p>
           <a href={`mailto:${profile.email}`} className="mt-6 max-w-full truncate rounded-full bg-accent px-6 py-3 font-semibold text-paper transition hover:opacity-90">
@@ -109,7 +115,7 @@ export default function App() {
           </div>
         </section>
       </main>
-      <footer className="mx-auto flex max-w-3xl flex-wrap justify-between gap-2 border-t border-line px-5 py-8 font-mono text-xs text-muted">
+      <footer className="segment mx-auto flex max-w-3xl flex-wrap justify-between gap-2 border-t border-line px-5 py-8 font-mono text-xs text-muted">
         <span>© 2026 {profile.name}</span>
         <span>{profile.location}</span>
       </footer>
