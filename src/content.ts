@@ -30,37 +30,42 @@ export type Role = {
   title: string;
   context: string;
   start: string;
+  end?: string;
   stack: string[];
   points: { topic: string; text: string }[];
 };
 
 export const experience = {
   company: 'Xebia',
-  title: 'Junior Consultant, Data Engineer',
+  title: 'Full-time',
   start: '2024-08',
   location: 'Gurugram, India',
   roles: [
     {
-      title: 'Data Engineering',
+      title: 'Junior Consultant, Data Engineer',
       context: 'Client engagement · Levi Strauss & Co.',
-      start: '2025-09',
-      stack: ['GCP', 'Apache Spark', 'Dataproc', 'BigQuery', 'dbt', 'Vertex AI', 'Dataplex'],
+      start: '2026-07',
+      stack: ['Dataproc', 'Vertex AI', 'BigQuery', 'dbt', 'Dataplex'],
       points: [
-        { topic: 'Migration', text: 'moved 13 e-commerce sources from Databricks to Spark on Dataproc and BigQuery, each validated against the legacy output.' },
-        { topic: 'Pipeline cost', text: 'ended a top-cost Spark pipeline’s repeated 4-hour timeouts and cut its run cost by 98%; right-sized 29 more.' },
-        { topic: 'Silent failures', text: 'found batches killed by their time limit were reported as succeeded; shipped task timeouts with alerts.' },
-        { topic: 'Template', text: 'leading the consolidation of the Dataproc template behind 616 pipelines into one reusable component.' },
-        { topic: 'Backfill', text: 'a 32 TB dbt backfill that found and repaired 1,455 missing records.' },
+        { topic: 'Template', text: 'leading the consolidation of the Dataproc template behind 616 scheduled pipelines into one reusable framework component.' },
+        { topic: 'Silent failures', text: 'found that batches killed by their time limit were reported as succeeded; shipped per-task timeouts in the shared Vertex AI framework, with alerts that name the task.' },
+        { topic: 'Pipeline cost', text: 'ended a top-cost Spark pipeline’s repeated 4-hour timeouts by pruning joins and partitions, cutting its run cost by 98%; right-sized clusters for 29 more.' },
+        { topic: 'Backfill', text: 'a 32 TB dbt backfill that found and repaired 1,455 missing records across 4,200 hourly source checks.' },
+        { topic: 'Health checks', text: 'cleared platform health-check violations, removing orphaned objects only after lineage, audit logs and an org-wide code search proved nobody read them.' },
       ],
     },
     {
-      title: 'Generative AI',
-      context: 'Internal projects',
+      title: 'Technical Trainee',
+      context: 'Centre of Excellence, then client engagement',
       start: '2024-08',
-      stack: ['Python', 'LLMs', 'RAG'],
+      end: '2026-06',
+      stack: ['Apache Spark', 'Datastream', 'Airflow', 'Dataplex', 'LLMs', 'RAG'],
       points: [
-        { topic: 'RAG extraction', text: 'resume parser and bank-statement PDF-to-Excel extractor on Weaviate and ChromaDB.' },
-        { topic: 'IaC Linter', text: 'Terraform security and Well-Architected checks with Claude on AWS Bedrock.' },
+        { topic: 'Migration', text: 'moved 13 e-commerce sources (OMS, Hybris, Shopify, Salsify, Cordial, Zendesk and more) from Databricks to Spark on Dataproc and BigQuery, each validated against the legacy output.' },
+        { topic: 'Change data capture', text: 'designed order-data CDC with Datastream into BigQuery, with snapshot and change-processing views, to replace third-party replication.' },
+        { topic: 'Event-driven ingestion', text: 'file-arrival triggers on Cloud Storage that start pipelines, and Airflow DAG orchestration from a Vertex AI trigger function.' },
+        { topic: 'Data quality', text: 'Dataplex DQ scans for an order-cancellation data product and a product inventory feed, plus a CI gate that blocks any dbt model without a registered scan.' },
+        { topic: 'Generative AI (CoE)', text: 'RAG document extraction on Weaviate and ChromaDB, and a Terraform linter on Claude via AWS Bedrock; selected for the Forward Deployed Engineer program.' },
       ],
     },
   ] satisfies Role[],
@@ -68,13 +73,15 @@ export const experience = {
 
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export function tenure(start: string, today = new Date()) {
+export function tenure(start: string, end?: string, today = new Date()) {
   const [year, month] = start.split('-').map(Number);
-  const total = (today.getFullYear() - year) * 12 + today.getMonth() + 1 - month + 1;
+  const [endYear, endMonth] = end ? end.split('-').map(Number) : [today.getFullYear(), today.getMonth() + 1];
+  const total = (endYear - year) * 12 + endMonth - month + 1;
   const years = Math.floor(total / 12);
   const months = total % 12;
   const parts = [years && `${years} yr${years > 1 ? 's' : ''}`, months && `${months} mo${months > 1 ? 's' : ''}`].filter(Boolean);
-  return `${monthNames[month - 1]} ${year} – Present · ${parts.join(' ')}`;
+  const until = end ? `${monthNames[endMonth - 1]} ${endYear}` : 'Present';
+  return `${monthNames[month - 1]} ${year} – ${until} · ${parts.join(' ')}`;
 }
 
 export const principles = [
@@ -90,8 +97,8 @@ export const principles = [
   },
   {
     kind: 'Data quality',
-    title: 'Quality is enforced, not remembered',
-    text: 'CI blocks a dbt model that ships without **Dataplex** checks, and every check is replayed against years of production data before it goes live, so its thresholds can actually fire.',
+    title: 'Profile first, then enforce',
+    text: '**Dataplex** profiling shows what the data really looks like before any rule is written. Every check is replayed against years of production data so its threshold can actually fire, and CI blocks a dbt model that ships without one.',
   },
   {
     kind: 'Architecture',
@@ -99,14 +106,14 @@ export const principles = [
     text: 'I designed change data capture for order data with **Datastream** into BigQuery, with snapshot and change views on top, to replace third-party replication.',
   },
   {
-    kind: 'AI',
-    title: 'Retrieve before you generate',
-    text: 'Document extraction grounded in retrieved context from **Weaviate** and **ChromaDB**, so the model answers from the document in front of it rather than from memory.',
+    kind: 'Security',
+    title: 'Sensitive data stays fenced',
+    text: '**PII** lands in its own zone of the lake, credentials come from **Secret Manager** per environment at run time instead of living in code, data leaving the company goes out encrypted, and coding agents get **read-only** database access with a cost cap.',
   },
   {
-    kind: 'AI',
-    title: 'Agents get guardrails',
-    text: 'Coding agents reach BigQuery through a **read-only MCP server** with a per-query cost cap, and pushes or merges always stop for a human. Custom agents, skills and hooks keep them on the team’s rules.',
+    kind: 'Operations',
+    title: 'Health checks stay green',
+    text: 'When the platform health check flags an object, I fix the cause: rename tables to the naming standard, or remove an orphan only after **lineage**, **audit logs** and an org-wide code search show nobody reads it.',
   },
 ];
 
