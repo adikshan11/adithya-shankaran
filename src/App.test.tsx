@@ -7,11 +7,12 @@ describe('portfolio', () => {
     render(<App />);
     expect(screen.getByRole('link', { name: 'Adithya Shankaran' }).getAttribute('href')).toBe('#top');
     expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('data pipelines');
-    for (const label of ['Experience', 'Projects', 'Contact']) {
-      const link = screen.getByRole('link', { name: label });
-      expect(document.querySelector(link.getAttribute('href')!)).not.toBeNull();
+    for (const id of ['#experience', '#principles', '#projects', '#contact']) {
+      expect(document.querySelector(id)).not.toBeNull();
     }
-    expect(screen.getByRole('link', { name: 'Resume' }).getAttribute('href')).toContain('.pdf');
+    for (const link of screen.getAllByRole('link', { name: 'Resume' })) {
+      expect(link.getAttribute('href')).toContain('.pdf');
+    }
   });
 
   it('opens the piano keys from the piano word', () => {
