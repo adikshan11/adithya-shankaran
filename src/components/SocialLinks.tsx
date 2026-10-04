@@ -22,7 +22,7 @@ export default function SocialLinks() {
             </a>
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute top-full left-1/2 mt-2 -translate-x-1/2 translate-y-1 rounded-md bg-ink px-2 py-1 text-xs font-medium whitespace-nowrap text-paper opacity-0 transition group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:translate-y-0 group-hover:opacity-100"
+              className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 -translate-x-1/2 translate-y-1 rounded bg-ink px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap text-paper opacity-0 transition group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:translate-y-0 group-hover:opacity-100"
             >
               {social.label}
             </span>
