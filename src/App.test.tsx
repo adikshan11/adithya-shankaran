@@ -6,7 +6,7 @@ describe('portfolio', () => {
   it('leads with the full name and working section links', () => {
     render(<App />);
     expect(screen.getByRole('link', { name: 'Adithya Shankaran' }).getAttribute('href')).toBe('#top');
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('data pipelines');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('data platforms');
     for (const id of ['#experience', '#principles', '#projects', '#contact']) {
       expect(document.querySelector(id)).not.toBeNull();
     }

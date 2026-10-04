@@ -33,6 +33,15 @@ export function XIcon({ className }: IconProps) {
   );
 }
 
+export function XebiaMark({ className }: IconProps) {
+  return (
+    <svg viewBox="-6 -10 49 49" className={className} role="img" aria-label="Xebia logo">
+      <rect x="-6" y="-10" width="49" height="49" rx="10" fill="#6c1d5f" />
+      <path fill="#fff" d="M.125 28.333h8.827L18.5 18.73l9.521 9.603h8.938l-13.99-14.11L37.085 0h-8.938L18.5 9.743 8.91 0H0l14.032 14.223z" />
+    </svg>
+  );
+}
+
 export function CodeIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
