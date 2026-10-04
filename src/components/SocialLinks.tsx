@@ -1,12 +1,12 @@
 import { profile } from '../content';
-import { GitHubIcon, LinkedInIcon, MailIcon, XIcon } from './Icons';
+import { CodeChefIcon, GitHubIcon, LeetCodeIcon, LinkedInIcon, MailIcon, XIcon } from './Icons';
 
-export const icons = { mail: MailIcon, linkedin: LinkedInIcon, github: GitHubIcon, x: XIcon };
+export const icons = { mail: MailIcon, linkedin: LinkedInIcon, github: GitHubIcon, x: XIcon, leetcode: LeetCodeIcon, codechef: CodeChefIcon };
 
 export default function SocialLinks() {
   return (
     <ul className="flex flex-wrap gap-2">
-      {profile.socials.map((social) => {
+      {[...profile.socials, ...profile.coding].map((social) => {
         const Icon = icons[social.icon];
         const external = social.href.startsWith('http');
         return (

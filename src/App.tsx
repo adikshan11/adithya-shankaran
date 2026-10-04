@@ -1,19 +1,13 @@
 import Experience from './components/Experience';
-import { CodeIcon } from './components/Icons';
 import Navigation from './components/Navigation';
 import PianoKeys from './components/PianoKeys';
 import Principles from './components/Principles';
 import Projects from './components/Projects';
 import Rich from './components/Rich';
 import SectionHeading from './components/SectionHeading';
-import SocialLinks, { icons } from './components/SocialLinks';
+import SocialLinks from './components/SocialLinks';
 import StatusBoard from './components/StatusBoard';
 import { profile } from './content';
-
-const contacts = [
-  ...profile.socials.map((social) => ({ ...social, Icon: icons[social.icon] })),
-  ...profile.coding.map((site) => ({ ...site, Icon: CodeIcon })),
-];
 
 export default function App() {
   return (
@@ -55,18 +49,17 @@ export default function App() {
         <section id="contact" aria-labelledby="contact-heading" className="py-8">
           <SectionHeading id="contact-heading" step="04" title="Let’s connect" />
           <p className="mt-3 text-muted">Open to data engineering and data platform roles: on-site, hybrid or remote. Email reaches me fastest.</p>
-          <ul className="mt-5 grid gap-2 sm:grid-cols-2">
-            {contacts.map(({ label, handle, href, Icon }) => (
-              <li key={label}>
+          <ul className="mt-5 space-y-2.5">
+            {profile.socials.map((social) => (
+              <li key={social.label} className="flex flex-wrap gap-x-2">
+                <span className="w-20 font-semibold">{social.label}</span>
                 <a
-                  href={href}
-                  target={href.startsWith('http') ? '_blank' : undefined}
-                  rel={href.startsWith('http') ? 'noreferrer' : undefined}
-                  className="card lift flex items-center gap-3 px-4 py-3 hover:text-accent"
+                  href={social.href}
+                  target={social.href.startsWith('http') ? '_blank' : undefined}
+                  rel={social.href.startsWith('http') ? 'noreferrer' : undefined}
+                  className="text-accent hover:underline"
                 >
-                  <Icon className="size-[18px] shrink-0 text-muted" />
-                  <span className="text-sm font-semibold">{label}</span>
-                  <span className="ml-auto truncate text-sm text-muted">{handle}</span>
+                  {social.handle}
                 </a>
               </li>
             ))}

@@ -21,9 +21,9 @@ export const profile = {
     { label: 'X', handle: '@adithyashan11', href: 'https://x.com/adithyashan11', icon: 'x' },
   ] as const,
   coding: [
-    { label: 'LeetCode', handle: '151 solved', href: 'https://leetcode.com/u/adikshan11/' },
-    { label: 'CodeChef', handle: 'Rating 1614', href: 'https://www.codechef.com/users/adithyashan_11' },
-  ],
+    { label: 'LeetCode', href: 'https://leetcode.com/u/adikshan11/', icon: 'leetcode' },
+    { label: 'CodeChef', href: 'https://www.codechef.com/users/adithyashan_11', icon: 'codechef' },
+  ] as const,
 };
 
 export type Role = {
