@@ -132,12 +132,12 @@ export type Project = {
 
 export const projects: Project[] = [
   {
-    name: 'Imaarat',
+    name: 'imaarat.ai',
     summary:
       'AI underwriting for Indian commercial property. Checks every one of 19,312 PIN codes against open seismic, flood and cyclone data, reads hand-filled paper proposals with a human check, and works in 26 Indian languages. Built on LangGraph with Gemini, RAG on Qdrant with cited guidelines, evals and Langfuse tracing, MCP and A2A, and a tested dbt pipeline.',
     stack: ['LangGraph', 'Gemini', 'Qdrant', 'MCP', 'A2A', 'dbt', 'DuckDB', 'Shapely'],
     links: [
-      { label: 'Live', href: 'https://uw-risk-assessment.vercel.app' },
+      { label: 'Live', href: 'https://imaarat-ai.vercel.app' },
       { label: 'Code', href: 'https://github.com/adikshan11/uw-risk-assessment' },
       { label: 'Docs', href: 'https://adikshan11.github.io/uw-risk-assessment/' },
     ],
