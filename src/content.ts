@@ -4,7 +4,7 @@ export const profile = {
   company: 'Xebia',
   location: 'Surat, Gujarat',
   email: 'adikshan11@gmail.com',
-  headline: ['I build ', 'data platforms', ' and the ', 'pipelines', ' that run on them.'],
+  headline: ['Turning raw data into ', 'reliable', ', ', 'analytics-ready', ' platforms.'],
   intro: [
     'Data engineer at **Xebia**, working on client engagements with **Spark**, **BigQuery**, **dbt** and **Vertex AI**, and the quality checks that keep the numbers honest.',
     'Most of my best work started as a number that did not add up: batches reported **succeeded** after their time limit killed them, a Spark pipeline whose run cost I cut by **98%**, and a **32 TB** backfill that had left **1,455 records** missing.',
