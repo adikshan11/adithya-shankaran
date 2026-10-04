@@ -132,14 +132,14 @@ export type Project = {
 
 export const projects: Project[] = [
   {
-    name: 'UW Risk Copilot',
+    name: 'Imaarat',
     summary:
-      'AI underwriting for Indian commercial property: LangGraph with Gemini Vision, RAG on Qdrant with cited guidelines, schema-validated memos and human review of referrals. Measured by an eval suite (RAG recall, LLM-judged faithfulness, TOON vs JSON), traced in Langfuse, exposed over MCP and A2A, with a nightly dbt on DuckDB pipeline.',
-    stack: ['LangGraph', 'Gemini', 'Qdrant', 'MCP', 'A2A', 'dbt', 'DuckDB', 'Postgres'],
+      'AI underwriting for Indian commercial property. Checks every one of 19,312 PIN codes against open seismic, flood and cyclone data, reads hand-filled paper proposals with a human check, and works in 26 Indian languages. Built on LangGraph with Gemini, RAG on Qdrant with cited guidelines, evals and Langfuse tracing, MCP and A2A, and a tested dbt pipeline.',
+    stack: ['LangGraph', 'Gemini', 'Qdrant', 'MCP', 'A2A', 'dbt', 'DuckDB', 'Shapely'],
     links: [
-      { label: 'Live', href: 'https://uw-risk-copilot.vercel.app' },
-      { label: 'Code', href: 'https://github.com/adikshan11/uw-risk-copilot' },
-      { label: 'Docs', href: 'https://adikshan11.github.io/uw-risk-copilot/' },
+      { label: 'Live', href: 'https://uw-risk-assessment.vercel.app' },
+      { label: 'Code', href: 'https://github.com/adikshan11/uw-risk-assessment' },
+      { label: 'Docs', href: 'https://adikshan11.github.io/uw-risk-assessment/' },
     ],
     note: 'Xebia capstone, team of three',
   },
