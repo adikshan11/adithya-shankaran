@@ -132,19 +132,23 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    name: 'UW Risk Copilot',
+    summary:
+      'AI underwriting for Indian commercial property: LangGraph with Gemini Vision, RAG on Qdrant with cited guidelines, schema-validated memos and human review of referrals. Measured by an eval suite (RAG recall, LLM-judged faithfulness, TOON vs JSON), traced in Langfuse, exposed over MCP and A2A, with a nightly dbt on DuckDB pipeline.',
+    stack: ['LangGraph', 'Gemini', 'Qdrant', 'MCP', 'A2A', 'dbt', 'DuckDB', 'Postgres'],
+    links: [
+      { label: 'Live', href: 'https://uw-risk-copilot.vercel.app' },
+      { label: 'Code', href: 'https://github.com/adikshan11/uw-risk-copilot' },
+      { label: 'Docs', href: 'https://adikshan11.github.io/uw-risk-copilot/' },
+    ],
+    note: 'Xebia capstone, team of three',
+  },
+  {
     name: 'NYC Taxi Lakehouse',
     summary:
       'Delta Lake lakehouse that ingests 9.5M trips, quarantines 3.9% bad records through 6 business rules, blocks bad loads with a 7-check quality gate, and serves dbt marts with 63 tests.',
     stack: ['PySpark', 'Delta Lake', 'dbt', 'DuckDB', 'Airflow'],
     links: [{ label: 'Code', href: 'https://github.com/adikshan11/lakehouse-dq-agent' }],
-  },
-  {
-    name: 'Underwriting Risk Assessment',
-    summary:
-      'Team-built underwriting risk app from Xebia’s X-AI Practitioner+ program, developed with GitHub Copilot custom agents, skills, rules and hooks.',
-    stack: ['Python', 'LLMs', 'GitHub Copilot'],
-    links: [],
-    note: 'Xebia X-AI Practitioner+',
   },
   {
     name: 'IaC Linter',
