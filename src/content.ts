@@ -139,8 +139,8 @@ export const projects: Project[] = [
     stack: ['FastAPI', 'DBT', 'DuckDB', 'PostgreSQL', 'LangGraph', 'Langfuse', 'RAG', 'MCP'],
     links: [
       { label: 'Live', href: 'https://imaarat-ai.vercel.app' },
-      { label: 'Code', href: 'https://github.com/adikshan11/uw-risk-assessment' },
-      { label: 'Docs', href: 'https://adikshan11.github.io/uw-risk-assessment/' },
+      { label: 'Code', href: 'https://github.com/adikshan11/imaarat-ai' },
+      { label: 'Docs', href: 'https://adikshan11.github.io/imaarat-ai/' },
     ],
     note: 'Xebia capstone, team of three',
   },
