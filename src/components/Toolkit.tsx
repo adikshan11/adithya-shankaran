@@ -1,5 +1,5 @@
 import { toolkit } from '../content';
-import { logoPaths } from '../logos';
+import { logoFiles, logoPaths } from '../logos';
 import SectionHeading from './SectionHeading';
 
 export default function Toolkit() {
@@ -19,10 +19,11 @@ export default function Toolkit() {
                 {row.items.map((name) => (
                   <li key={name} className="card tool">
                     {logoPaths[name] && (
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d={logoPaths[name]} />
+                      <svg viewBox="0 0 24 24" aria-hidden="true" style={{ fill: logoPaths[name].color }}>
+                        <path d={logoPaths[name].d} />
                       </svg>
                     )}
+                    {logoFiles[name] && <img src={logoFiles[name]} alt="" width="20" height="20" loading="lazy" />}
                     {name}
                   </li>
                 ))}
