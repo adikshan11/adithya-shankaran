@@ -7,6 +7,7 @@ import Rich from './components/Rich';
 import SectionHeading from './components/SectionHeading';
 import SocialLinks from './components/SocialLinks';
 import StatusBoard from './components/StatusBoard';
+import Toolkit from './components/Toolkit';
 import { profile } from './content';
 
 export default function App() {
@@ -45,9 +46,10 @@ export default function App() {
         <Experience />
         <Principles />
         <Projects />
+        <Toolkit />
 
         <section id="contact" aria-labelledby="contact-heading" className="py-8">
-          <SectionHeading id="contact-heading" step="04" title="Let’s connect" />
+          <SectionHeading id="contact-heading" step="05" title="Let’s connect" />
           <p className="mt-3 text-muted">Open to data engineering and data platform roles: on-site, hybrid or remote. Email reaches me fastest.</p>
           <ul className="mt-5 space-y-2.5">
             {profile.socials.map((social) => (
