@@ -45,7 +45,7 @@ export const experience = {
       title: 'Junior Consultant, Data Engineer',
       context: 'Client engagement · Levi Strauss & Co.',
       start: '2026-07',
-      stack: ['Dataproc', 'Vertex AI', 'BigQuery', 'dbt', 'Dataplex'],
+      stack: ['Dataproc', 'Vertex AI', 'BigQuery', 'DBT', 'Dataplex'],
       points: [
         { topic: 'Reliability', text: 'shipped per-task timeouts with named alerts in the shared Vertex AI framework, rolled out to the e-commerce pipelines.' },
         { topic: 'Platform engineering', text: 'building one reusable Dataproc template for 600+ scheduled pipelines, with a hard time limit and success read from the job’s own final state.' },
@@ -136,7 +136,7 @@ export const projects: Project[] = [
     name: 'imaarat.ai',
     summary:
       'AI underwriting for Indian commercial property: rules score each proposal against official seismic, flood and cyclone data for 19,312 PIN codes, AI reads hand-filled forms in 26 languages, and referrals wait for reviewer sign-off. Ships with evals, tracing, MCP and A2A APIs, and CI/CD.',
-    stack: ['LangGraph', 'Gemini', 'RAG', 'MCP', 'A2A', 'FastAPI', 'React', 'dbt'],
+    stack: ['FastAPI', 'DBT', 'DuckDB', 'PostgreSQL', 'LangGraph', 'Langfuse', 'RAG', 'MCP'],
     links: [
       { label: 'Live', href: 'https://imaarat-ai.vercel.app' },
       { label: 'Code', href: 'https://github.com/adikshan11/uw-risk-assessment' },
@@ -148,7 +148,7 @@ export const projects: Project[] = [
     name: 'NYC Taxi Lakehouse',
     summary:
       'Delta Lake lakehouse that ingests 9.5M trips, quarantines 3.9% bad records through 6 business rules, blocks bad loads with a 7-check quality gate, and serves dbt marts with 63 tests.',
-    stack: ['PySpark', 'Delta Lake', 'dbt', 'DuckDB', 'Airflow'],
+    stack: ['PySpark', 'Delta Lake', 'DBT', 'DuckDB', 'Airflow'],
     links: [{ label: 'Code', href: 'https://github.com/adikshan11/lakehouse-dq-agent' }],
   },
   {
