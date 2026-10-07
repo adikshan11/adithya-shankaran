@@ -129,6 +129,7 @@ export type Project = {
   stack: string[];
   links: { label: string; href: string }[];
   note?: string;
+  image?: { src: string; alt: string };
 };
 
 export const projects: Project[] = [
@@ -143,6 +144,7 @@ export const projects: Project[] = [
       { label: 'Docs', href: 'https://adikshan11.github.io/imaarat-ai/' },
     ],
     note: 'Xebia capstone, team of three',
+    image: { src: '/projects/imaarat.webp', alt: 'imaarat.ai assessment result with risk score, decision, reasons and score breakdown' },
   },
   {
     name: 'NYC Taxi Lakehouse',
@@ -150,6 +152,7 @@ export const projects: Project[] = [
       'Delta Lake lakehouse that ingests 9.5M trips, quarantines 3.9% bad records through 6 business rules, blocks bad loads with a 7-check quality gate, and serves dbt marts with 63 tests.',
     stack: ['PySpark', 'Delta Lake', 'DBT', 'DuckDB', 'Airflow'],
     links: [{ label: 'Code', href: 'https://github.com/adikshan11/lakehouse-dq-agent' }],
+    image: { src: '/projects/lakehouse-lineage.svg', alt: 'Lineage from TLC parquet through bronze, silver and quarantine Delta tables, a quality gate and a DQ agent to dbt marts' },
   },
   {
     name: 'IaC Linter',
@@ -167,5 +170,16 @@ export const projects: Project[] = [
       { label: 'Live', href: 'https://bkmrkd-frontend.vercel.app' },
       { label: 'Code', href: 'https://github.com/BREACH1247/bkmrkd_frontend' },
     ],
+  },
+];
+
+export const toolkit = [
+  {
+    label: 'Data',
+    items: ['Python', 'Apache Spark', 'BigQuery', 'Google Cloud', 'Dataproc', 'Vertex AI', 'DBT', 'Airflow', 'Delta Lake', 'Databricks', 'DuckDB', 'PostgreSQL', 'MongoDB', 'Parquet', 'Looker Studio'],
+  },
+  {
+    label: 'AI and platform',
+    items: ['Gemini', 'Claude', 'LangGraph', 'Langfuse', 'MCP', 'A2A', 'RAG', 'FastAPI', 'Docker', 'Terraform', 'GitHub Actions', 'Git', 'Vercel', 'Jira', 'Confluence'],
   },
 ];

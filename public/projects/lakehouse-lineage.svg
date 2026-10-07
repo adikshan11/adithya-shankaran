@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="1440" height="900" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0L10 5L0 10z" fill="#94a3b8"/>
+    </marker>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.2" fill="#e2e8f0"/>
+    </pattern>
+  </defs>
+  <rect width="1440" height="900" fill="#f8fafc"/>
+  <rect y="56" width="1440" height="844" fill="url(#dots)"/>
+  <rect width="1440" height="56" fill="#0f172a"/>
+  <text x="32" y="35" fill="#f8fafc" font-size="18" font-weight="700">lakehouse-dq-agent</text>
+  <text x="228" y="35" fill="#94a3b8" font-size="15">Overview</text>
+  <text x="318" y="35" fill="#f8fafc" font-size="15" font-weight="600">Lineage</text>
+  <rect x="318" y="44" width="58" height="3" rx="1.5" fill="#38bdf8"/>
+  <text x="404" y="35" fill="#94a3b8" font-size="15">Tests</text>
+  <text x="1408" y="35" fill="#94a3b8" font-size="14" text-anchor="end">9.5M trips · 3 months · 3 min 39 s end to end</text>
+
+  <g fill="none" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)">
+    <path d="M270 340H308"/>
+    <path d="M530 340C550 340 550 260 568 260"/>
+    <path d="M530 340C550 340 550 440 568 440"/>
+    <path d="M790 260C810 260 810 150 828 150"/>
+    <path d="M790 260C810 260 810 340 828 340"/>
+    <path d="M790 260C810 260 810 530 828 530"/>
+    <path d="M790 660C810 660 810 720 828 720"/>
+    <path d="M1050 340C1070 340 1070 400 1088 400"/>
+    <path d="M1050 720C1070 720 1070 400 1088 400"/>
+    <path d="M1050 530C1070 530 1070 600 1088 600"/>
+  </g>
+
+  <g font-size="12">
+    <g transform="translate(50 300)">
+      <rect width="220" height="80" rx="12" fill="#fff" stroke="#16a34a" stroke-width="2"/>
+      <text x="16" y="24" fill="#16a34a" font-weight="700" letter-spacing="1">SOURCE</text>
+      <text x="16" y="48" fill="#0f172a" font-size="16" font-family="ui-monospace, monospace" font-weight="600">TLC parquet</text>
+      <text x="16" y="67" fill="#64748b">NYC yellow taxi · 3 months</text>
+    </g>
+    <g transform="translate(310 300)">
+      <rect width="220" height="80" rx="12" fill="#fff" stroke="#0ea5e9" stroke-width="2"/>
+      <text x="16" y="24" fill="#0284c7" font-weight="700" letter-spacing="1">DELTA · BRONZE</text>
+      <text x="16" y="48" fill="#0f172a" font-size="16" font-family="ui-monospace, monospace" font-weight="600">bronze</text>
+      <text x="16" y="67" fill="#64748b">9,554,778 rows · per month</text>
+    </g>
+    <g transform="translate(570 220)">
+      <rect width="220" height="80" rx="12" fill="#fff" stroke="#0ea5e9" stroke-width="2"/>
+      <text x="16" y="24" fill="#0284c7" font-weight="700" letter-spacing="1">DELTA · SILVER</text>
+      <text x="16" y="48" fill="#0f172a" font-size="16" font-family="ui-monospace, monospace" font-weight="600">silver</text>
+      <text x="16" y="67" fill="#64748b">9,179,149 rows · MERGE</text>
+    </g>
+    <g transform="translate(570 400)">
+      <rect width="220" height="80" rx="12" fill="#fff" stroke="#dc2626" stroke-width="2"/>
+      <text x="16" y="24" fill="#dc2626" font-weight="700" letter-spacing="1">QUARANTINE</text>
+      <text x="16" y="48" fill="#0f172a" font-size="16" font-family="ui-monospace, monospace" font-weight="600">quarantine</text>
+      <text x="16" y="67" fill="#64748b">375,628 rows · 3.93%</text>
+    </g>
+    <g transform="translate(570 620)">
+      <rect width="220" height="80" rx="12" fill="#fff" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="16" y="24" fill="#7c3aed" font-weight="700" letter-spacing="1">DBT SEED</text>
+      <text x="16" y="48" fill="#0f172a" font-size="16" font-family="ui-monospace, monospace" font-weight="600">taxi_zone_lookup</text>
+      <text x="16" y="67" fill="#64748b">taxi zone reference</text>
+    </g>
+    <g transform="translate(830 110)">
+      <rect width="220" height="80" rx="12" fill="#fff" stroke="#f59e0b" stroke-width="2"/>
+      <text x="16" y="24" fill="#d97706" font-weight="700" letter-spacing="1">QUALITY GATE</text>
+      <text x="16" y="48" fill="#0f172a" font-size="16" font-family="ui-monospace, monospace" font-weight="600">7 checks</text>
+      <text x="16" y="67" fill="#64748b">7 of 7 passed · fails the run</text>
+    </g>
+    <g transform="translate(830 300)">
+      <rect width="220" height="80" rx="12" fill="#fff" stroke="#2563eb" stroke-width="2"/>
+      <text x="16" y="24" fill="#2563eb" font-weight="700" letter-spacing="1">DBT MODEL</text>
+      <text x="16" y="48" fill="#0f172a" font-size="16" font-family="ui-monospace, monospace" font-weight="600">stg_yellow_trips</text>
+      <text x="16" y="67" fill="#64748b">staging over silver</text>
+    </g>
+    <g transform="translate(830 490)">
+      <rect width="220" height="80" rx="12" fill="#fff" stroke="#9333ea" stroke-width="2"/>
+      <text x="16" y="24" fill="#9333ea" font-weight="700" letter-spacing="1">DQ AGENT</text>
+      <text x="16" y="48" fill="#0f172a" font-size="16" font-family="ui-monospace, monospace" font-weight="600">column profiler</text>
+      <text x="16" y="67" fill="#64748b">proposes dbt tests</text>
+    </g>
+    <g transform="translate(830 680)">
+      <rect width="220" height="80" rx="12" fill="#fff" stroke="#2563eb" stroke-width="2"/>
+      <text x="16" y="24" fill="#2563eb" font-weight="700" letter-spacing="1">DBT MODEL</text>
+      <text x="16" y="48" fill="#0f172a" font-size="16" font-family="ui-monospace, monospace" font-weight="600">dim_zones</text>
+      <text x="16" y="67" fill="#64748b">one row per zone</text>
+    </g>
+    <g transform="translate(1090 360)">
+      <rect width="250" height="80" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <text x="16" y="24" fill="#2563eb" font-weight="700" letter-spacing="1">DBT MART</text>
+      <text x="16" y="48" fill="#0f172a" font-size="16" font-family="ui-monospace, monospace" font-weight="600">fct_daily_zone_trips</text>
+      <text x="16" y="67" fill="#64748b">trips and revenue by zone, day</text>
+    </g>
+    <g transform="translate(1090 560)">
+      <rect width="250" height="80" rx="12" fill="#fff" stroke="#9333ea" stroke-width="2" stroke-dasharray="6 4"/>
+      <text x="16" y="24" fill="#9333ea" font-weight="700" letter-spacing="1">DBT TESTS</text>
+      <text x="16" y="48" fill="#0f172a" font-size="16" font-family="ui-monospace, monospace" font-weight="600">generated tests</text>
+      <text x="16" y="67" fill="#64748b">proposed from the data</text>
+    </g>
+  </g>
+
+  <g font-size="13" fill="#475569">
+    <rect x="50" y="836" width="12" height="12" rx="3" fill="#16a34a"/><text x="70" y="847">source</text>
+    <rect x="140" y="836" width="12" height="12" rx="3" fill="#0ea5e9"/><text x="160" y="847">Delta table</text>
+    <rect x="262" y="836" width="12" height="12" rx="3" fill="#2563eb"/><text x="282" y="847">dbt model</text>
+    <rect x="372" y="836" width="12" height="12" rx="3" fill="#dc2626"/><text x="392" y="847">quarantine</text>
+    <rect x="490" y="836" width="12" height="12" rx="3" fill="#f59e0b"/><text x="510" y="847">quality gate</text>
+    <rect x="618" y="836" width="12" height="12" rx="3" fill="#9333ea"/><text x="638" y="847">DQ agent</text>
+  </g>
+</svg>

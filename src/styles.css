@@ -148,6 +148,101 @@
   .chip {
     @apply rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent;
   }
+
+  .showcase {
+    overflow: hidden;
+  }
+
+  .device {
+    position: relative;
+    width: 130%;
+    margin-top: 1.25rem;
+    margin-bottom: -3.5rem;
+    padding: 18px 8px 8px;
+    border-radius: 16px;
+    background: #0f1115;
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.08),
+      0 24px 48px -24px rgb(15 17 21 / 0.6);
+  }
+
+  .device::before {
+    content: "";
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2c3038;
+  }
+
+  .device img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+
+  @media (min-width: 40rem) {
+    .showcase {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      align-items: start;
+      gap: 2rem;
+      min-height: 19rem;
+    }
+
+    .showcase .device {
+      width: 150%;
+      margin-top: 1rem;
+    }
+  }
+
+  .marquee {
+    display: flex;
+    overflow: hidden;
+    padding-block: 4px;
+    mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  }
+
+  .marquee-group {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.75rem;
+    padding-right: 0.75rem;
+    animation: marquee 48s linear infinite;
+  }
+
+  .marquee-reverse .marquee-group {
+    animation-direction: reverse;
+  }
+
+  .marquee:hover .marquee-group {
+    animation-play-state: paused;
+  }
+
+  .tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 1.1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .tool svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: var(--color-accent);
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-100%);
+  }
 }
 
 @keyframes drift-a {
@@ -181,5 +276,16 @@
   }
   .aurora span {
     animation: none;
+  }
+  .marquee {
+    mask-image: none;
+  }
+  .marquee-group {
+    flex-shrink: 1;
+    flex-wrap: wrap;
+    animation: none;
+  }
+  .marquee-group[aria-hidden="true"] {
+    display: none;
   }
 }
