@@ -12,7 +12,7 @@ export const profile = {
   ],
   status: [
     { label: 'Live', text: 'One reusable Dataproc template for 600+ scheduled pipelines' },
-    { label: 'Next', text: 'Xebia’s Forward Deployed Engineer program, from October 2026' },
+    { label: 'Next', text: 'Passed Xebia’s Forward Deployed Engineer level 1 on GCP, October 2026' },
   ],
   socials: [
     { label: 'Email', handle: 'adikshan11@gmail.com', href: 'mailto:adikshan11@gmail.com', icon: 'mail' },
@@ -62,9 +62,9 @@ export const experience = {
       stack: ['Apache Spark', 'Dataproc', 'BigQuery', 'Datastream', 'Dataplex', 'LLMs', 'RAG'],
       points: [
         { topic: 'Cloud migration', text: 'moved 13 e-commerce sources (OMS, Hybris, Shopify, Salsify, Cordial, Zendesk and more) from Databricks to Spark on Dataproc and BigQuery, each validated against the legacy output.' },
-        { topic: 'Change data capture', text: 'designed order-data CDC with Datastream into BigQuery, with snapshot and change-processing views, to replace third-party replication.' },
+        { topic: 'Change data capture', text: 'designed Datastream CDC for 72 OMS order tables into BigQuery, with snapshot and change-processing views as the single source of truth for order reporting, to replace Qlik.' },
         { topic: 'Data quality', text: 'Dataplex DQ scans for an order-cancellation data product and a product inventory feed, plus a CI gate that blocks any dbt model without a registered scan.' },
-        { topic: 'Generative AI', text: 'at the Centre of Excellence, RAG document extraction on Weaviate and ChromaDB and a Terraform linter on Claude via AWS Bedrock; selected for the Forward Deployed Engineer program.' },
+        { topic: 'Generative AI', text: 'at the Centre of Excellence, RAG document extraction on Weaviate and ChromaDB and a Terraform linter on Claude via AWS Bedrock; passed Forward Deployed Engineer level 1 on GCP.' },
       ],
     },
   ] satisfies Role[],
