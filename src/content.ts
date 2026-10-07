@@ -7,11 +7,11 @@ export const profile = {
   headline: ['Building the ', 'data foundations', ' that ', 'analytics and AI', ' run on.'],
   intro: [
     'Data engineer at **Xebia**, working on client engagements with **Spark**, **BigQuery**, **dbt** and **Vertex AI**, and the quality checks that keep the numbers honest.',
-    'Most of my best work started as a number that did not add up: batches reported **succeeded** after their time limit killed them, a Spark pipeline whose run cost I cut by **98%**, and a **32 TB** backfill that had left **1,455 records** missing.',
+    'Recently: per-task **timeouts** with alerts across a shared pipeline framework, a **98%** run-cost cut on a top-cost Spark pipeline, and **1,455 missing records** repaired in a **32 TB** backfill.',
     'Away from pipelines I play the [piano], cheer for Real Madrid, and lose more hours to Minecraft than I should.',
   ],
   status: [
-    { label: 'Live', text: 'Consolidating the Dataproc template behind 616 scheduled pipelines into one reusable component' },
+    { label: 'Live', text: 'One reusable Dataproc template for 600+ scheduled pipelines' },
     { label: 'Next', text: 'Xebia’s Forward Deployed Engineer program, from October 2026' },
   ],
   socials: [
@@ -47,10 +47,11 @@ export const experience = {
       start: '2026-07',
       stack: ['Dataproc', 'Vertex AI', 'BigQuery', 'dbt', 'Dataplex'],
       points: [
-        { topic: 'Platform engineering', text: 'leading the consolidation of the Dataproc pipeline template behind 616 scheduled pipelines into one reusable component of the shared framework.' },
-        { topic: 'Reliability', text: 'found that batches killed by their time limit were reported as succeeded, and shipped per-task timeouts in the shared Vertex AI framework with alerts that name the task.' },
-        { topic: 'Cost optimization', text: 'ended a top-cost Spark pipeline’s repeated 4-hour timeouts by pruning joins and partitions, cutting its run cost by 98%; right-sized clusters for 29 more.' },
-        { topic: 'Data correctness', text: 'repaired 1,455 missing records in a 32 TB dbt backfill across 4,200 hourly source checks, and cleared platform health-check violations.' },
+        { topic: 'Reliability', text: 'shipped per-task timeouts with named alerts in the shared Vertex AI framework, rolled out to the e-commerce pipelines.' },
+        { topic: 'Platform engineering', text: 'building one reusable Dataproc template for 600+ scheduled pipelines, with a hard time limit and success read from the job’s own final state.' },
+        { topic: 'Cost optimization', text: 'cut a top-cost Spark pipeline’s run cost by 98% ($51 to $0.91 per run); moved 29 pipelines to right-sized clusters.' },
+        { topic: 'Source migration', text: 'validated 7 Hybris commerce pipelines against the new SQL Server Hyperscale source before cut-over.' },
+        { topic: 'Data correctness', text: 'repaired 1,455 missing records in a 32 TB dbt backfill and cleared platform health-check violations.' },
       ],
     },
     {
@@ -84,7 +85,7 @@ export function tenure(start: string, end?: string, today = new Date()) {
 
 export const metrics = [
   { value: '13', label: 'e-commerce sources migrated to Spark on Google Cloud' },
-  { value: '616', label: 'scheduled pipelines on the template I am consolidating' },
+  { value: '600+', label: 'scheduled pipelines moving to one reusable template' },
   { value: '98%', label: 'run-cost cut on a top-cost Spark pipeline' },
   { value: '1,455', label: 'missing records found and repaired in a 32 TB backfill' },
 ];
@@ -92,33 +93,33 @@ export const metrics = [
 export const principles = [
   {
     kind: 'Reliability',
-    title: 'A green run is a claim, not proof',
-    text: 'Dataproc batches cut off by their time limit ended **CANCELLED** while the pipeline still reported **SUCCEEDED**. Every task now has a timeout, the workload’s own terminal state decides success, and a timeout raises an alert.',
+    title: 'Failures are loud',
+    text: 'Shipped per-task **timeouts** with named alerts in the shared pipeline framework, so a stuck job stops and pages the team instead of burning hours of compute.',
   },
   {
     kind: 'Cost',
     title: 'Cost is a design input',
-    text: 'Prune partitions and joins before adding executors, and size clusters from measured runs, not defaults. That turned a pipeline with repeated 4-hour timeouts into one that costs **98% less**.',
+    text: 'Pruned joins and partitions on a top-cost Spark pipeline: **98% cheaper** per run and no more 4-hour timeouts. Clusters are sized from measured runs, not defaults.',
   },
   {
     kind: 'Data quality',
     title: 'Profile first, then enforce',
-    text: '**Dataplex** profiling shows what the data really looks like before any rule is written. Every check is replayed against years of production data so its threshold can actually fire, and CI blocks a dbt model that ships without one.',
+    text: '**Dataplex** scans with thresholds tested on years of production data, and a CI gate that blocks any dbt model shipped without one.',
   },
   {
     kind: 'Architecture',
     title: 'Move changes, not tables',
-    text: 'I designed change data capture for order data with **Datastream** into BigQuery, with snapshot and change views on top, to replace third-party replication.',
+    text: 'Order-data **CDC** with Datastream into BigQuery, with snapshot and change views, replacing third-party replication.',
   },
   {
     kind: 'Security',
     title: 'Sensitive data stays fenced',
-    text: '**PII** lands in its own zone of the lake, credentials come from **Secret Manager** per environment at run time instead of living in code, data leaving the company goes out encrypted, and coding agents get **read-only** database access with a cost cap.',
+    text: '**PII** in its own lake zone, credentials from **Secret Manager** at run time, encrypted outbound data, and **read-only**, cost-capped database access for coding agents.',
   },
   {
     kind: 'Operations',
     title: 'Health checks stay green',
-    text: 'When the platform health check flags an object, I fix the cause: rename tables to the naming standard, or remove an orphan only after **lineage**, **audit logs** and an org-wide code search show nobody reads it.',
+    text: 'Cleared health-check violations at the cause: renamed tables to the standard, and removed orphans only after **lineage**, **audit logs** and code search showed no readers.',
   },
 ];
 
@@ -134,8 +135,8 @@ export const projects: Project[] = [
   {
     name: 'imaarat.ai',
     summary:
-      'AI underwriting for Indian commercial property. Checks every one of 19,312 PIN codes against open seismic, flood and cyclone data, reads hand-filled paper proposals with a human check, and works in 26 Indian languages. Built on LangGraph with Gemini, RAG on Qdrant with cited guidelines, evals and Langfuse tracing, MCP and A2A, and a tested dbt pipeline.',
-    stack: ['LangGraph', 'Gemini', 'Qdrant', 'MCP', 'A2A', 'dbt', 'DuckDB', 'Shapely'],
+      'AI underwriting for Indian commercial property: rules score each proposal against official seismic, flood and cyclone data for 19,312 PIN codes, AI reads hand-filled forms in 26 languages, and referrals wait for reviewer sign-off. Ships with evals, tracing, MCP and A2A APIs, and CI/CD.',
+    stack: ['LangGraph', 'Gemini', 'RAG', 'MCP', 'A2A', 'FastAPI', 'React', 'dbt'],
     links: [
       { label: 'Live', href: 'https://imaarat-ai.vercel.app' },
       { label: 'Code', href: 'https://github.com/adikshan11/uw-risk-assessment' },
