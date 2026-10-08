@@ -136,7 +136,7 @@ export const projects: Project[] = [
   {
     name: 'imaarat.ai',
     summary:
-      'AI underwriting for Indian commercial property: rules score each proposal against official seismic, flood and cyclone data for 19,312 PIN codes, AI reads hand-filled forms in 26 languages, and referrals wait for reviewer sign-off. Ships with evals, tracing, MCP and A2A APIs, and CI/CD.',
+      'AI underwriting for Indian commercial property: rules score each proposal against official seismic, flood and cyclone data for 19,312 PIN codes, AI reads hand-filled forms in 26 languages, and referrals wait for reviewer sign-off. Ships with a nightly medallion dbt pipeline, evals, tracing, MCP and A2A APIs, and CI/CD.',
     stack: ['FastAPI', 'DBT', 'DuckDB', 'PostgreSQL', 'LangGraph', 'Langfuse', 'RAG', 'MCP'],
     links: [
       { label: 'Live', href: 'https://imaarat-ai.vercel.app' },
@@ -149,7 +149,7 @@ export const projects: Project[] = [
   {
     name: 'NYC Taxi Lakehouse',
     summary:
-      'Delta Lake lakehouse that ingests 9.5M trips, quarantines 3.9% bad records through 6 business rules, blocks bad loads with a 7-check quality gate, and serves dbt marts with 63 tests.',
+      'Medallion lakehouse on Delta Lake: bronze ingests 9.5M trips, silver quarantines 3.9% bad records through 6 business rules, a 7-check quality gate blocks bad loads, and gold dbt marts carry 63 tests.',
     stack: ['PySpark', 'Delta Lake', 'DBT', 'DuckDB', 'Airflow'],
     links: [{ label: 'Code', href: 'https://github.com/adikshan11/lakehouse-dq-agent' }],
     image: { src: '/projects/lakehouse-lineage.svg', alt: 'Lineage from TLC parquet through bronze, silver and quarantine Delta tables, a quality gate and a DQ agent to dbt marts' },
