@@ -7,10 +7,15 @@ export default function Projects() {
       <SectionHeading id="projects-heading" step="03" title="Projects" />
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {projects.map((project) => (
-          <article
-            key={project.name}
-            className={project.image ? 'card lift showcase p-5 sm:col-span-2' : 'card lift flex flex-col gap-3 p-5'}
-          >
+          <article key={project.name} className="card lift flex flex-col gap-3 p-5">
+            {project.image && (
+              <div className="laptop" aria-hidden="true">
+                <div className="laptop-screen">
+                  <img src={project.image.src} alt="" width="1440" height="900" loading="lazy" decoding="async" />
+                </div>
+                <div className="laptop-base" />
+              </div>
+            )}
             <div className="flex flex-1 flex-col gap-3">
               <h3 className="font-semibold">{project.name}</h3>
               <p className="flex-1 text-sm leading-relaxed text-muted">{project.summary}</p>
@@ -26,11 +31,6 @@ export default function Projects() {
                 {project.note && <span className="font-normal text-muted">{project.note}</span>}
               </div>
             </div>
-            {project.image && (
-              <div className="device">
-                <img src={project.image.src} alt={project.image.alt} width="1440" height="900" loading="lazy" decoding="async" />
-              </div>
-            )}
           </article>
         ))}
       </div>

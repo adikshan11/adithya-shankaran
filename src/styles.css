@@ -149,54 +149,69 @@
     @apply rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent;
   }
 
-  .showcase {
-    overflow: hidden;
+  .laptop {
+    width: 86%;
+    margin: 0.25rem auto 0.5rem;
   }
 
-  .device {
+  .laptop-screen {
     position: relative;
-    width: 130%;
-    margin-top: 1.25rem;
-    margin-bottom: -3.5rem;
-    padding: 18px 8px 8px;
-    border-radius: 16px;
+    padding: 10px 6px 6px;
+    border-radius: 10px 10px 3px 3px;
     background: #0f1115;
-    box-shadow:
-      inset 0 0 0 1px rgb(255 255 255 / 0.08),
-      0 24px 48px -24px rgb(15 17 21 / 0.6);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
   }
 
-  .device::before {
+  .laptop-screen::before {
     content: "";
     position: absolute;
-    top: 6px;
+    top: 3px;
     left: 50%;
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
     border-radius: 50%;
     background: #2c3038;
+    transform: translateX(-50%);
   }
 
-  .device img {
+  .laptop-screen img {
     display: block;
     width: 100%;
     height: auto;
-    border-radius: 8px;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    object-position: top left;
+    border-radius: 3px;
   }
 
-  @media (min-width: 40rem) {
-    .showcase {
-      display: grid;
-      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-      align-items: start;
-      gap: 2rem;
-      min-height: 19rem;
-    }
+  .laptop-base {
+    position: relative;
+    width: 114%;
+    height: 8px;
+    margin-left: -7%;
+    border-radius: 2px 2px 10px 10px;
+    background: linear-gradient(#d9dce1, #a2a7af);
+    box-shadow: 0 10px 18px -12px rgb(15 17 21 / 0.6);
+  }
 
-    .showcase .device {
-      width: 150%;
-      margin-top: 1rem;
-    }
+  .laptop-base::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 16%;
+    height: 3px;
+    border-radius: 0 0 4px 4px;
+    background: #8a9099;
+    transform: translateX(-50%);
+  }
+
+  [data-theme="dark"] .laptop-base {
+    background: linear-gradient(#3d424a, #24282e);
+  }
+
+  [data-theme="dark"] .laptop-base::before {
+    background: #17191d;
   }
 
   .marquee {
