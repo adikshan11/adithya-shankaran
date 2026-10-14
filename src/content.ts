@@ -56,7 +56,7 @@ export const experience = {
     },
     {
       title: 'Technical Trainee',
-      context: 'Client engagement · Global apparel retail brand, earlier Centre of Excellence',
+      context: 'Centre of Excellence dept. · Global apparel retail brand (client project)',
       start: '2024-08',
       end: '2026-06',
       stack: ['Apache Spark', 'Dataproc', 'BigQuery', 'Datastream', 'Dataplex', 'LLMs', 'RAG'],
