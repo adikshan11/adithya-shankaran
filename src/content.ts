@@ -43,7 +43,7 @@ export const experience = {
   roles: [
     {
       title: 'Junior Consultant, Data Engineer',
-      context: 'Client engagement · Levi Strauss & Co.',
+      context: 'Client engagement · Global apparel retail brand',
       start: '2026-07',
       stack: ['Dataproc', 'Vertex AI', 'BigQuery', 'DBT', 'Dataplex'],
       points: [
@@ -56,7 +56,7 @@ export const experience = {
     },
     {
       title: 'Technical Trainee',
-      context: 'Client engagement · Levi Strauss & Co., earlier Centre of Excellence',
+      context: 'Client engagement · Global apparel retail brand, earlier Centre of Excellence',
       start: '2024-08',
       end: '2026-06',
       stack: ['Apache Spark', 'Dataproc', 'BigQuery', 'Datastream', 'Dataplex', 'LLMs', 'RAG'],
