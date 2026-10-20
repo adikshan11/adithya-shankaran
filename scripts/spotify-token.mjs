@@ -37,7 +37,7 @@ const server = createServer(async (request, response) => {
   }
   console.log('Redeploying...');
   execSync('npx --yes vercel@latest deploy --prod --yes', { stdio: ['ignore', 'ignore', 'inherit'] });
-  console.log('Done. Check https://adithya-shankaran.vercel.app/api/now-playing');
+  console.log('Done. Check https://adithyashankaran.vercel.app/api/now-playing');
 });
 
 server.listen(8888, '127.0.0.1', () => {

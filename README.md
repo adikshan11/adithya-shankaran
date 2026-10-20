@@ -20,4 +20,4 @@ Personal portfolio built with React, TypeScript, Vite and Tailwind CSS, prerende
 
 ## Deployment
 
-Deployed on Vercel as `adithya-shankaran` (https://adithya-shankaran.vercel.app). Build command `npm run build`, output directory `dist`. No server, database or environment variables are needed.
+Deployed on Vercel as `adithya-shankaran` at https://adithyashankaran.vercel.app (primary) and https://adithya-shankaran.vercel.app (same site, kept for existing links). Build command `npm run build`, output directory `dist`. No server, database or environment variables are needed.
