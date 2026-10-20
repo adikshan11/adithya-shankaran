@@ -15,7 +15,7 @@ export default function SocialLinks() {
               href={social.href}
               aria-label={social.label}
               target={external ? '_blank' : undefined}
-              rel={external ? 'noreferrer' : undefined}
+              rel={external ? 'noopener noreferrer' : undefined}
               className="glass grid size-11 place-items-center rounded-full text-muted transition hover:-translate-y-0.5 hover:text-accent"
             >
               <Icon className="size-[18px]" />

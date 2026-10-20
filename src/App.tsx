@@ -58,7 +58,7 @@ export default function App() {
                 <a
                   href={social.href}
                   target={social.href.startsWith('http') ? '_blank' : undefined}
-                  rel={social.href.startsWith('http') ? 'noreferrer' : undefined}
+                  rel={social.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                   className="text-accent hover:underline"
                 >
                   {social.handle}
