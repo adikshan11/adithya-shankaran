@@ -39,7 +39,7 @@ export default function StatusBoard() {
             {track.playing ? 'Listening' : 'Last played'}
           </dt>
           <dd className="mt-1">
-            <a href={track.url} target="_blank" rel="noreferrer" className="flex min-w-0 items-center gap-3 hover:underline">
+            <a href={track.url} target="_blank" rel="noopener noreferrer" className="flex min-w-0 items-center gap-3 hover:underline">
               {track.image && <img src={track.image} alt="" width={32} height={32} className="size-8 rounded" />}
               <span className="min-w-0 truncate">
                 <span className="font-medium">{track.title}</span>

@@ -2,17 +2,17 @@ export const profile = {
   name: 'Adithya Shankaran',
   role: 'Data Engineer',
   company: 'Xebia',
-  location: 'Surat, Gujarat',
+  location: 'Gurugram, Haryana',
   email: 'adikshan11@gmail.com',
   headline: ['Building the ', 'data foundations', ' that ', 'analytics and AI', ' run on.'],
   intro: [
-    'Data engineer at **Xebia**, working on client engagements with **Spark**, **BigQuery**, **dbt** and **Vertex AI**, and the quality checks that keep the numbers honest.',
-    'Recently: per-task **timeouts** with alerts across a shared pipeline framework, a **98%** run-cost cut on a top-cost Spark pipeline, and **1,455 missing records** repaired in a **32 TB** backfill.',
+    'Data engineer at **Xebia**, working directly with a global apparel retail brand’s product owners and **BI analysts** on the pipelines, **CDC**, data models and **data quality** checks on Google Cloud behind their sales and demand reporting, plus **RAG** and **LangGraph** AI agents.',
+    'Recently: one reusable **Dataproc** component for **524 production schedules**, per-task **timeouts** with alerts on **59 tasks**, and **1,455 missing records** repaired across **6 months** of events.',
     'Away from pipelines I play the [piano], cheer for Real Madrid, and lose more hours to Minecraft than I should.',
   ],
   status: [
-    { label: 'Live', text: 'One reusable Dataproc template for 600+ scheduled pipelines' },
-    { label: 'Next', text: 'Passed Xebia’s Forward Deployed Engineer level 1 on GCP, October 2026' },
+    { label: 'Live', text: 'One reusable Dataproc component for 524 production schedules, with time limits on 600+ DAGs' },
+    { label: 'Certified', text: 'Xebia Forward Deployed Engineer, FDE-1 Level 2 on GCP, October 2026' },
   ],
   socials: [
     { label: 'Email', handle: 'adikshan11@gmail.com', href: 'mailto:adikshan11@gmail.com', icon: 'mail' },
@@ -47,11 +47,12 @@ export const experience = {
       start: '2026-07',
       stack: ['Dataproc', 'Vertex AI', 'BigQuery', 'DBT', 'Dataplex'],
       points: [
-        { topic: 'Reliability', text: 'shipped per-task timeouts with named alerts in the shared Vertex AI framework, rolled out to the e-commerce pipelines.' },
-        { topic: 'Platform engineering', text: 'building one reusable Dataproc template for 600+ scheduled pipelines, with a hard time limit and success read from the job’s own final state.' },
-        { topic: 'Cost optimization', text: 'cut a top-cost Spark pipeline’s run cost by 98% ($51 to $0.91 per run); moved 29 pipelines to right-sized clusters.' },
-        { topic: 'Source migration', text: 'validated 7 Hybris commerce pipelines against the new SQL Server Hyperscale source before cut-over.' },
-        { topic: 'Data correctness', text: 'repaired 1,455 missing records in a 32 TB dbt backfill and cleared platform health-check violations.' },
+        { topic: 'Platform engineering', text: 'unified duplicated Dataproc pipeline templates into one reusable framework component powering 524 production schedules with zero output regressions, plus time limits on 600+ DAGs that expose silent 4-hour failures.' },
+        { topic: 'Reliability', text: 'designed per-task time limits in the shared Vertex AI pipeline framework, sized from measured production run times, with alerts naming the failed task; enforced on 59 tasks across 25 e-commerce pipelines.' },
+        { topic: 'Data correctness', text: 'restored a missing campaign attribute for the site marketing team’s twice-weekly reporting with a chained dbt backfill across 6 months of events, reconciling 4,200 hourly windows and repairing 1,455 missing records.' },
+        { topic: 'Cost optimization', text: 'ended repeated 4-hour timeouts on a high-cost Hybris Spark pipeline (0 of 9 runs finished before, 11 of 16 after) and cut its daily cost 19.7%; right-sized clusters for 29 pipelines (17.6% lower cost).' },
+        { topic: 'Source migration', text: 'led preprod validation of 7 Hybris pipelines on the new SQL Server Hyperscale source; all 7 matched.' },
+        { topic: 'Engineering practice', text: 'triaged production incidents, reviewed 102 pull requests across 7 repositories and wrote 7 design and analysis docs.' },
       ],
     },
     {
@@ -61,10 +62,10 @@ export const experience = {
       end: '2026-06',
       stack: ['Apache Spark', 'Dataproc', 'BigQuery', 'Datastream', 'Dataplex', 'LLMs', 'RAG'],
       points: [
-        { topic: 'Cloud migration', text: 'moved 13 e-commerce sources (OMS, Hybris, Shopify, Salsify, Cordial, Zendesk and more) from Databricks to Spark on Dataproc and BigQuery, each validated against the legacy output.' },
-        { topic: 'Change data capture', text: 'designed Datastream CDC for 72 OMS order tables into BigQuery, with snapshot and change-processing views as the single source of truth for order reporting, to replace Qlik.' },
-        { topic: 'Data quality', text: 'Dataplex DQ scans for an order-cancellation data product and a product inventory feed, plus a CI gate that blocks any dbt model without a registered scan.' },
-        { topic: 'Generative AI', text: 'at the Centre of Excellence, RAG document extraction on Weaviate and ChromaDB and a Terraform linter on Claude via AWS Bedrock; passed Forward Deployed Engineer level 1 on GCP.' },
+        { topic: 'Cloud migration', text: 'led the migration of 13 e-commerce data sources (OMS, Hybris, Shopify, Salsify, Cordial, Zendesk and more) from Databricks to Dataproc and BigQuery, each validated.' },
+        { topic: 'Change data capture', text: 'designed CDC for the OMS order tables with Datastream, with BigQuery snapshot and change views as the single source of truth for order reporting, to replace Qlik.' },
+        { topic: 'Data quality', text: 'built Dataplex data-quality scans for 2 data products with thresholds tested on years of production data, and a CI gate that blocks dbt models without a scan.' },
+        { topic: 'Generative AI', text: 'at the Centre of Excellence, RAG extraction with LlamaIndex chunking into Weaviate and ChromaDB, and a Claude (AWS Bedrock) Terraform linter for all 6 Well-Architected pillars.' },
       ],
     },
   ] satisfies Role[],
@@ -85,9 +86,9 @@ export function tenure(start: string, end?: string, today = new Date()) {
 
 export const metrics = [
   { value: '13', label: 'e-commerce sources migrated to Spark on Google Cloud' },
-  { value: '600+', label: 'scheduled pipelines moving to one reusable template' },
-  { value: '98%', label: 'run-cost cut on a top-cost Spark pipeline' },
-  { value: '1,455', label: 'missing records found and repaired in a 32 TB backfill' },
+  { value: '524', label: 'production schedules on one reusable Dataproc component' },
+  { value: '59', label: 'pipeline tasks with per-task time limits and named alerts' },
+  { value: '1,455', label: 'missing records repaired across 6 months of events' },
 ];
 
 export const principles = [
@@ -99,7 +100,7 @@ export const principles = [
   {
     kind: 'Cost',
     title: 'Cost is a design input',
-    text: 'Pruned joins and partitions on a top-cost Spark pipeline: **98% cheaper** per run and no more 4-hour timeouts. Clusters are sized from measured runs, not defaults.',
+    text: 'Pruned joins and scans on a high-cost Spark pipeline: no more 4-hour timeouts (0 of 9 runs finished before, 11 of 16 after) and **19.7%** lower daily cost. Clusters for 29 pipelines are sized from measured runs, not defaults.',
   },
   {
     kind: 'Data quality',
@@ -112,14 +113,14 @@ export const principles = [
     text: 'Order-data **CDC** with Datastream into BigQuery, with snapshot and change views, replacing third-party replication.',
   },
   {
-    kind: 'Security',
-    title: 'Sensitive data stays fenced',
-    text: '**PII** in its own lake zone, credentials from **Secret Manager** at run time, encrypted outbound data, and **read-only**, cost-capped database access for coding agents.',
+    kind: 'AI',
+    title: 'Rules decide, AI explains',
+    text: 'In **imaarat.ai** a deterministic rule engine makes every decision; **LangGraph** agents read forms and explain the result, and a reviewer signs off.',
   },
   {
     kind: 'Operations',
     title: 'Health checks stay green',
-    text: 'Cleared health-check violations at the cause: renamed tables to the standard, and removed orphans only after **lineage**, **audit logs** and code search showed no readers.',
+    text: 'Fixed platform **health-check** failures at the cause: renamed data mart tables to the naming standard and added table and dependent-table descriptions for the data products.',
   },
 ];
 
@@ -149,7 +150,7 @@ export const projects: Project[] = [
   {
     name: 'NYC Taxi Lakehouse',
     summary:
-      'Medallion lakehouse on Delta Lake: bronze ingests 9.5M trips, silver quarantines 3.9% bad records through 6 business rules, a 7-check quality gate blocks bad loads, and gold dbt marts carry 63 tests.',
+      'Medallion lakehouse on Delta Lake: bronze ingests 9.5M trips, silver quarantines 3.9% bad records through 5 reject rules, a 7-check quality gate blocks bad loads, and gold dbt marts carry 63 tests.',
     stack: ['PySpark', 'Delta Lake', 'DBT', 'DuckDB', 'Airflow'],
     links: [{ label: 'Code', href: 'https://github.com/adikshan11/lakehouse-dq-agent' }],
     image: { src: '/projects/lakehouse-lineage.svg', alt: 'Lineage from TLC parquet through bronze, silver and quarantine Delta tables, a quality gate and a DQ agent to dbt marts' },
@@ -157,7 +158,7 @@ export const projects: Project[] = [
   {
     name: 'IaC Linter',
     summary:
-      'Checks Terraform for security issues and AWS Well-Architected gaps with Claude on AWS Bedrock, then applies fixes with backups.',
+      'Checks Terraform against all 6 AWS Well-Architected pillars, including security, with Claude on AWS Bedrock, then applies fixes with backups.',
     stack: ['Python', 'AWS Bedrock', 'Terraform'],
     links: [{ label: 'Code', href: 'https://github.com/XI4684-AdithyaShankaran/Iac-Linter' }],
   },

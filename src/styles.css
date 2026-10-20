@@ -131,6 +131,7 @@
 
   .refract .glass[data-lens] {
     background: color-mix(in srgb, var(--color-paper) 55%, transparent);
+    -webkit-backdrop-filter: url(#liquid-glass) blur(5px) saturate(170%);
     backdrop-filter: url(#liquid-glass) blur(5px) saturate(170%);
   }
 

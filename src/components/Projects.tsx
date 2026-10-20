@@ -24,7 +24,7 @@ export default function Projects() {
               </ul>
               <div className="flex gap-4 text-sm font-semibold">
                 {project.links.map((link) => (
-                  <a key={link.href} href={link.href} className="text-accent hover:underline" target="_blank" rel="noreferrer">
+                  <a key={link.href} href={link.href} className="text-accent hover:underline" target="_blank" rel="noopener noreferrer">
                     {link.label} →
                   </a>
                 ))}
