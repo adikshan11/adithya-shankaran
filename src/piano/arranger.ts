@@ -410,6 +410,8 @@ export class Arranger {
     misses: number;
     streak: number;
     wrongRun: number;
+    // Right (true) or wrong (false) for the last ten chords, for the 'almost perfect' reaction.
+    recent: boolean[];
     // Rhythm: practice speed (share of the piece's tempo), seconds per semiquaver at that speed, the time signature,
     // when the last chord was completed, and how long each gap took compared with the score (1 = in time).
     speed: number;
@@ -997,7 +999,7 @@ export class Arranger {
     this.tempo = Math.min(240, Math.max(40, Math.round(pieceTempo * speed)));
     const meterIndex = meters.findIndex((item) => item.label === meterLabel);
     if (meterIndex >= 0) this.setMeter(meterIndex);
-    this.learn = { song, hand, steps, at: 0, remaining: new Set(steps[0]?.notes), misses: 0, streak: 0, wrongRun: 0, speed, per16: songPer16 / speed, meterLabel, lastAt: 0, ratios: [], held: new Map(), holdUntil: 0, tipAt: -10 };
+    this.learn = { song, hand, steps, at: 0, remaining: new Set(steps[0]?.notes), misses: 0, streak: 0, wrongRun: 0, recent: [], speed, per16: songPer16 / speed, meterLabel, lastAt: 0, ratios: [], held: new Map(), holdUntil: 0, tipAt: -10 };
     const count = meter.unit === 8 ? `${meter.beats} quavers` : `${meter.beats} crotchet beats`;
     this.say('idle', `${song.title} is in ${meterLabel}: count ${count} a bar. We start at ${Math.round(speed * 100)}% speed (♩ = ${this.tempo}); press Metro for a click. First: ${(steps[0]?.notes ?? []).map(spoken).join(' + ')}.`);
     this.onChange();
@@ -1071,6 +1073,7 @@ export class Arranger {
       learn.misses++;
       learn.streak = 0;
       learn.wrongRun++;
+      learn.recent = [...learn.recent, false].slice(-10);
       const wanted = [...learn.remaining].sort((a, b) => Math.abs(a - pitch) - Math.abs(b - pitch))[0];
       if (wanted !== undefined) {
         const gap = pitch - wanted;
@@ -1080,7 +1083,9 @@ export class Arranger {
         else if (steps <= 2) tip = `You played ${spoken(pitch)}, ${steps === 1 ? 'one semitone' : 'a whole tone'} too ${gap > 0 ? 'high' : 'low'}. The note is ${spoken(wanted)}${isBlack(pitch) !== isBlack(wanted) ? `, a ${isBlack(wanted) ? 'black' : 'white'} key` : ''}.`;
         else tip = `You played ${spoken(pitch)}. The note is ${spoken(wanted)}, ${steps} keys to the ${gap > 0 ? 'left' : 'right'}.`;
         if (learn.wrongRun >= 3) tip = `Three wrong in a row! Slow down and read the green note. ${tip}`;
-        this.say(learn.wrongRun >= 3 ? 'angry' : 'upset', tip);
+        // A near miss (the key next door) gets encouragement, not a frown; repeated misses still get firmer.
+        if (steps === 1 && learn.wrongRun < 3) this.say('idle', `So close! ${tip}`);
+        else this.say(learn.wrongRun >= 3 ? 'angry' : 'upset', tip);
       }
       this.onChange();
       return;
@@ -1103,6 +1108,8 @@ export class Arranger {
       learn.lastAt = now;
       learn.at++;
       learn.streak++;
+      learn.recent = [...learn.recent, true].slice(-10);
+      const lastTen = learn.recent.length === 10 ? learn.recent.filter(Boolean).length : 0;
       learn.remaining = new Set(learn.steps[learn.at]?.notes);
       const next = ` Next: ${[...learn.remaining].map(spoken).join(' + ')}.`;
       const pace = this.pace();
@@ -1117,6 +1124,8 @@ export class Arranger {
       } else if (learn.at % 8 === 0 && pace === 'steady') {
         this.tip(learn.speed >= 1 ? 'astonished' : 'happy', `Steady rhythm in ${learn.meterLabel}${learn.speed >= 1 ? ' at full speed!' : '!'}${next}`);
       } else if (learn.streak % 10 === 0) this.say('astonished', `${learn.streak} right in a row! Keep going.${next}`);
+      else if (learn.streak === 5) this.say('happy', `5 in a row, nice and steady!${next}`);
+      else if (lastTen >= 8 && lastTen < 10 && learn.at % 10 === 0) this.say('happy', `${lastTen} of the last 10 right, almost perfect!${next}`);
       else if (this.fastRunAhead()) this.tip('idle', `Fast notes ahead: keep them light and even, fingers close to the keys.${next}`);
       else if (performance.now() >= learn.holdUntil) this.say('happy', ['Nice!', 'Yes!', 'Good!', 'Lovely.', 'That’s it!'][learn.at % 5] + next);
     }
