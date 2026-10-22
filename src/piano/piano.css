@@ -257,6 +257,9 @@
 
   /* Dial, joystick, pedal, volume */
   .pa-dial {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
     position: relative;
     display: grid;
     place-items: center;
@@ -557,6 +560,9 @@
     border-radius: 10px;
     cursor: grab;
     touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
     background: linear-gradient(145deg, #2e3035, #121316);
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 -2px 4px rgb(0 0 0 / 0.6), 0 0 0 1px #050506, 0 4px 8px rgb(0 0 0 / 0.6);
   }

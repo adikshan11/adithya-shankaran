@@ -606,6 +606,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                 aria-valuemax={240}
                 aria-valuenow={arranger.tempo}
                 onPointerDown={(event) => {
+                  event.preventDefault(); // no text selection or native drag while turning
                   capture(event);
                   const box = event.currentTarget.getBoundingClientRect();
                   const x = box.left + box.width / 2;
@@ -773,9 +774,11 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
               aria-valuemax={2}
               aria-valuenow={0}
               onPointerDown={(event) => {
+                event.preventDefault(); // no text selection or native drag (the browser's no-drop cursor)
                 capture(event);
                 moveJoy(event);
               }}
+              onDragStart={(event) => event.preventDefault()}
               onPointerMove={moveJoy}
               onPointerUp={releaseJoy}
               onPointerCancel={releaseJoy}
