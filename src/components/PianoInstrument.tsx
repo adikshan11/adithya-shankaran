@@ -644,6 +644,29 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   };
   useEffect(() => () => midiOff.current?.(), []);
 
+  // Phones: while the sheet music or the Panel is open, the stage's ✕ first goes back to the blue screen (what people
+  // expect of ✕ on an open view); from the screen it closes the piano. Caught before the stage's own handler runs.
+  const views = useRef({ drawer, showSheet });
+  views.current = { drawer, showSheet };
+  useEffect(() => {
+    const phone = window.matchMedia('(max-width: 760px), (max-height: 500px) and (orientation: landscape)');
+    const intercept = (event: MouseEvent) => {
+      const target = event.target instanceof Element ? event.target.closest('.pa-overlay-close') : null;
+      const { drawer: panelOpen, showSheet: sheetOpen } = views.current;
+      if (!target || !phone.matches || (!panelOpen && !sheetOpen)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setDrawer(false);
+      setShowSheet(false);
+    };
+    window.addEventListener('click', intercept, true);
+    return () => window.removeEventListener('click', intercept, true);
+  }, []);
+  useEffect(() => {
+    const close = document.querySelector('.pa-overlay-close');
+    if (close) close.setAttribute('aria-label', drawer || showSheet ? 'Back to the screen' : 'Close the curtain');
+  }, [drawer, showSheet]);
+
   // Phones: any completed tap, click or key press unlocks the audio if the browser still holds it back.
   useEffect(() => {
     const wake = () => arranger.unlockAudio();
