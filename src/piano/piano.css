@@ -1465,3 +1465,8 @@
 @media (max-width: 760px) and (orientation: portrait) {
   .pa-overlay :is(.pa-howto, .pa-credits) { display: none !important; }
 }
+
+/* Learn's hand and speed tabs: every tab in view. The row wraps to a second line rather than scrolling sideways
+   under a fade (the bonus speeds at its end could not be seen or tapped). */
+.pa-screen .pa-page-head .pa-tabs { flex-wrap: wrap !important; overflow: visible !important; row-gap: 3px; mask-image: none; -webkit-mask-image: none; }
+.pa-screen .pa-page-head .pa-tab { border-radius: 4px; }

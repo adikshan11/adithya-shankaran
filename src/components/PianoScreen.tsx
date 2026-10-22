@@ -277,8 +277,8 @@ export default function PianoScreen({ arranger, page, category, open, message, b
           head={
             <div className="pa-tabs" role="tablist" aria-label="Hand">
               {(['right', 'left', 'both'] as Hand[]).map((name) => (
-                <button key={name} type="button" role="tab" aria-selected={name === hand} className={`pa-tab ${name === hand ? 'pa-tab-on' : ''}`} onClick={() => onHand?.(name)}>
-                  {name === 'both' ? 'Both hands' : name === 'right' ? 'Right hand' : 'Left hand'}
+                <button key={name} type="button" role="tab" aria-selected={name === hand} aria-label={name === 'both' ? 'Both hands' : name === 'right' ? 'Right hand' : 'Left hand'} className={`pa-tab ${name === hand ? 'pa-tab-on' : ''}`} onClick={() => onHand?.(name)}>
+                  {name === 'both' ? 'Both' : name === 'right' ? 'Right' : 'Left'}
                 </button>
               ))}
               {/* 150% and 200%: bonus speeds, shown once a piece is mastered (every note right at 100%) with this hand. */}
