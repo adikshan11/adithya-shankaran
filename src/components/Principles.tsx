@@ -6,7 +6,7 @@ export default function Principles() {
   return (
     <section id="principles" aria-labelledby="principles-heading" className="py-8">
       <SectionHeading id="principles-heading" step="02" title="How I build" />
-      <p className="mt-3 text-muted">Six rules I work by, each one learned on a real pipeline, and what they added up to.</p>
+      <p className="mt-3 text-muted">Six rules I work by, each with the work it came from.</p>
       <dl className="card mt-6 grid grid-cols-2 overflow-hidden sm:grid-cols-4">
         {metrics.map((metric) => (
           <div key={metric.value} className="border-line p-5 not-last:border-r max-sm:nth-2:border-r-0 max-sm:nth-[-n+2]:border-b">

@@ -7,8 +7,8 @@ export const profile = {
   headline: ['Building the ', 'data foundations', ' that ', 'analytics and AI', ' run on.'],
   intro: [
     'I’m a data engineer at **Xebia**. I build and run the Google Cloud pipelines behind a global apparel retail brand’s **sales and demand reporting**, and I work directly with the product owners and **BI analysts** who depend on it.',
-    'Lately that has meant getting the marketing team’s dashboard **complete again** after a field went missing, making stuck jobs **fail and alert** instead of reporting success, and moving **524 production schedules** onto one shared Dataproc component. I also build **RAG** and **LangGraph** agents, at work and in **imaarat.ai**.',
-    'Away from pipelines I play the [piano], rep Real Madrid, and lose more hours to Minecraft than I should.',
+    'Lately that has meant getting the marketing team’s dashboard complete again after a field went missing, making stuck jobs fail and alert instead of reporting success, and moving **524 production schedules** onto one shared Dataproc component. I also build RAG and LangGraph agents, at work and in **imaarat.ai**.',
+    'Away from pipelines I play the [piano], rep Real Madrid, and grind way too much Minecraft.',
   ],
   status: [
     { label: 'Live', text: 'Just shipped DQ enforcement in the shared pipeline framework: data-quality and profile scans now carry each table’s domain labels' },
@@ -97,12 +97,12 @@ export const principles = [
   {
     kind: 'Reliability',
     title: 'Failures are loud',
-    text: 'A stuck job should stop and alert, not run for hours and report success. Per-task **timeouts** in the shared framework name the task that failed.',
+    text: 'Our stuck jobs used to hit the 4-hour limit and still report success. Now time limits on 600+ DAGs make them fail with an alert, and per-task **timeouts** in the shared framework name the task that failed.',
   },
   {
     kind: 'Cost',
     title: 'Cost is a design input',
-    text: 'Pruning joins and scans on a costly Spark pipeline took it from 0 of 9 runs finishing to 11 of 16, at **19.7%** lower daily cost. Clusters for 29 pipelines are sized from measured runs, not defaults.',
+    text: 'Pruning joins and scans on a costly Spark pipeline took it from 0 of 9 runs finishing to 11 of 16, at **19.7%** lower daily cost. Sizing clusters for 29 pipelines from measured runs cut their cost **17.6%**.',
   },
   {
     kind: 'Data quality',
