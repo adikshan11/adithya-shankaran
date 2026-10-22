@@ -8,7 +8,7 @@ export const profile = {
   intro: [
     'I’m a data engineer at **Xebia**. I build and run the Google Cloud pipelines behind a global apparel retail brand’s **sales and demand reporting**, and I work directly with the product owners and **BI analysts** who depend on it.',
     'Lately that has meant getting the marketing team’s dashboard **complete again** after a field went missing, making stuck jobs **fail and alert** instead of reporting success, and moving **524 production schedules** onto one shared Dataproc component. I also build **RAG** and **LangGraph** agents, at work and in **imaarat.ai**.',
-    'Away from pipelines I play the [piano], cheer for Real Madrid, and lose more hours to Minecraft than I should.',
+    'Away from pipelines I play the [piano], rep Real Madrid, and lose more hours to Minecraft than I should.',
   ],
   status: [
     { label: 'Live', text: 'Just shipped DQ enforcement in the shared pipeline framework: data-quality and profile scans now carry each table’s domain labels' },
