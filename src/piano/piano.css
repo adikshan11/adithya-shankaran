@@ -1,0 +1,279 @@
+/* Piano: a vintage arranger keyboard (walnut, brass, ivory and an amber screen). */
+@layer components {
+  .pa-handle {
+    border-radius: 999px;
+    padding: 0.7rem 1.4rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #2a1a0c;
+    background: linear-gradient(180deg, #f3dc94, #c99a3c 55%, #a77a26);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), 0 6px 18px -6px rgb(167 122 38 / 0.7);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .pa-handle:hover {
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), 0 10px 24px -6px rgb(201 154 60 / 0.9);
+  }
+
+  .piano-unfold {
+    animation: pa-unfold 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    transform-origin: top center;
+  }
+
+  .pa-body {
+    position: relative;
+    border-radius: 22px;
+    padding: 18px 26px 22px;
+    background: linear-gradient(180deg, #2b1a14, #160d0a 60%, #0f0907);
+    box-shadow: 0 30px 60px -25px rgb(0 0 0 / 0.65), inset 0 1px 0 rgb(255 220 160 / 0.15);
+    border: 2px solid #8a6a2f;
+    color: #f1e3c2;
+    overflow: hidden;
+  }
+  .pa-body::before,
+  .pa-body::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 14px;
+    background:
+      repeating-linear-gradient(95deg, rgb(0 0 0 / 0.18) 0 2px, transparent 2px 7px),
+      linear-gradient(180deg, #8a5a32, #5b3a1f 50%, #3d2613);
+  }
+  .pa-body::before { left: 0; }
+  .pa-body::after { right: 0; }
+
+  .pa-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .pa-grille {
+    flex: 1;
+    height: 26px;
+    border-radius: 6px;
+    background: radial-gradient(circle, #050302 1.4px, transparent 1.6px) 0 0 / 7px 7px, #2a1d16;
+    box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.6);
+  }
+  .pa-plate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 18px 5px;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #f6e2a4, #c79b3f 60%, #9c7426);
+    color: #2a1a0c;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 2px 6px rgb(0 0 0 / 0.5);
+  }
+  .pa-plate-name { font-family: Georgia, "Times New Roman", serif; font-style: italic; font-weight: 700; font-size: 1.15rem; letter-spacing: 0.04em; }
+  .pa-plate-model { font-size: 0.6rem; letter-spacing: 0.25em; text-transform: uppercase; }
+
+  .pa-panel {
+    display: grid;
+    gap: 1rem;
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #1d1411, #120c0a);
+    border: 1px solid rgb(201 154 60 / 0.35);
+  }
+  @media (min-width: 1024px) {
+    .pa-panel { grid-template-columns: 1fr 1.25fr 1fr; align-items: start; }
+  }
+  .pa-panel-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 10px;
+    padding: 8px 14px;
+  }
+  .pa-label { display: block; margin-bottom: 6px; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: #d9b45f; }
+
+  .pa-btn {
+    position: relative;
+    min-height: 2.1rem;
+    padding: 0.45rem 0.4rem 0.35rem;
+    border-radius: 7px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+    transition: transform 0.08s, filter 0.15s;
+    box-shadow: 0 3px 0 rgb(0 0 0 / 0.55), inset 0 1px 0 rgb(255 255 255 / 0.45);
+  }
+  .pa-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgb(0 0 0 / 0.55), inset 0 1px 0 rgb(255 255 255 / 0.3); }
+  .pa-btn:hover { filter: brightness(1.08); }
+  .pa-btn-cream { background: linear-gradient(180deg, #f6ecd2, #dccaa0); color: #2b1d10; }
+  .pa-btn-wine { background: linear-gradient(180deg, #8c2a24, #5d1714); color: #f8e7c8; }
+  .pa-btn-brass { background: linear-gradient(180deg, #ecd28a, #b88d36); color: #2a1a0c; }
+  .pa-led {
+    position: absolute;
+    top: 4px;
+    right: 5px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #3b1a12;
+    box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.6);
+  }
+  .pa-led-on { background: #ff5a36; box-shadow: 0 0 6px 2px rgb(255 90 54 / 0.8); }
+
+  .pa-screen {
+    position: relative;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: #ffb347;
+    text-shadow: 0 0 6px rgb(255 166 51 / 0.55);
+    background: radial-gradient(120% 140% at 50% 0%, #2b1c07, #120b03 70%);
+    border: 3px solid #050302;
+    box-shadow: inset 0 0 28px rgb(0 0 0 / 0.85), 0 0 0 2px #6d5323;
+    overflow: hidden;
+    animation: pa-boot 1.3s steps(12) both;
+    transition: box-shadow 0.1s;
+  }
+  .pa-screen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(180deg, rgb(0 0 0 / 0.28) 0 1px, transparent 1px 3px);
+  }
+  .pa-screen-beat { box-shadow: inset 0 0 28px rgb(0 0 0 / 0.85), 0 0 0 2px #e0a33a; }
+  .pa-screen-bar {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 5px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgb(255 179 71 / 0.35);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+  }
+  .pa-screen-line { display: flex; align-items: baseline; gap: 0.6rem; margin-top: 4px; }
+  .pa-tag { padding: 0 4px; font-size: 0.6rem; color: #120b03; background: #ffb347; border-radius: 2px; text-shadow: none; }
+  .pa-big { flex: 1; font-size: 1.15rem; font-weight: 700; letter-spacing: 0.02em; }
+  .pa-screen-grid { display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; gap: 0.3rem; margin-top: 8px; font-size: 0.62rem; }
+  .pa-screen-grid b { display: block; font-size: 0.85rem; }
+  .pa-meter { height: 5px; margin-top: 8px; border-radius: 3px; background: rgb(255 179 71 / 0.12); overflow: hidden; }
+  .pa-meter span { display: block; height: 100%; transform-origin: left; transform: scaleX(0); background: linear-gradient(90deg, #ffb347 70%, #ff5a36); }
+  .pa-message { margin-top: 6px; min-height: 1.2em; font-size: 0.7rem; }
+  .pa-cursor,
+  .pa-blink { animation: pa-blink 1s steps(2) infinite; }
+
+  .pa-volume { display: flex; align-items: center; gap: 0.75rem; }
+  .pa-volume input { accent-color: #c99a3c; width: 9rem; }
+
+  .pa-felt { height: 7px; margin: 10px -26px 0; background: linear-gradient(180deg, #7d1414, #4a0909); box-shadow: inset 0 2px 3px rgb(0 0 0 / 0.5); }
+  .pa-keybed { position: relative; overflow-x: auto; overflow-y: hidden; margin: 0 -10px; padding: 0 10px 4px; perspective: 1100px; scrollbar-width: thin; }
+  .pa-keys { position: relative; min-width: 820px; height: 150px; touch-action: manipulation; user-select: none; }
+  @media (max-width: 640px) {
+    .pa-keys { height: 120px; }
+    .pa-body { padding: 14px 16px 16px; }
+    .pa-felt { margin: 10px -16px 0; }
+  }
+
+  .pa-key {
+    position: absolute;
+    top: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: pa-key-rise 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  }
+  .pa-key-white {
+    height: 100%;
+    z-index: 1;
+    border: 1px solid #b9a77f;
+    border-top: 0;
+    border-radius: 0 0 6px 6px;
+    background: linear-gradient(180deg, #e9dcbc, #fbf4e2 12%, #f3e8cc 85%, #e3d3ad);
+    box-shadow: inset 0 -5px 0 #d8c69c, 0 2px 3px rgb(0 0 0 / 0.4);
+  }
+  .pa-key-black {
+    height: 62%;
+    z-index: 2;
+    border-radius: 0 0 4px 4px;
+    background: linear-gradient(180deg, #0c0a09, #2c2723 80%, #11100e);
+    box-shadow: inset 0 -4px 0 #000, inset 1px 0 0 rgb(255 255 255 / 0.08), 0 3px 5px rgb(0 0 0 / 0.6);
+  }
+  .pa-key-white.pa-key-down {
+    background: linear-gradient(180deg, #d9c89f, #ead9b2 20%, #e2cfa3);
+    box-shadow: inset 0 -2px 0 #c9b484, inset 0 6px 10px rgb(201 154 60 / 0.35);
+    transform: translateY(2px);
+  }
+  .pa-key-black.pa-key-down {
+    background: linear-gradient(180deg, #000, #1c1916 80%);
+    box-shadow: inset 0 -1px 0 #000, 0 0 10px rgb(255 179 71 / 0.45);
+    transform: translateY(2px);
+  }
+  .pa-key-label { text-align: center; margin-bottom: 7px; font-size: 0.55rem; font-weight: 700; color: #8a7448; pointer-events: none; }
+  .pa-key-label-dark { color: #8f846f; }
+
+  .pa-fallboard {
+    position: absolute;
+    inset: 0 10px;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+    background:
+      repeating-linear-gradient(92deg, rgb(0 0 0 / 0.16) 0 2px, transparent 2px 9px),
+      linear-gradient(180deg, #7a4d2b, #4f311a 60%, #3a2312);
+    box-shadow: inset 0 2px 0 rgb(255 220 160 / 0.25), 0 8px 20px rgb(0 0 0 / 0.6);
+    transform-origin: top center;
+    pointer-events: none;
+    animation: pa-lid 1.15s cubic-bezier(0.5, 0, 0.2, 1) 0.3s forwards;
+  }
+  .pa-fallboard-plate {
+    font-family: Georgia, serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: #e8c36a;
+    text-shadow: 0 1px 0 #000, 0 0 12px rgb(232 195 106 / 0.5);
+    letter-spacing: 0.06em;
+  }
+
+  .pa-notes { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+  .pa-notes span {
+    position: absolute;
+    bottom: 30%;
+    font-size: 1.3rem;
+    color: #e8c36a;
+    text-shadow: 0 0 10px rgb(232 195 106 / 0.8);
+    opacity: 0;
+    animation: pa-float 2.4s ease-out both;
+  }
+
+  @keyframes pa-unfold {
+    from { opacity: 0; transform: translateY(-12px) scaleY(0.6); clip-path: inset(0 0 100% 0); }
+    to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); }
+  }
+  @keyframes pa-lid {
+    0% { transform: rotateX(0); opacity: 1; }
+    70% { opacity: 1; }
+    100% { transform: rotateX(-100deg) translateY(-20%); opacity: 0; visibility: hidden; }
+  }
+  @keyframes pa-key-rise {
+    from { transform: translateY(26px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+  @keyframes pa-boot {
+    0% { opacity: 0; filter: brightness(3); }
+    15% { opacity: 1; }
+    25% { opacity: 0.2; }
+    40% { opacity: 1; }
+    100% { opacity: 1; filter: none; }
+  }
+  @keyframes pa-float {
+    0% { opacity: 0; transform: translateY(0) rotate(0); }
+    15% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-140px) rotate(-18deg); }
+  }
+  @keyframes pa-blink { 50% { opacity: 0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .piano-unfold, .pa-key, .pa-screen, .pa-cursor, .pa-blink { animation: none !important; }
+    .pa-fallboard, .pa-notes { display: none; }
+  }
+}

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import App from './App';
+import { detectChord } from './piano/arranger';
 
 describe('portfolio', () => {
   it('leads with the full name and working section links', () => {
@@ -15,11 +16,23 @@ describe('portfolio', () => {
     }
   });
 
-  it('opens the piano keys from the piano word', () => {
+  it('opens the 61-key arranger from the piano word and switches sounds', () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'piano' }));
-    expect(screen.getByRole('dialog', { name: 'Piano' })).not.toBeNull();
-    expect(screen.getAllByRole('button', { name: /^Play / })).toHaveLength(13);
+    const piano = screen.getByRole('region', { name: 'Piano' });
+    expect(screen.getAllByRole('button', { name: /^Play / })).toHaveLength(61);
+    fireEvent.click(screen.getByRole('button', { name: 'Strings' }));
+    expect(piano.textContent).toContain('Warm Strings');
+    fireEvent.click(screen.getByRole('button', { name: 'Strings' }));
+    expect(piano.textContent).toContain('Pizzicato');
+    fireEvent.click(screen.getByRole('button', { name: 'Close the lid' }));
+    expect(screen.queryByRole('region', { name: 'Piano' })).toBeNull();
+  });
+
+  it('recognises chords from the left hand', () => {
+    expect(detectChord([57, 60, 64])).toEqual({ root: 9, type: 'm' });
+    expect(detectChord([43, 47, 50, 53])).toEqual({ root: 7, type: '7' });
+    expect(detectChord([50])).toEqual({ root: 2, type: '' });
   });
 
   it('persists the theme and restores it on the next visit', () => {

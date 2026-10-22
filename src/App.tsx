@@ -1,6 +1,7 @@
 import Experience from './components/Experience';
 import Navigation from './components/Navigation';
 import PianoKeys from './components/PianoKeys';
+import PianoRoom from './components/PianoRoom';
 import Principles from './components/Principles';
 import Projects from './components/Projects';
 import Rich from './components/Rich';
@@ -47,6 +48,7 @@ export default function App() {
         <Principles />
         <Projects />
         <Toolkit />
+        <PianoRoom />
 
         <section id="contact" aria-labelledby="contact-heading" className="py-8">
           <SectionHeading id="contact-heading" step="05" title="Let’s connect" />
