@@ -50,8 +50,11 @@ export default function PianoRoom() {
   useEffect(() => {
     if (!open) return;
     const before = document.activeElement as HTMLElement | null;
+    // Lock the page on both html and body: iOS Safari still scrolls and bounces the page when only body is locked.
     const overflow = document.body.style.overflow;
+    const rootOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     closer.current?.focus({ preventScroll: true });
     const escape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') pianoStore.set(false);
@@ -59,6 +62,7 @@ export default function PianoRoom() {
     window.addEventListener('keydown', escape);
     return () => {
       document.body.style.overflow = overflow;
+      document.documentElement.style.overflow = rootOverflow;
       window.removeEventListener('keydown', escape);
       (before ?? trigger.current)?.focus({ preventScroll: true });
     };

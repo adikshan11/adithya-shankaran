@@ -222,7 +222,8 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const meter = useRef<HTMLSpanElement | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const pointerDown = useRef(false);
-  const dial = useRef<{ y: number; tempo: number } | null>(null);
+  const dial = useRef<{ x: number; y: number; angle: number; tempo: number } | null>(null);
+  const refit = useRef<() => void>(() => undefined);
   const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
   const take = useRef<{ origin: number; last: number; notes: Played[] }>({ origin: 0, last: 0, notes: [] });
   const downbeat = useRef(0);
@@ -327,12 +328,13 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       }
     };
     fit();
-    const refit = setTimeout(fit, 400); // again once fonts and the stage have settled
+    refit.current = fit;
+    const settle = setTimeout(fit, 400); // again once fonts and the stage have settled
     window.addEventListener('resize', fit);
     return () => {
       clearTimeout(fallback);
       clearTimeout(centre);
-      clearTimeout(refit);
+      clearTimeout(settle);
       window.removeEventListener('resize', fit);
       if (idle.current) clearTimeout(idle.current);
       arranger.dispose();
@@ -346,11 +348,22 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     return () => clearInterval(timer);
   }, [pressed.size, arranger.song, arranger]);
 
+  // Phones: refit the panel and keys when the sheet music or the panel opens or closes.
+  useEffect(() => {
+    const first = requestAnimationFrame(() => refit.current());
+    const after = setTimeout(() => refit.current(), 400); // after the sheet's open animation
+    return () => {
+      cancelAnimationFrame(first);
+      clearTimeout(after);
+    };
+  }, [showSheet, drawer]);
+
   // Computer keyboard: two rows from C (see PC_KEYS), arrows move them an octave, Shift plays louder, Space sustains.
   useEffect(() => {
     const ignore = (event: KeyboardEvent) => {
       const target = event.target instanceof Element ? event.target : null;
-      return event.metaKey || event.ctrlKey || event.altKey || Boolean(target?.closest('input, textarea, select, [contenteditable="true"]'));
+      const typing = target?.closest('textarea, select, [contenteditable="true"], input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="button"])');
+      return event.metaKey || event.ctrlKey || event.altKey || Boolean(typing);
     };
     const down = (event: KeyboardEvent) => {
       if (ignore(event)) return;
@@ -414,7 +427,9 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     let frame = 0;
     const update = () => {
       frame = 0;
-      const { scrollLeft, scrollWidth, clientWidth } = element;
+      const { scrollWidth, clientWidth } = element;
+      // iOS reports a negative or too-large scrollLeft while it bounces at either end; keep the window inside the map.
+      const scrollLeft = Math.min(Math.max(element.scrollLeft, 0), scrollWidth - clientWidth);
       const span = minimapWindow.current;
       if (span) {
         span.style.left = `${(100 * scrollLeft) / scrollWidth}%`;
@@ -570,10 +585,23 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                 aria-valuenow={arranger.tempo}
                 onPointerDown={(event) => {
                   capture(event);
-                  dial.current = { y: event.clientY, tempo: arranger.tempo };
+                  const box = event.currentTarget.getBoundingClientRect();
+                  const x = box.left + box.width / 2;
+                  const y = box.top + box.height / 2;
+                  dial.current = { x, y, angle: Math.atan2(event.clientY - y, event.clientX - x), tempo: arranger.tempo };
                 }}
                 onPointerMove={(event) => {
-                  if (dial.current) arranger.changeTempo(dial.current.tempo + (dial.current.y - event.clientY) / 2 - arranger.tempo);
+                  // Turn like a real knob: the mark follows the finger round the centre, clockwise is faster.
+                  const turn = dial.current;
+                  if (!turn) return;
+                  const angle = Math.atan2(event.clientY - turn.y, event.clientX - turn.x);
+                  let step = ((angle - turn.angle) * 180) / Math.PI;
+                  if (step > 180) step -= 360;
+                  if (step < -180) step += 360;
+                  turn.angle = angle;
+                  turn.tempo = Math.min(240, Math.max(40, turn.tempo + step / 1.5));
+                  const next = Math.round(turn.tempo);
+                  if (next !== arranger.tempo) arranger.changeTempo(next - arranger.tempo);
                 }}
                 onPointerUp={() => {
                   dial.current = null;
@@ -688,17 +716,23 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           </button>
           <button
             type="button"
+            aria-pressed={arranger.pedal}
             className={`pa-phone-btn pa-phone-wide ${arranger.pedal ? 'pa-phone-on' : ''}`}
-            onPointerDown={() => arranger.setPedal(true)}
-            onPointerUp={() => arranger.setPedal(false)}
-            onPointerCancel={() => arranger.setPedal(false)}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              arranger.setPedal(!arranger.pedal);
+            }}
             onClick={(event) => {
               if (event.detail === 0) arranger.setPedal(!arranger.pedal);
             }}
           >
+            <span className="pa-phone-led" aria-hidden="true" />
             Sustain
           </button>
-          <button type="button" className="pa-phone-btn pa-phone-wide" aria-expanded={drawer} onClick={() => setDrawer((value) => !value)}>{drawer ? '▴ Less' : '☰ Panel'}</button>
+          <button type="button" className={`pa-phone-btn pa-phone-wide ${showSheet ? 'pa-phone-on' : ''}`} aria-pressed={showSheet} onClick={() => { setShowSheet((value) => !value); setDrawer(false); }}>
+            ♪ Sheet
+          </button>
+          <button type="button" className="pa-phone-btn pa-phone-wide" aria-expanded={drawer} onClick={() => { setDrawer((value) => !value); setShowSheet(false); }}>{drawer ? '▴ Less' : '☰ Panel'}</button>
           <span className="pa-rotate-hint">↻ Turn sideways for a bigger keyboard</span>
         </div>
 
