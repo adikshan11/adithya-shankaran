@@ -415,6 +415,17 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         root.style.setProperty('--island-l', island === 'right' ? '0px' : 'env(safe-area-inset-left)');
         root.style.setProperty('--island-r', island === 'left' ? '0px' : 'env(safe-area-inset-right)');
         root.dataset.island = island;
+        // The joystick and Sustain sit in the island's strip, centred in the space between the bottom of the Dynamic
+        // Island and the bottom of the screen. In landscape the island is centred on that edge and about 126 pt long;
+        // the page starts below Safari's bars, so convert from screen to page by the difference in heights.
+        const shortSide = Math.min(screen.width, screen.height);
+        const pageTop = Math.max(0, shortSide - window.innerHeight);
+        const islandBottom = shortSide / 2 + 63 - pageTop;
+        const stack = 92; // joystick 54 + gap 6 + Sustain 28 + padding
+        const keysTop = root.querySelector<HTMLElement>('.pa-keys')?.getBoundingClientRect().top ?? 0;
+        const free = Math.max(islandBottom + 6, keysTop);
+        const joyTop = Math.min(window.innerHeight - stack - 4, free + Math.max(0, (window.innerHeight - free - stack) / 2));
+        root.style.setProperty("--joy-top", `${Math.round(joyTop)}px`);
         // Nothing is scaled down: the panel opens as its own full-size view (keys step aside), and the sheet music
         // sits at full size above the keys, which take the height that is left.
         root.style.removeProperty('--fit');
