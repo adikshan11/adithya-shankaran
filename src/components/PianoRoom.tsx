@@ -143,8 +143,24 @@ export default function PianoRoom() {
                   </span>
                 ))}
                 <span className="pa-tear-valance" />
+                {/* While the piano loads: a tuner whose needle swings and settles on pitch (the green lamp lights), over
+                    an octave of keys pressed one after another, as a tuner tests each note. */}
                 <span className="pa-tuning">
-                  <span className="pa-tuning-dots"><span /><span /><span /></span>
+                  <svg className="pa-tuner" viewBox="0 0 120 66" aria-hidden="true">
+                    <path className="tu-arc" d="M16 58 A44 44 0 0 1 104 58" />
+                    {[-60, -45, -30, -15, 0, 15, 30, 45, 60].map((angle) => (
+                      <line key={angle} className={angle === 0 ? 'tu-tick tu-tick-mid' : 'tu-tick'} x1="60" y1="18" x2="60" y2={angle % 30 === 0 ? 25 : 22} transform={`rotate(${angle} 60 58)`} />
+                    ))}
+                    <text className="tu-flat" x="14" y="44">♭</text>
+                    <text className="tu-sharp" x="100" y="44">♯</text>
+                    <circle className="tu-lamp" cx="60" cy="9" r="3.2" />
+                    <line className="tu-needle" x1="60" y1="58" x2="60" y2="20" />
+                    <circle className="tu-hub" cx="60" cy="58" r="4" />
+                  </svg>
+                  <span className="pa-tuning-keys">
+                    {Array.from({ length: 8 }, (_, index) => <span key={index} style={{ '--k': index } as CSSProperties} />)}
+                    {[0, 1, 3, 4, 5].map((index) => <i key={index} style={{ '--b': index } as CSSProperties} />)}
+                  </span>
                   Tuning the piano
                 </span>
               </div>

@@ -97,10 +97,25 @@
     transition: opacity 0.3s;
   }
   .pa-tear.pa-go .pa-tuning { opacity: 0; }
-  .pa-tuning-dots { display: flex; gap: 6px; }
-  .pa-tuning-dots span { width: 7px; height: 7px; border-radius: 50%; background: #f6d7a0; animation: pa-tuning 1s ease-in-out infinite; }
-  .pa-tuning-dots span:nth-child(2) { animation-delay: 0.15s; }
-  .pa-tuning-dots span:nth-child(3) { animation-delay: 0.3s; }
+  /* Tuner: the needle swings and settles on pitch every 2.4 s; the lamp lights green while it is on pitch. */
+  .pa-tuner { width: 132px; height: 72px; overflow: visible; }
+  .tu-arc { fill: none; stroke: rgb(246 215 160 / 0.35); stroke-width: 2; stroke-linecap: round; }
+  .tu-tick { stroke: rgb(246 215 160 / 0.6); stroke-width: 1.4; stroke-linecap: round; }
+  .tu-tick-mid { stroke: #7cf0a8; stroke-width: 2; }
+  .tu-flat, .tu-sharp { font: 700 11px system-ui, sans-serif; fill: rgb(246 215 160 / 0.7); text-anchor: middle; letter-spacing: 0; }
+  .tu-needle { stroke: #ff6b5a; stroke-width: 2.2; stroke-linecap: round; transform-box: view-box; transform-origin: 60px 58px; animation: tu-needle 2.4s cubic-bezier(0.45, 0, 0.3, 1) infinite; }
+  .tu-hub { fill: #f6d7a0; }
+  .tu-lamp { fill: #2c3a30; animation: tu-lamp 2.4s linear infinite; }
+  @keyframes tu-needle { 0% { transform: rotate(-42deg); } 18% { transform: rotate(30deg); } 34% { transform: rotate(-17deg); } 50% { transform: rotate(9deg); } 63% { transform: rotate(-4deg); } 74%, 100% { transform: rotate(0deg); } }
+  @keyframes tu-lamp { 0%, 72% { fill: #2c3a30; filter: none; } 76%, 96% { fill: #5ef08f; filter: drop-shadow(0 0 4px #5ef08f); } 100% { fill: #2c3a30; } }
+  /* An octave of keys, pressed one after another and glowing gold, as the tuner tests each note. */
+  .pa-tuning-keys { position: relative; display: flex; gap: 2px; height: 34px; padding: 3px 4px 4px; border-radius: 4px; background: #1a1b1e; box-shadow: inset 0 3px 0 #7a1120, 0 2px 6px rgb(0 0 0 / 0.6); }
+  .pa-tuning-keys span { width: 13px; height: 100%; border-radius: 0 0 2px 2px; background: linear-gradient(180deg, #d9dbe0, #fbfbf9 30%, #ecece8); animation: tu-key 2.4s ease-in-out infinite; animation-delay: calc(var(--k) * 0.15s); }
+  .pa-tuning-keys i { position: absolute; top: 3px; left: calc(4px + (var(--b) + 1) * 15px - 4.5px); width: 9px; height: 58%; border-radius: 0 0 2px 2px; background: linear-gradient(180deg, #08090a, #2a2c31 85%, #111); }
+  @keyframes tu-key { 0%, 12%, 100% { transform: none; background: linear-gradient(180deg, #d9dbe0, #fbfbf9 30%, #ecece8); } 4% { transform: translateY(1.5px); background: linear-gradient(180deg, #e6cf9a, #fbeccb 30%, #f2d99f); box-shadow: 0 0 8px rgb(245 197 66 / 0.8); } }
+  /* Stop once the curtain parts, and keep still for people who ask for less motion. */
+  .pa-tear.pa-go .pa-tuning :is(.tu-needle, .tu-lamp, .pa-tuning-keys span) { animation: none; }
+  @media (prefers-reduced-motion: reduce) { .pa-tuning :is(.tu-needle, .tu-lamp, .pa-tuning-keys span) { animation: none; } }
 
   /* Body */
   /* No entrance animation of its own: the curtain is the reveal. The instrument is drawn while the curtain is shut, so
@@ -1443,4 +1458,10 @@
 /* Touch phones have no computer keyboard, so PC keys (letters on the keys for typing) is left out of their Panel. */
 @media (pointer: coarse) and (max-width: 760px), (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
   .pa-btn-pckeys { display: none !important; }
+}
+
+/* Portrait phone: the piano is the whole page (as sideways); the laptop's how-to guide and credits below it are left
+   out, so scrolling never runs past the instrument into text. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .pa-overlay :is(.pa-howto, .pa-credits) { display: none !important; }
 }
