@@ -13,7 +13,7 @@ import { barLength, meterNamed, meters } from '../piano/notation';
 import type { ScoreNote } from '../piano/notation';
 import PianoScreen from './PianoScreen';
 import type { Page } from './PianoScreen';
-import Staff from './Staff';
+import Staff, { CROP_HEIGHT, STAFF_BAR, STAFF_LEFT } from './Staff';
 
 const keys = Array.from({ length: HIGH - LOW + 1 }, (_, index) => LOW + index);
 const whiteKeys = keys.filter((key) => !isBlack(key));
@@ -296,6 +296,20 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const [showSheet, setShowSheet] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [hand, setHand] = useState<Hand>('right');
+  // Bars on the screen's Score page, from its card's shape: bars that make the staff as wide (for its height) as the card.
+  const [screenBars, setScreenBars] = useState(3);
+  const scoreObserver = useRef<ResizeObserver | null>(null);
+  const measureScore = (element: HTMLDivElement | null) => {
+    scoreObserver.current?.disconnect();
+    if (!element || typeof ResizeObserver === 'undefined') return;
+    scoreObserver.current = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (!width || !height) return;
+      const next = Math.max(2, Math.min(8, Math.round(((width / height) * CROP_HEIGHT - STAFF_LEFT) / STAFF_BAR)));
+      setScreenBars((current) => (current === next ? current : next));
+    });
+    scoreObserver.current.observe(element);
+  };
   const [speed, setSpeed] = useState(0.5);
   const recorder = useRef(new TakeRecorder());
   const [recording, setRecording] = useState(false);
@@ -671,7 +685,27 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const latest = cursor ?? standNotes.reduce((end, note) => Math.max(end, note.start), 0);
   const fromBar = Math.max(0, Math.floor(latest / bar) - (cursor !== undefined ? 1 : bars - 1));
 
-  // What the music stand shows (the coach while learning, then the staff); also drawn on the screen's Score page.
+  // The screen's Score page shows as many bars as fit the display's shape (a wide, short display shows more bars),
+  // so the staff fills it at the same note size instead of shrinking into the middle.
+  const screenFromBar = Math.max(0, Math.floor(latest / bar) - (cursor !== undefined ? 1 : screenBars - 1));
+  const scoreView = (
+    <>
+      {learn && <Coach mood={arranger.coach.mood} text={arranger.coach.text} tick={arranger.coach.tick} tempo={arranger.tempo} />}
+      <Staff
+        notes={standNotes}
+        meter={standMeter}
+        fromBar={screenFromBar}
+        bars={screenBars}
+        cursor={cursor}
+        recent={pressed}
+        learnAt={learn ? cursor : undefined}
+        crop
+        version={`screen${screenBars}:${learn ? `learn${learn.at}` : ''}${songScore ? 'song' : 'live'}:${standNotes.length}:${standNotes.reduce((sum, note) => sum + note.start + note.length * 3, 0)}:${screenFromBar}:${standMeter.beats}/${standMeter.unit}:${cursor === undefined ? '' : Math.round(cursor * 2)}:${[...pressed].join(',')}`}
+      />
+    </>
+  );
+
+  // What the music stand shows (the coach while learning, then the staff).
   const standView = (
     <>
       {learn && <Coach mood={arranger.coach.mood} text={arranger.coach.text} tick={arranger.coach.tick} tempo={arranger.tempo} />}
@@ -750,7 +784,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                 meter.current = element;
               }}
               recording={recording}
-              score={<div className="pa-stand pa-stand-screen" aria-label="Score">{standView}</div>}
+              score={<div ref={measureScore} className="pa-stand pa-stand-screen" aria-label="Score">{scoreView}</div>}
               hand={hand}
               onHand={(next) => {
                 setHand(next);

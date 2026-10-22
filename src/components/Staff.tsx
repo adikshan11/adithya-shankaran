@@ -11,9 +11,13 @@ const BAR_WIDTH = 230;
 const TREBLE_BOTTOM = 70; // y of the treble staff's bottom line (E4)
 const BASS_BOTTOM = 146; // y of the bass staff's bottom line (G2)
 const HEIGHT = 178;
+export const CROP_TOP = 16;
+export const CROP_HEIGHT = 152;
+export const STAFF_LEFT = 70; // clefs, time signature and the right margin
+export const STAFF_BAR = 230;
 
 // `version` sums up what is shown; the staff redraws only when it changes.
-type Props = { notes: ScoreNote[]; meter: TimeSignature; fromBar: number; bars: number; cursor?: number; recent?: Set<number>; learnAt?: number; version: string };
+type Props = { notes: ScoreNote[]; meter: TimeSignature; fromBar: number; bars: number; cursor?: number; recent?: Set<number>; learnAt?: number; crop?: boolean; version: string };
 
 function staffY(staff: 'treble' | 'bass', step: number) {
   return staff === 'treble' ? TREBLE_BOTTOM - (step - 30) * HALF : BASS_BOTTOM - (step - 18) * HALF;
@@ -121,7 +125,7 @@ function beamOf(staff: 'treble' | 'bass', group: Glyph[]): Beam {
   return { up, end: up ? Math.min(...ys) - 28 : Math.max(...ys) + 28 };
 }
 
-function Staff({ notes, meter, fromBar, bars, cursor, recent, learnAt }: Props) {
+function Staff({ notes, meter, fromBar, bars, cursor, recent, learnAt, crop = false }: Props) {
   const bar = barLength(meter);
   const width = LEFT + bars * BAR_WIDTH + 6;
   const xOf = (time: number) => {
@@ -136,7 +140,8 @@ function Staff({ notes, meter, fromBar, bars, cursor, recent, learnAt }: Props) 
   for (const { staff, glyphs } of staves) for (const group of beamGroups(glyphs, bar, beat)) for (const glyph of group) beamed.set(`${staff}${glyph.start}`, beamOf(staff, group));
 
   return (
-    <svg className="pa-staff-svg" viewBox={`0 0 ${width} ${HEIGHT}`} role="img" aria-label="Sheet music of what is playing">
+    // crop: a tighter frame (two ledger lines either side) for small displays, so the staves fill more of the height.
+    <svg className="pa-staff-svg" viewBox={crop ? `0 ${CROP_TOP} ${width} ${CROP_HEIGHT}` : `0 0 ${width} ${HEIGHT}`} role="img" aria-label="Sheet music of what is playing">
       {(['treble', 'bass'] as const).map((staff) =>
         Array.from({ length: 5 }, (_, line) => (
           <line key={`${staff}${line}`} x1={8} x2={width - 4} y1={tops[staff] + line * SPACE} y2={tops[staff] + line * SPACE} className="st-line" strokeWidth={1} />
