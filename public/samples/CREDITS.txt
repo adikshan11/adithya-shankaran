@@ -5,3 +5,10 @@ Files as published at https://github.com/Tonejs/audio/tree/master/salamander (do
 Other instrument samples (fluidr3/): rendered from the FluidR3_GM soundfont by
 https://github.com/gleitz/midi-js-soundfonts (repository MIT; soundfont Creative Commons Attribution 3.0,
 https://creativecommons.org/licenses/by/3.0/us/). Downloaded 2026-10-22, every minor third from C1 to C8.
+
+Added 2026-10-22: 15 more FluidR3_GM instruments (accordion, violin, cello, orchestral harp, trumpet, flute, clarinet,
+alto sax, harmonica, vibraphone, marimba, sitar, shanai, dulcimer, koto), every minor third from C2 to C7, same licence.
+
+Scores in /songs: public-domain MIDI files from the Mutopia Project (https://www.mutopiaproject.org), each listed there
+as "Public Domain": Bach BWV 846 Prelude; Beethoven WoO 59 Fur Elise; Mozart K. 331 Rondo alla Turca;
+Chopin Op. 28 No. 4, Op. 28 No. 15 and Op. 64 No. 1. Downloaded 2026-10-22.

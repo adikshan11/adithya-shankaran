@@ -1,7 +1,10 @@
 // A 61-key arranger keyboard in the browser, modelled on the panel of a Korg Pa300.
 // Tones are recorded samples: the Salamander Grand Piano (a Yamaha C5, Alexander Holm, CC BY 3.0) and the
-// FluidR3 GM soundfont (CC BY 3.0), served from /samples and loaded only when the piano opens or a sound is picked.
-// Drums, and any note played before its samples finish loading, are synthesised with the Web Audio API.
+// FluidR3 GM soundfont (CC BY 3.0), served from /samples and loaded only when the piano opens or a sound is picked,
+// middle octaves first. Drums, tabla, and any note played before its samples arrive are synthesised with the Web Audio API.
+import { parseMidi } from './midi';
+import type { Note } from './midi';
+import type { Song } from './songs';
 
 export const LOW = 36; // C2
 export const HIGH = 96; // C7, 61 keys
@@ -34,7 +37,8 @@ const thirds = (names: [string, string, string, string]) => {
 };
 const salamanderFiles = thirds(['C', 'Ds', 'Fs', 'A']);
 const fluidFiles = thirds(['C', 'Eb', 'Gb', 'A']).filter(([, midi]) => midi >= 24);
-const fluid = (name: string, loop: boolean, release: number, level = 1): Bank => ({ path: `/samples/fluidr3/${name}/`, files: fluidFiles, loop, release, level });
+const fluidMid = fluidFiles.filter(([, midi]) => midi >= 36 && midi <= 96);
+const fluid = (name: string, loop: boolean, release: number, level = 1, files = fluidFiles): Bank => ({ path: `/samples/fluidr3/${name}/`, files, loop, release, level });
 
 const BANKS: Record<string, Bank> = {
   salamander: { path: '/samples/salamander/', files: salamanderFiles, loop: false, release: 0.32, level: 1.1 },
@@ -54,12 +58,27 @@ const BANKS: Record<string, Bank> = {
   pad: fluid('pad_2_warm', true, 1.2, 0.9),
   choir: fluid('choir_aahs', true, 0.8, 0.9),
   bass: fluid('electric_bass_finger', false, 0.1, 1.1),
+  accordion: fluid('accordion', true, 0.12, 0.8, fluidMid),
+  violin: fluid('violin', true, 0.3, 0.9, fluidMid),
+  cello: fluid('cello', true, 0.35, 1, fluidMid),
+  harp: fluid('orchestral_harp', false, 0.6, 1, fluidMid),
+  trumpet: fluid('trumpet', true, 0.15, 0.8, fluidMid),
+  flute: fluid('flute', true, 0.2, 0.9, fluidMid),
+  clarinet: fluid('clarinet', true, 0.15, 0.9, fluidMid),
+  sax: fluid('alto_sax', true, 0.15, 0.85, fluidMid),
+  harmonica: fluid('harmonica', true, 0.12, 0.7, fluidMid),
+  vibes: fluid('vibraphone', false, 0.8, 1, fluidMid),
+  marimba: fluid('marimba', false, 0.3, 1.1, fluidMid),
+  sitar: fluid('sitar', false, 0.6, 1, fluidMid),
+  shehnai: fluid('shanai', true, 0.15, 0.75, fluidMid),
+  santoor: fluid('dulcimer', false, 0.5, 1, fluidMid),
+  koto: fluid('koto', false, 0.4, 1, fluidMid),
 };
 
 type Kind = 'piano' | 'epiano' | 'organ' | 'pluck' | 'strings' | 'brass' | 'lead' | 'pad' | 'bass';
 export type Sound = { category: string; name: string; bank: string; kind: Kind; bright?: boolean };
 
-export const categories = ['Piano', 'E.Piano', 'Organ', 'Guitar', 'Strings', 'Brass', 'Synth', 'Pad'];
+export const categories = ['Piano', 'E.Piano', 'Organ', 'Guitar', 'Strings', 'Brass', 'Woodwind', 'Mallet', 'Ethnic', 'Synth', 'Pad', 'Bass'];
 
 export const sounds: Sound[] = [
   { category: 'Piano', name: 'Grand Piano', bank: 'salamander', kind: 'piano' },
@@ -69,30 +88,54 @@ export const sounds: Sound[] = [
   { category: 'E.Piano', name: 'FM E.Piano', bank: 'fm', kind: 'epiano' },
   { category: 'Organ', name: 'Drawbar Organ', bank: 'drawbar', kind: 'organ' },
   { category: 'Organ', name: 'Church Organ', bank: 'church', kind: 'organ' },
+  { category: 'Organ', name: 'Accordion', bank: 'accordion', kind: 'organ' },
   { category: 'Guitar', name: 'Nylon Guitar', bank: 'nylon', kind: 'pluck' },
   { category: 'Guitar', name: 'Steel Guitar', bank: 'steel', kind: 'pluck' },
   { category: 'Strings', name: 'String Ensemble', bank: 'strings', kind: 'strings' },
+  { category: 'Strings', name: 'Violin', bank: 'violin', kind: 'strings' },
+  { category: 'Strings', name: 'Cello', bank: 'cello', kind: 'strings' },
   { category: 'Strings', name: 'Pizzicato', bank: 'pizzicato', kind: 'pluck' },
+  { category: 'Strings', name: 'Concert Harp', bank: 'harp', kind: 'pluck' },
   { category: 'Brass', name: 'Brass Section', bank: 'brass', kind: 'brass' },
+  { category: 'Brass', name: 'Trumpet', bank: 'trumpet', kind: 'brass' },
   { category: 'Brass', name: 'French Horn', bank: 'horn', kind: 'brass' },
+  { category: 'Woodwind', name: 'Flute', bank: 'flute', kind: 'lead' },
+  { category: 'Woodwind', name: 'Clarinet', bank: 'clarinet', kind: 'lead' },
+  { category: 'Woodwind', name: 'Alto Sax', bank: 'sax', kind: 'lead' },
+  { category: 'Woodwind', name: 'Harmonica', bank: 'harmonica', kind: 'lead' },
+  { category: 'Mallet', name: 'Vibraphone', bank: 'vibes', kind: 'pluck' },
+  { category: 'Mallet', name: 'Marimba', bank: 'marimba', kind: 'pluck' },
+  { category: 'Ethnic', name: 'Sitar', bank: 'sitar', kind: 'pluck' },
+  { category: 'Ethnic', name: 'Shehnai', bank: 'shehnai', kind: 'lead' },
+  { category: 'Ethnic', name: 'Santoor', bank: 'santoor', kind: 'pluck' },
+  { category: 'Ethnic', name: 'Koto', bank: 'koto', kind: 'pluck' },
   { category: 'Synth', name: 'Saw Lead', bank: 'saw', kind: 'lead' },
   { category: 'Synth', name: 'Square Lead', bank: 'square', kind: 'lead' },
   { category: 'Pad', name: 'Warm Pad', bank: 'pad', kind: 'pad' },
   { category: 'Pad', name: 'Choir Aahs', bank: 'choir', kind: 'pad' },
+  { category: 'Bass', name: 'Finger Bass', bank: 'bass', kind: 'bass' },
 ];
 
-const sound = (name: string) => sounds.find((item) => item.name === name) ?? sounds[0];
-const BASS: Sound = { category: 'Bass', name: 'Finger Bass', bank: 'bass', kind: 'bass' };
+export const soundNamed = (name: string) => sounds.find((item) => item.name === name) ?? sounds[0];
+const sound = soundNamed;
+const BASS = sound('Finger Bass');
 
-// 16 steps per bar. Bass entries are [step, interval from the chord root, length in steps]; comp entries are [step, length].
+// Each bar has `steps` sixteenth steps (16 for 4/4, 12 for 3/4 and 6/8). Bass entries are [step, interval from the chord
+// root, length in steps]; comp entries are [step, length]. `swing` delays the off-beat eighths; `tabla` lists [step, bol].
+type Bol = 'dha' | 'dhin' | 'ge' | 'na' | 'tin' | 'ka' | 'ti';
 export type Style = {
   name: string;
+  category: string;
   tempo: number;
+  steps: number;
+  beatSteps: number;
+  swing?: number;
   kick: number[];
   snare: number[];
   hat: number[];
   open?: number[];
   rim?: number[];
+  tabla?: [number, Bol][];
   bass: [number, number, number][];
   comp: [number, number][];
   compSound: Sound;
@@ -101,23 +144,64 @@ export type Style = {
 const eighths = [0, 2, 4, 6, 8, 10, 12, 14];
 const quarters = [0, 4, 8, 12];
 const sixteenths = Array.from({ length: 16 }, (_, step) => step);
+const four = { steps: 16, beatSteps: 4 };
+
+export const styleCategories = ['Pop', 'Ballad', 'Rock', 'Dance', 'Jazz', 'Latin', 'World', 'Indian'];
 
 export const styles: Style[] = [
   {
-    name: '8Beat Pop', tempo: 100, kick: [0, 6, 8], snare: [4, 12], hat: eighths,
+    name: '8Beat Pop', category: 'Pop', tempo: 100, ...four, kick: [0, 6, 8], snare: [4, 12], hat: eighths,
     bass: [[0, 0, 3], [6, 0, 2], [8, 7, 3], [14, 12, 2]], comp: [[0, 3], [4, 3], [8, 3], [12, 3]], compSound: sound('Tine E.Piano'),
   },
   {
-    name: 'Slow Ballad', tempo: 72, kick: [0, 10], snare: [8], hat: eighths,
+    name: '16Beat Pop', category: 'Pop', tempo: 94, ...four, kick: [0, 7, 8, 10], snare: [4, 12], hat: sixteenths,
+    bass: [[0, 0, 2], [3, 0, 1], [6, 0, 2], [8, 7, 2], [10, 7, 2], [14, 12, 2]], comp: [[0, 2], [3, 2], [6, 2], [8, 2], [11, 2], [14, 2]], compSound: sound('Steel Guitar'),
+  },
+  {
+    name: 'Slow Ballad', category: 'Ballad', tempo: 72, ...four, kick: [0, 10], snare: [8], hat: eighths,
     bass: [[0, 0, 8], [8, 7, 6], [14, 0, 2]], comp: [[0, 16]], compSound: sound('String Ensemble'),
   },
   {
-    name: 'Bossa Nova', tempo: 128, kick: [0, 3, 4, 8, 11, 12], snare: [], hat: eighths, rim: [0, 3, 6, 10, 12],
+    name: 'Viennese Waltz', category: 'Ballad', tempo: 150, steps: 12, beatSteps: 4, kick: [0], snare: [], hat: [4, 8],
+    bass: [[0, 0, 4]], comp: [[4, 3], [8, 3]], compSound: sound('Grand Piano'),
+  },
+  {
+    name: 'Classic Rock', category: 'Rock', tempo: 118, ...four, kick: [0, 3, 8, 10], snare: [4, 12], hat: eighths, open: [14],
+    bass: eighths.map((step) => [step, 0, 2] as [number, number, number]), comp: [[0, 6], [8, 6]], compSound: sound('Drawbar Organ'),
+  },
+  {
+    name: 'Disco', category: 'Dance', tempo: 120, ...four, kick: quarters, snare: [4, 12], hat: eighths, open: [2, 6, 10, 14],
+    bass: eighths.map((step, index) => [step, index % 2 ? 12 : 0, 1] as [number, number, number]), comp: [[2, 1], [6, 1], [10, 1], [14, 1]], compSound: sound('String Ensemble'),
+  },
+  {
+    name: 'Funk', category: 'Dance', tempo: 100, ...four, kick: [0, 3, 6, 10], snare: [4, 12], rim: [7, 9, 15], hat: sixteenths,
+    bass: [[0, 0, 1], [3, 12, 1], [6, 0, 1], [7, 10, 1], [10, 7, 1], [13, 0, 1]], comp: [[2, 1], [5, 1], [9, 1], [13, 1]], compSound: sound('Tine E.Piano'),
+  },
+  {
+    name: 'Swing Jazz', category: 'Jazz', tempo: 140, ...four, swing: 0.34, kick: [0, 8], snare: [], hat: [0, 4, 6, 8, 12, 14], rim: [4, 12],
+    bass: [[0, 0, 4], [4, 4, 4], [8, 7, 4], [12, 9, 4]], comp: [[6, 2], [12, 3]], compSound: sound('Grand Piano'),
+  },
+  {
+    name: 'Bossa Nova', category: 'Latin', tempo: 128, ...four, kick: [0, 3, 4, 8, 11, 12], snare: [], hat: eighths, rim: [0, 3, 6, 10, 12],
     bass: [[0, 0, 3], [3, 7, 1], [4, 7, 4], [8, 0, 3], [11, 7, 1], [12, 7, 4]], comp: [[0, 2], [3, 2], [6, 2], [10, 2], [12, 2]], compSound: sound('Nylon Guitar'),
   },
   {
-    name: 'Classic Rock', tempo: 118, kick: [0, 3, 8, 10], snare: [4, 12], hat: eighths, open: [14],
-    bass: eighths.map((step) => [step, 0, 2] as [number, number, number]), comp: [[0, 6], [8, 6]], compSound: sound('Drawbar Organ'),
+    name: 'Reggae One Drop', category: 'World', tempo: 76, ...four, kick: [8], snare: [], rim: [8], hat: eighths,
+    bass: [[0, 0, 3], [6, 7, 2], [10, 0, 2]], comp: [[4, 1], [12, 1]], compSound: sound('Drawbar Organ'),
+  },
+  {
+    name: 'Bhangra', category: 'World', tempo: 160, ...four, kick: [0, 3, 6, 8, 11, 14], snare: [4, 12], hat: eighths,
+    bass: [[0, 0, 2], [3, 0, 2], [6, 7, 2], [8, 0, 2], [11, 0, 2], [14, 7, 2]], comp: [[0, 2], [3, 2], [8, 2], [11, 2]], compSound: sound('Sitar'),
+  },
+  {
+    name: 'Keherwa (8 beats)', category: 'Indian', tempo: 84, steps: 16, beatSteps: 2, kick: [], snare: [], hat: [],
+    tabla: [[0, 'dha'], [2, 'ge'], [4, 'na'], [6, 'tin'], [8, 'na'], [10, 'ka'], [12, 'dhin'], [14, 'na']],
+    bass: [[0, 0, 4], [8, 7, 4]], comp: [[0, 4], [6, 2], [8, 4], [14, 2]], compSound: sound('Accordion'),
+  },
+  {
+    name: 'Dadra (6 beats)', category: 'Indian', tempo: 90, steps: 12, beatSteps: 2, kick: [], snare: [], hat: [],
+    tabla: [[0, 'dha'], [2, 'dhin'], [4, 'na'], [6, 'dha'], [8, 'tin'], [10, 'na']],
+    bass: [[0, 0, 4], [6, 7, 4]], comp: [[0, 6], [6, 6]], compSound: sound('Accordion'),
   },
 ];
 
@@ -162,23 +246,9 @@ function voicing(chord: Chord) {
   });
 }
 
-// J. S. Bach, Prelude in C major, BWV 846 (public domain), bars 1 to 19: each bar is five notes, low to high,
-// played as Bach wrote it: low, middle, then the upper three twice, and the whole pattern twice per bar.
-const n = (name: string) => {
-  const match = name.match(/^([A-G])(#|b)?(\d)$/)!;
-  const base = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[match[1] as 'C'];
-  return 12 * (Number(match[3]) + 1) + base + (match[2] === '#' ? 1 : match[2] === 'b' ? -1 : 0);
-};
-const PRELUDE = [
-  'C4 E4 G4 C5 E5', 'C4 D4 A4 D5 F5', 'B3 D4 G4 D5 F5', 'C4 E4 G4 C5 E5', 'C4 E4 A4 E5 A5', 'C4 D4 F#4 A4 D5',
-  'B3 D4 G4 D5 G5', 'B3 C4 E4 G4 C5', 'A3 C4 E4 G4 C5', 'D3 A3 D4 F#4 C5', 'G3 B3 D4 G4 B4', 'G3 Bb3 E4 G4 C#5',
-  'F3 A3 D4 A4 D5', 'F3 Ab3 D4 F4 B4', 'E3 G3 C4 G4 C5', 'E3 F3 A3 C4 F4', 'D3 F3 A3 C4 F4', 'G2 D3 G3 B3 F4', 'C3 E3 G3 C4 E4',
-].map((bar) => bar.split(' ').map(n));
-const PRELUDE_FIGURE = [0, 1, 2, 3, 4, 2, 3, 4];
-const PRELUDE_END = ['C2', 'C3', 'G3', 'C4', 'E4', 'G4', 'C5'].map(n);
-
 type Voice = { stop: (time: number) => void };
 type Playing = { voice: Voice; sources: AudioBufferSourceNode[] };
+type SongNote = Note & { glide?: number };
 
 export class Arranger {
   ctx: AudioContext | null = null;
@@ -194,12 +264,14 @@ export class Arranger {
   bend = 0;
   variation = 2;
   running = false;
-  recital = false;
   intro = false;
   measure = 0;
   beat = 0;
   loading = '';
   chord: Chord = { root: 0, type: '' };
+  song: Song | null = null;
+  songLength = 0;
+  songElapsed = 0;
   onChange: () => void = () => {};
   onNote: (key: number, on: boolean) => void = () => {};
   onBeat: () => void = () => {};
@@ -220,12 +292,15 @@ export class Arranger {
   private timer: ReturnType<typeof setInterval> | null = null;
   private step = 0;
   private nextTime = 0;
-  private recitalStep = 0;
-  private savedTempo = 0;
   private fillNext = false;
   private inFill = false;
   private endNext = false;
   private crashNext = false;
+  private songTimer: ReturnType<typeof setInterval> | null = null;
+  private songNotes: SongNote[] = [];
+  private songAt = 0;
+  private songStart = 0;
+  private songVoices: Voice[] = [];
   private meterData = new Float32Array(512);
 
   get sound() {
@@ -238,6 +313,10 @@ export class Arranger {
 
   get chordName() {
     return NOTE_NAMES[this.chord.root] + this.chord.type;
+  }
+
+  get beatsPerBar() {
+    return this.style.steps / this.style.beatSteps;
   }
 
   init() {
@@ -283,6 +362,7 @@ export class Arranger {
 
   dispose() {
     this.stopClock();
+    this.stopSong();
     void this.ctx?.close();
     this.ctx = null;
     this.banks.clear();
@@ -297,7 +377,7 @@ export class Arranger {
     return Math.sqrt(sum / this.meterData.length);
   }
 
-  // Samples
+  // Samples: fetched nearest-to-middle-C first, six at a time, so the keys in use sound real within a moment.
 
   load(bankId: string) {
     if (!this.init() || !this.ctx) return Promise.resolve();
@@ -306,9 +386,13 @@ export class Arranger {
     const ctx = this.ctx;
     const bank = BANKS[bankId];
     const buffers = new Map<number, AudioBuffer>();
+    this.banks.set(bankId, buffers);
+    const queue = [...bank.files].sort((a, b) => Math.abs(a[1] - 62) - Math.abs(b[1] - 62));
+    const total = queue.length;
     let done = 0;
-    const promise = Promise.all(
-      bank.files.map(async ([file, midi]) => {
+    const worker = async () => {
+      for (let next = queue.shift(); next; next = queue.shift()) {
+        const [file, midi] = next;
         try {
           const response = await fetch(`${bank.path}${file}.mp3`);
           buffers.set(midi, await ctx.decodeAudioData(await response.arrayBuffer()));
@@ -316,33 +400,36 @@ export class Arranger {
           // a missing sample falls back to its neighbours
         }
         done++;
-        if (done % 6 === 0 || done === bank.files.length) {
-          this.loading = done === bank.files.length ? '' : `LOADING ${done}/${bank.files.length}`;
+        if (done % 5 === 0 || done === total) {
+          this.loading = done === total ? '' : `Loading sounds ${Math.round((done / total) * 100)}%`;
           this.onChange();
         }
-      }),
-    ).then(() => {
-      this.banks.set(bankId, buffers);
-    });
-    this.loading = `LOADING 0/${bank.files.length}`;
+      }
+    };
+    this.loading = 'Loading sounds 0%';
+    const promise = Promise.all(Array.from({ length: 6 }, worker)).then(() => undefined);
     this.bankLoads.set(bankId, promise);
     this.onChange();
     return promise;
   }
 
-  private sampled(pitch: number, item: Sound, time: number, output: AudioNode, velocity: number): Playing | null {
+  private sampled(pitch: number, item: Sound, time: number, output: AudioNode, velocity: number, glide = 0): Playing | null {
     const buffers = this.banks.get(item.bank);
     if (!buffers?.size || !this.ctx) return null;
     const ctx = this.ctx;
     const bank = BANKS[item.bank];
     let nearest = -1;
     for (const midi of buffers.keys()) if (nearest < 0 || Math.abs(midi - pitch) < Math.abs(nearest - pitch)) nearest = midi;
+    if (Math.abs(nearest - pitch) > 7) return null;
     const buffer = buffers.get(nearest)!;
 
     const source = ctx.createBufferSource();
     source.buffer = buffer;
     source.playbackRate.value = 2 ** ((pitch - nearest) / 12);
-    source.detune.value = this.bend * 100;
+    if (glide) {
+      source.detune.setValueAtTime(glide * 100 + this.bend * 100, time);
+      source.detune.linearRampToValueAtTime(this.bend * 100, time + 0.14);
+    } else source.detune.value = this.bend * 100;
     if (bank.loop && buffer.duration > 2.5) {
       source.loop = true;
       source.loopStart = 1.0;
@@ -385,9 +472,9 @@ export class Arranger {
     };
   }
 
-  private play(pitch: number, item: Sound, time: number, output: AudioNode, velocity = 0.8): Playing {
+  private play(pitch: number, item: Sound, time: number, output: AudioNode, velocity = 0.8, glide = 0): Playing {
     pitch = Math.min(108, Math.max(21, pitch));
-    const sampled = this.sampled(pitch, item, time, output, velocity);
+    const sampled = this.sampled(pitch, item, time, output, velocity, glide);
     if (sampled) return sampled;
     void this.load(item.bank);
     return { voice: this.synth(pitch, item.kind, time, output, velocity), sources: [] };
@@ -398,7 +485,7 @@ export class Arranger {
   noteOn(key: number, velocity = 0.8) {
     if (!this.init() || !this.ctx) return;
     const time = this.ctx.currentTime;
-    if (this.running && !this.recital && key < SPLIT) {
+    if (this.running && key < SPLIT) {
       this.left.add(key);
       this.chord = detectChord([...this.left]) ?? this.chord;
       this.onNote(key, true);
@@ -466,10 +553,18 @@ export class Arranger {
     this.onChange();
   }
 
+  selectStyleCategory(category: string) {
+    const options = styles.map((item, index) => [item, index] as const).filter(([item]) => item.category === category);
+    const position = options.findIndex(([, index]) => index === this.styleIndex);
+    this.selectStyle(options[(position + 1) % options.length][1]);
+  }
+
   selectStyle(index: number) {
+    const restart = this.running && styles[index].steps !== this.style.steps;
     this.styleIndex = index;
     if (!this.running) this.tempo = styles[index].tempo;
     void this.load(styles[index].compSound.bank);
+    if (restart) this.startStyle();
     this.onChange();
   }
 
@@ -521,7 +616,7 @@ export class Arranger {
 
   startStyle(withIntro = false) {
     if (!this.init()) return;
-    if (this.recital) this.stopStyle();
+    this.stopSong();
     void this.load(BASS.bank);
     void this.load(this.style.compSound.bank);
     this.running = true;
@@ -532,9 +627,7 @@ export class Arranger {
   }
 
   stopStyle() {
-    if (this.recital) this.tempo = this.savedTempo;
     this.running = false;
-    this.recital = false;
     this.intro = false;
     this.left.clear();
     if (!this.metronome) this.stopClock();
@@ -543,28 +636,80 @@ export class Arranger {
   }
 
   fill() {
-    if (this.running && !this.recital) this.fillNext = true;
+    if (this.running) this.fillNext = true;
   }
 
   ending() {
     if (this.running) this.endNext = true;
   }
 
-  playRecital() {
+  // Song player: notes are booked on the audio clock a little ahead of time, like the style clock.
+
+  async playSong(song: Song) {
+    if (!this.init() || !this.ctx) return;
     if (this.running) this.stopStyle();
-    if (!this.init()) return;
-    this.soundIndex = 0;
-    void this.load('salamander').then(() => {
-      this.savedTempo = this.tempo;
-      this.tempo = 66;
-      this.recital = true;
-      this.running = true;
-      this.recitalStep = 0;
-      this.endNext = false;
-      this.startClock(true);
-      this.onChange();
-    });
+    this.stopSong();
+    this.song = song;
+    this.songElapsed = 0;
+    this.songLength = 0;
     this.onChange();
+    const item = soundNamed(song.sound);
+    const [notes] = await Promise.all([
+      song.file ? fetch(song.file).then((response) => response.arrayBuffer()).then(parseMidi) : Promise.resolve(song.notes?.() ?? []),
+      this.load(item.bank),
+      song.drone !== undefined ? this.load('sitar') : Promise.resolve(),
+    ]);
+    if (this.song !== song || !this.ctx) return;
+    this.songNotes = notes;
+    this.songLength = notes.reduce((end, note) => Math.max(end, note.time + note.duration), 0);
+    this.songAt = 0;
+    this.songStart = this.ctx.currentTime + 0.25;
+    if (song.drone !== undefined) this.drone(song.drone, this.songStart, this.songLength + 1.5);
+    this.songTimer = setInterval(() => this.songTick(item), 30);
+    this.onChange();
+  }
+
+  stopSong() {
+    if (this.songTimer) clearInterval(this.songTimer);
+    this.songTimer = null;
+    if (this.ctx) for (const voice of this.songVoices) voice.stop(this.ctx.currentTime);
+    this.songVoices = [];
+    if (this.song) {
+      this.song = null;
+      this.onChange();
+    }
+  }
+
+  private songTick(item: Sound) {
+    if (!this.ctx) return;
+    const horizon = this.ctx.currentTime + 0.2;
+    while (this.songAt < this.songNotes.length && this.songStart + this.songNotes[this.songAt].time < horizon) {
+      const note = this.songNotes[this.songAt++];
+      const time = this.songStart + note.time;
+      const end = time + note.duration + 0.06;
+      const playing = this.play(note.midi + this.transpose, item, time, this.bus, 0.35 + note.velocity * 0.6, note.glide ?? 0);
+      playing.voice.stop(end);
+      this.songVoices.push(playing.voice);
+      if (this.songVoices.length > 96) this.songVoices.shift();
+      this.later(time, () => this.onNote(note.midi, true));
+      this.later(Math.min(end, time + 0.6), () => this.onNote(note.midi, false));
+    }
+    const elapsed = Math.max(0, this.ctx.currentTime - this.songStart);
+    if (Math.floor(elapsed) !== Math.floor(this.songElapsed)) {
+      this.songElapsed = elapsed;
+      this.onChange();
+    }
+    if (this.songAt >= this.songNotes.length && elapsed > this.songLength + 1.5) this.stopSong();
+  }
+
+  // Tanpura: Pa, Sa, Sa, low Sa, plucked softly in a slow cycle under the raga.
+  private drone(sa: number, start: number, length: number) {
+    const item = soundNamed('Sitar');
+    const cycle = [sa - 5, sa, sa, sa - 12];
+    for (let time = start, index = 0; time < start + length; time += 0.75, index++) {
+      const playing = this.play(cycle[index % 4] - 12, item, time, this.accompaniment, 0.3);
+      playing.voice.stop(time + 2.6);
+    }
   }
 
   // Clock: a look-ahead scheduler, so timing comes from the audio clock and not from timers.
@@ -590,9 +735,10 @@ export class Arranger {
   private tick() {
     if (!this.ctx) return;
     while (this.timer && this.nextTime < this.ctx.currentTime + 0.12) {
-      this.playStep(this.step, this.nextTime);
+      const swing = this.style.swing && this.step % 4 === 2 ? this.style.swing * this.stepTime * 2 : 0;
+      this.playStep(this.step, this.nextTime + swing);
       this.nextTime += this.stepTime;
-      this.step = (this.step + 1) % 16;
+      this.step = (this.step + 1) % this.style.steps;
     }
   }
 
@@ -602,7 +748,7 @@ export class Arranger {
   }
 
   private playStep(step: number, time: number) {
-    if (this.recital) return this.playRecitalStep(step, time);
+    const style = this.style;
     if (step === 0) {
       this.measure++;
       if (this.running) {
@@ -617,76 +763,47 @@ export class Arranger {
         this.crashNext = false;
       }
     }
-    if (step % 4 === 0) {
-      this.beat = step / 4 + 1;
+    if (step % style.beatSteps === 0) {
+      this.beat = step / style.beatSteps + 1;
       this.later(time, () => this.onBeat());
       if (this.metronome) this.click(time, step === 0);
     }
     if (!this.running) return;
     if (this.intro) {
-      if (step % 4 === 0) this.sticks(time);
+      if (step % style.beatSteps === 0) this.sticks(time);
       return;
     }
 
-    const style = this.style;
     const variation = this.variation;
-    if (this.inFill && step >= 8) {
-      if (step === 8) this.kick(time, 1);
-      this.tom(time, 230 - (step - 8) * 14, step % 2 ? 0.55 : 0.8);
-      if (step === 15) this.crashNext = true;
+    const half = style.steps / 2;
+    if (this.inFill && step >= half) {
+      if (step === half) this.kick(time, 1);
+      if (style.tabla) this.tabla(time, step % 2 ? 'na' : 'dha');
+      else this.tom(time, 230 - (step - half) * 14, step % 2 ? 0.55 : 0.8);
+      if (step === style.steps - 1) this.crashNext = true;
     } else {
-      const kicks = variation === 4 ? [...style.kick, 10, 14] : style.kick;
-      const hats = variation === 1 ? quarters : variation >= 3 ? sixteenths : style.hat;
+      const kicks = variation === 4 && style.kick.length ? [...style.kick, 10, 14] : style.kick;
+      const hats = !style.hat.length ? [] : variation === 1 ? quarters : variation >= 3 && style.steps === 16 ? sixteenths : style.hat;
       if (kicks.includes(step)) this.kick(time, step % 8 === 0 ? 1 : 0.8);
       if (style.snare.includes(step)) this.snare(time, variation === 1 ? 0.6 : 0.9);
       if (variation > 1 && style.rim?.includes(step)) this.rim(time);
       if (hats.includes(step)) this.hat(time, step % 4 === 0 ? 0.6 : step % 2 === 0 ? 0.42 : 0.26, Boolean(style.open?.includes(step)) || (variation === 4 && step === 6));
+      for (const [at, bol] of style.tabla ?? []) {
+        if (at === step && (variation > 1 || at % (style.beatSteps * 2) === 0)) this.tabla(time, bol);
+        if (variation >= 3 && at + 1 === step) this.tabla(time, 'ti');
+      }
     }
 
     const root = this.chord.root;
     for (const [at, interval, length] of style.bass) {
-      if (at !== step || (variation === 1 && at % 8 !== 0)) continue;
+      if (at !== step || (variation === 1 && at % half !== 0)) continue;
       this.play(36 + root + interval, BASS, time, this.accompaniment, 0.85).voice.stop(time + length * this.stepTime * 0.92);
     }
     for (const [at, length] of style.comp) {
-      if (at !== step || (variation === 1 && at % 8 !== 0)) continue;
+      if (at !== step || (variation === 1 && at % half !== 0)) continue;
       const notes = variation === 4 ? [...voicing(this.chord), voicing(this.chord)[0] + 12] : voicing(this.chord);
       for (const note of notes) this.play(note, style.compSound, time, this.accompaniment, 0.6).voice.stop(time + length * this.stepTime * 0.9);
     }
-  }
-
-  private playRecitalStep(step: number, time: number) {
-    if (step === 0) {
-      this.measure++;
-      this.later(time, () => this.onChange());
-    }
-    if (step % 4 === 0) {
-      this.beat = step / 4 + 1;
-      this.later(time, () => this.onBeat());
-    }
-    const bar = Math.floor(this.recitalStep / 16);
-    const at = this.recitalStep % 16;
-    this.recitalStep++;
-    if (bar === PRELUDE.length) {
-      if (at === 0) {
-        PRELUDE_END.forEach((note, index) => this.recitalNote(note, time + index * 0.06, this.stepTime * 24, 0.5 + index * 0.04));
-        this.later(time + this.stepTime * 24, () => this.stopStyle());
-        this.stopClock();
-      }
-      return;
-    }
-    const notes = PRELUDE[bar];
-    const figure = PRELUDE_FIGURE[at % 8];
-    const length = figure === 0 ? 16 - at : figure === 1 ? 15 - at : 2.2;
-    const velocity = (figure === 0 ? 0.6 : figure === 1 ? 0.5 : 0.42 + (at % 8 === 2 ? 0.08 : 0)) * (0.92 + Math.sin(bar / 3) * 0.08);
-    if (figure > 1 || at === figure || at === figure + 8) this.recitalNote(notes[figure], time, length * this.stepTime, velocity);
-  }
-
-  private recitalNote(note: number, time: number, length: number, velocity: number) {
-    const playing = this.play(note + this.transpose, sounds[0], time, this.bus, velocity);
-    playing.voice.stop(time + length);
-    this.later(time, () => this.onNote(note, true));
-    this.later(time + Math.min(length, 0.5), () => this.onNote(note, false));
   }
 
   private playEnding(time: number) {
@@ -705,7 +822,7 @@ export class Arranger {
     });
   }
 
-  // Drums (synthesised)
+  // Drums and tabla (synthesised)
 
   private hit(time: number, peak: number, decay: number) {
     const gain = this.ctx!.createGain();
@@ -727,26 +844,25 @@ export class Arranger {
     source.stop(time + decay + 0.05);
   }
 
-  private kick(time: number, velocity: number) {
+  private tone(time: number, from: number, to: number, glideTime: number, peak: number, decay: number, type: OscillatorType = 'sine') {
     const osc = this.ctx!.createOscillator();
-    osc.frequency.setValueAtTime(130, time);
-    osc.frequency.exponentialRampToValueAtTime(45, time + 0.1);
-    osc.connect(this.hit(time, velocity, 0.34));
+    osc.type = type;
+    osc.frequency.setValueAtTime(from, time);
+    osc.frequency.exponentialRampToValueAtTime(to, time + glideTime);
+    osc.connect(this.hit(time, peak, decay));
     osc.start(time);
-    osc.stop(time + 0.36);
+    osc.stop(time + decay + 0.05);
+  }
+
+  private kick(time: number, velocity: number) {
+    this.tone(time, 130, 45, 0.1, velocity, 0.34);
     this.noiseBurst(time, 'lowpass', 2500, velocity * 0.08, 0.012);
   }
 
   private snare(time: number, velocity: number) {
     this.noiseBurst(time, 'bandpass', 2200, velocity * 0.55, 0.17);
     this.noiseBurst(time, 'highpass', 4500, velocity * 0.2, 0.09);
-    const body = this.ctx!.createOscillator();
-    body.type = 'triangle';
-    body.frequency.setValueAtTime(220, time);
-    body.frequency.exponentialRampToValueAtTime(170, time + 0.05);
-    body.connect(this.hit(time, velocity * 0.35, 0.08));
-    body.start(time);
-    body.stop(time + 0.1);
+    this.tone(time, 220, 170, 0.05, velocity * 0.35, 0.08, 'triangle');
   }
 
   private hat(time: number, velocity: number, open: boolean) {
@@ -762,12 +878,7 @@ export class Arranger {
   }
 
   private tom(time: number, frequency: number, velocity: number) {
-    const osc = this.ctx!.createOscillator();
-    osc.frequency.setValueAtTime(frequency, time);
-    osc.frequency.exponentialRampToValueAtTime(frequency * 0.6, time + 0.25);
-    osc.connect(this.hit(time, velocity * 0.8, 0.28));
-    osc.start(time);
-    osc.stop(time + 0.3);
+    this.tone(time, frequency, frequency * 0.6, 0.25, velocity * 0.8, 0.28);
   }
 
   private crash(time: number) {
@@ -775,11 +886,23 @@ export class Arranger {
   }
 
   private click(time: number, accent: boolean) {
-    const osc = this.ctx!.createOscillator();
-    osc.frequency.value = accent ? 1600 : 1000;
-    osc.connect(this.hit(time, 0.3, 0.03));
-    osc.start(time);
-    osc.stop(time + 0.05);
+    this.tone(time, accent ? 1600 : 1000, accent ? 1600 : 1000, 0.01, 0.3, 0.03);
+  }
+
+  // Tabla bols: the bayan (left drum) is a low boom that glides up; the dayan (right) rings at a tuned pitch.
+  private tabla(time: number, bol: Bol) {
+    const bayan = () => this.tone(time, 85, 125, 0.18, 0.75, 0.5);
+    const dayan = (ring: number) => {
+      this.tone(time, 540, 520, 0.05, 0.32, ring);
+      this.tone(time, 1090, 1050, 0.05, 0.1, ring * 0.6);
+      this.noiseBurst(time, 'bandpass', 3000, 0.12, 0.015);
+    };
+    if (bol === 'dha' || bol === 'dhin') bayan();
+    if (bol === 'dha' || bol === 'na') dayan(bol === 'dha' ? 0.3 : 0.22);
+    if (bol === 'dhin' || bol === 'tin') dayan(0.55);
+    if (bol === 'ge') bayan();
+    if (bol === 'ti') this.noiseBurst(time, 'bandpass', 1800, 0.18, 0.04);
+    if (bol === 'ka') this.noiseBurst(time, 'lowpass', 600, 0.4, 0.05);
   }
 
   private impulse(seconds: number) {
@@ -801,14 +924,14 @@ export class Arranger {
     const osc = ctx.createOscillator();
     osc.type = kind === 'lead' || kind === 'brass' || kind === 'strings' ? 'sawtooth' : 'triangle';
     osc.frequency.value = frequency;
-    const tone = ctx.createBiquadFilter();
-    tone.type = 'lowpass';
-    tone.frequency.value = Math.min(9000, frequency * 6);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = Math.min(9000, frequency * 6);
     const amp = ctx.createGain();
     amp.gain.setValueAtTime(0, time);
     amp.gain.linearRampToValueAtTime(0.25 * velocity, time + 0.005);
     amp.gain.setTargetAtTime(sustained ? 0.15 * velocity : 0.0001, time + 0.005, sustained ? 0.2 : 0.6);
-    osc.connect(tone).connect(amp).connect(output);
+    osc.connect(filter).connect(amp).connect(output);
     osc.start(time);
     osc.stop(time + 20);
     return {

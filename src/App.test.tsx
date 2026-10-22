@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import App from './App';
+import { readFileSync } from 'node:fs';
 import { detectChord } from './piano/arranger';
+import { parseMidi } from './piano/midi';
 
 describe('portfolio', () => {
   it('leads with the full name and working section links', () => {
@@ -16,17 +18,30 @@ describe('portfolio', () => {
     }
   });
 
-  it('opens the 61-key arranger from the piano word and switches sounds', () => {
+  it('opens the 61-key arranger from the piano word and switches sounds', async () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'piano' }));
-    const piano = screen.getByRole('region', { name: 'Piano' });
+    const piano = await screen.findByRole('region', { name: 'Piano' });
     expect(screen.getAllByRole('button', { name: /^Play / })).toHaveLength(61);
     fireEvent.click(screen.getByRole('button', { name: 'Strings' }));
     expect(piano.textContent).toContain('String Ensemble');
     fireEvent.click(screen.getByRole('button', { name: 'Strings' }));
-    expect(piano.textContent).toContain('Pizzicato');
-    fireEvent.click(screen.getByRole('button', { name: 'Close the lid' }));
+    expect(piano.textContent).toContain('Violin');
+    fireEvent.click(screen.getByRole('button', { name: 'Indian' }));
+    expect(piano.textContent).toContain('Keherwa');
+    expect(piano.textContent).toContain('Für Elise');
+    fireEvent.click(screen.getByRole('button', { name: 'Close the curtain' }));
     expect(screen.queryByRole('region', { name: 'Piano' })).toBeNull();
+  });
+
+  it('reads public-domain MIDI scores into timed notes', () => {
+    const file = readFileSync('public/songs/fur_Elise_WoO59.mid');
+    const notes = parseMidi(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength));
+    expect(notes.length).toBeGreaterThan(200);
+    expect(notes[0].midi).toBe(76);
+    expect(notes[1].time).toBeGreaterThan(0.1);
+    expect(notes[0].duration).toBeGreaterThan(0.1);
+    expect(notes.at(-1)!.time).toBeGreaterThan(60);
   });
 
   it('recognises chords from the left hand', () => {

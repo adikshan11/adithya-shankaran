@@ -10,8 +10,18 @@
   font-display: swap;
 }
 
+/* Arial resized to Inter's measurements, so text keeps its place when Inter arrives (no layout shift). */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  ascent-override: 90.49%;
+  descent-override: 22.56%;
+  line-gap-override: 0%;
+  size-adjust: 107.06%;
+}
+
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "JetBrains Mono", monospace;
   --color-accent: #2563eb;
   --color-accent-soft: #e8effd;
@@ -70,24 +80,24 @@
     pointer-events: none;
   }
 
+  /* Each glow is a gradient the size of the old 90px-blurred ellipse, so it looks the same without a per-frame blur. */
   .aurora span {
     position: absolute;
-    width: 42rem;
-    height: 32rem;
-    border-radius: 50%;
-    filter: blur(90px);
+    width: 53.25rem;
+    height: 43.25rem;
+    will-change: transform;
   }
 
   .aurora span:first-child {
-    top: -12rem;
-    left: -10rem;
-    background: var(--color-glow-a);
+    top: -17.6rem;
+    left: -15.6rem;
+    background: radial-gradient(closest-side, var(--color-glow-a) 58%, transparent);
   }
 
   .aurora span:last-child {
-    top: 10rem;
-    right: -14rem;
-    background: var(--color-glow-b);
+    top: 4.4rem;
+    right: -19.6rem;
+    background: radial-gradient(closest-side, var(--color-glow-b) 58%, transparent);
   }
 
   @supports (animation-timeline: scroll()) {
