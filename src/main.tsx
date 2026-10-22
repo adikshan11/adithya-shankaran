@@ -3,8 +3,10 @@ import { createRoot, hydrateRoot } from 'react-dom/client';
 import App from './App';
 import './styles.css';
 
+// The liquid-glass refraction redraws an SVG displacement filter on every scroll frame. Desktop GPUs handle it;
+// phones get the plain frosted blur instead (touch screens report no hover and a coarse pointer).
 const brands = (navigator as Navigator & { userAgentData?: { brands: { brand: string }[] } }).userAgentData?.brands;
-if (brands?.some((entry) => entry.brand === 'Chromium')) {
+if (brands?.some((entry) => entry.brand === 'Chromium') && matchMedia('(hover: hover) and (pointer: fine)').matches) {
   document.documentElement.classList.add('refract');
 }
 
