@@ -704,12 +704,14 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   };
   useEffect(() => () => midiOff.current?.(), []);
 
-  // Phones: while the sheet music or the Panel is open, the stage's ✕ first goes back to the blue screen (what people
-  // expect of ✕ on an open view); from the screen it closes the piano. Caught before the stage's own handler runs.
+  // Phone held sideways: the Panel button steps aside while the Panel is open, so the stage's ✕ first goes back to the
+  // blue screen; from the screen it closes the piano. Caught before the stage's own handler runs. Upright, the Panel
+  // and Sheet buttons stay under the thumb and close their own views, so Close at the top only closes the piano.
+  const SIDEWAYS = '(max-height: 500px) and (orientation: landscape)';
   const views = useRef({ drawer, showSheet });
   views.current = { drawer, showSheet };
   useEffect(() => {
-    const phone = window.matchMedia('(max-width: 760px), (max-height: 500px) and (orientation: landscape)');
+    const phone = window.matchMedia(SIDEWAYS);
     const intercept = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target.closest('.pa-overlay-close') : null;
       const { drawer: panelOpen, showSheet: sheetOpen } = views.current;
@@ -724,7 +726,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   }, []);
   useEffect(() => {
     const close = document.querySelector('.pa-overlay-close');
-    if (close) close.setAttribute('aria-label', drawer || showSheet ? 'Back to the screen' : 'Close the curtain');
+    if (close) close.setAttribute('aria-label', (drawer || showSheet) && window.matchMedia(SIDEWAYS).matches ? 'Back to the screen' : 'Close the curtain');
   }, [drawer, showSheet]);
 
   // Phones: any touch, tap, click or key press unlocks the audio if the browser still holds it back, and coming back
@@ -1167,6 +1169,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             <PanelButton label="Song" active={Boolean(arranger.song) && !learn} onClick={() => open('song')} />
             <PanelButton
               label="Learn"
+              className="pa-btn-learn"
               tone="green"
               active={Boolean(learn)}
               onClick={() => {
@@ -1266,7 +1269,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           <button type="button" className={`pa-phone-btn pa-phone-wide ${showSheet ? 'pa-phone-on' : ''}`} aria-pressed={showSheet} onClick={() => { setShowSheet((value) => !value); setDrawer(false); }}>
             ♪ Sheet
           </button>
-          <button type="button" className="pa-phone-btn pa-phone-wide pa-phone-panel" aria-expanded={drawer} onClick={() => { setDrawer((value) => !value); setShowSheet(false); }}>{drawer ? '▴ Less' : '☰ Panel'}</button>
+          <button type="button" className="pa-phone-btn pa-phone-wide pa-phone-panel" aria-expanded={drawer} onClick={() => { setDrawer((value) => !value); setShowSheet(false); }}>{drawer ? '✕ Panel' : '☰ Panel'}</button>
           <button
             type="button"
             className={`pa-phone-btn pa-phone-wide ${learn ? 'pa-phone-on' : ''}`}

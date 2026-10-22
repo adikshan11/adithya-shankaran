@@ -722,8 +722,9 @@
   @keyframes pa-star { from { transform: scale(0) rotate(-40deg); } 70% { transform: scale(1.3); } to { transform: none; } }
   @keyframes pa-result-in { from { transform: scale(0.85); opacity: 0; } to { transform: none; opacity: 1; } }
   .pa-t-short { display: none; }
-  /* Phones: while Panel is open the corner ✕ closes it, so the Panel button steps aside (no two buttons for one job). */
-  @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
+  /* Phone sideways: while Panel is open the corner ✕ closes it, so the Panel button steps aside (no two buttons for
+     one job). Upright it stays in its place as "✕ Panel": the thumb closes it where it opened it, and no gap opens. */
+  @media (max-height: 500px) and (orientation: landscape) {
     .pa-phonebar > .pa-phone-panel[aria-expanded="true"] { display: none !important; }
   }
   /* Phones: Master volume and Balance live in the Panel. Portrait: in the strip with the other groups. Landscape:
@@ -1058,9 +1059,9 @@
     .pa-drawer-open .pa-pages::-webkit-scrollbar { display: none; }
     .pa-drawer-open .pa-pages > .pa-group { flex: 0 0 86%; scroll-snap-align: start; padding: 10px; border-radius: 12px; background: rgb(255 255 255 / 0.03); box-shadow: inset 0 0 0 1px #2f3136; }
     .pa-drawer-open .pa-controls { margin-top: 10px; }
-    .pa-drawer-open .pa-ctl-groups { flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; gap: 14px; padding-bottom: 2px; }
-    .pa-drawer-open .pa-ctl-groups::-webkit-scrollbar { display: none; }
-    .pa-drawer-open .pa-ctl-group { flex: none; scroll-snap-align: start; }
+    /* All groups in view, wrapping to a second row: a strip that hides half its buttons off the edge reads as cut. */
+    .pa-drawer-open .pa-ctl-groups { flex-wrap: wrap; gap: 10px 14px; padding-bottom: 2px; }
+    .pa-drawer-open .pa-ctl-group { flex: none; }
     .pa-dial-row { display: none !important; }
     /* No panel box around the screen on a phone, Panel open or closed (that box is the laptop panel's). */
     .pa-drawer .pa-panel { padding: 0; border: 0; background: none; box-shadow: none; }
@@ -1322,4 +1323,17 @@
     .pa-keys, .pa-screen, .pa-edge { animation: none !important; }
     .pa-tear { display: none; }
     }
+}
+
+/* Phone upright, Panel open: the Panel sits between the screen and the quick bar, so it gives up what it repeats or
+   does not need, to leave the keys in view: Learn is already in the quick bar, the turn hint can wait, and the two
+   faders share one row. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .pa-overlay .pa-body:has(.pa-drawer-open) .pa-btn-learn, .pa-overlay .pa-body:has(.pa-drawer-open) .pa-rotate-hint { display: none !important; }
+  .pa-overlay .pa-body .pa-drawer-open .pa-faders { flex-direction: row !important; gap: 14px; }
+  .pa-overlay .pa-body .pa-drawer-open .pa-fader { flex: 1; min-width: 0; grid-template-columns: 1fr; gap: 2px; }
+  .pa-overlay .pa-body .pa-drawer-open .pa-fader-label { white-space: nowrap; }
+  .pa-overlay .pa-body .pa-drawer-open .pa-ctl-groups { gap: 8px 10px; }
+  .pa-overlay .pa-body .pa-drawer-open .pa-ctl-row { gap: 4px; }
+  .pa-overlay .pa-body .pa-drawer-open .pa-ctl-group > .pa-label { display: none; } /* the buttons name themselves; as in landscape */
 }
