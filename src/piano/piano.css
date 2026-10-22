@@ -409,7 +409,8 @@
   .pa-key-marks { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 8px; pointer-events: none; }
   .pa-key-label { font-size: 0.56rem; font-weight: 700; color: #7b7f88; pointer-events: none; }
   /* Note names on the white keys in coloured badges, one colour per note, as phone piano apps show them. */
-  .pa-key-note { min-width: 1.7em; padding: 2px 5px; border-radius: 5px; font-size: 0.6rem; font-weight: 800; line-height: 1.35; text-align: center; color: #2a2d33; box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.08); }
+  .pa-key-white { container-type: inline-size; } /* badges size to the key width (cqi) */
+  .pa-key-note { min-width: 1.7em; max-width: 92cqi; padding: 2px clamp(1px, 6cqi, 5px); border-radius: 5px; font-size: clamp(0.42rem, 34cqi, 0.6rem); font-weight: 800; line-height: 1.35; text-align: center; color: #2a2d33; box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.08); }
   .pa-note-C { background: #ffc4c4; }
   .pa-note-D { background: #ffdcb8; }
   .pa-note-E { background: #fff0b0; }
@@ -418,8 +419,13 @@
   .pa-note-A { background: #c6defe; }
   .pa-note-B { background: #e0d2ff; }
   /* Touch screens have no computer keyboard: no letters and no blue computer-key range, just the notes. */
-  @media (pointer: coarse) { .pa-key-label, .pa-pc-window { display: none; } }
+  @media (pointer: coarse) { .pa-key-label, .pa-pc-window, .pa-btn-pckeys { display: none; } }
   .pa-key-label-dark { color: #9ea2ab; }
+  /* Learn: the keys to press now glow green, with a pulsing ring, as in learning apps. */
+  .pa-key-white.pa-key-target { background: linear-gradient(180deg, #e9fff1, #9be7b8); box-shadow: inset 0 0 0 2px #1e9e57; }
+  .pa-key-black.pa-key-target { background: linear-gradient(180deg, #1e9e57, #0d5c31); box-shadow: inset 0 0 0 2px #7cf0a8; }
+  .pa-key-target::after { content: ""; position: absolute; left: 50%; bottom: 34%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #2ecc71; box-shadow: 0 0 0 0 rgb(46 204 113 / 0.7); animation: pa-target 1s ease-out infinite; pointer-events: none; }
+  @keyframes pa-target { to { box-shadow: 0 0 0 12px rgb(46 204 113 / 0); } }
   .pa-key-star { margin-left: 1px; font-size: 0.7em; vertical-align: 0.45em; line-height: 0; }
 
   /* Song book, guide and credits (outside the body) */
@@ -496,6 +502,18 @@
   .pa-page-head { display: flex; align-items: flex-start; gap: 8px; }
   .pa-page-head-main { flex: 1; min-width: 0; }
   .pa-page-head .pa-page-title { margin: 3px 0 0; }
+  /* Recordings page */
+  .pa-grid-takes { display: flex; flex-direction: column; gap: 6px; }
+  .pa-take { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, auto); align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px; background: rgb(255 255 255 / 0.06); }
+  .pa-take-on { box-shadow: inset 0 0 0 1.5px #59d0ff; }
+  .pa-take-name { display: flex; flex-direction: column; min-width: 0; overflow: hidden; font-size: 0.8rem; font-weight: 700; color: #eef4ff; white-space: nowrap; text-overflow: ellipsis; }
+  .pa-take-name small { font-size: 0.62rem; font-weight: 600; color: #8ca3c9; }
+  .pa-take-btn { min-width: 34px; height: 28px; padding: 0 8px; border-radius: 5px; font-size: 0.68rem; font-weight: 800; color: #dff6ff; background: #1d3b6e; box-shadow: inset 0 0 0 1px #2a62c9; }
+  .pa-take-btn:hover:not(:disabled) { background: #24508f; }
+  .pa-take-btn:disabled { opacity: 0.4; }
+  .pa-take-empty { padding: 10px 4px; font-size: 0.78rem; color: #9fb3d6; }
+  .pa-rec-flag { color: #ff6b62; font-weight: 800; animation: pa-rec-blink 1s steps(2) infinite; }
+  @keyframes pa-rec-blink { 50% { opacity: 0.35; } }
   .pa-exit { flex: none; padding: 3px 9px; border-radius: 4px; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #071a33; background: #ffc857; }
   .pa-exit:hover { filter: brightness(1.08); }
   /* Lists: a slim screen-blue scrollbar with no arrow buttons. Chrome ignores ::-webkit-scrollbar when the standard
@@ -541,6 +559,8 @@
   .st-line { stroke: #2b2a27; }
   .st-ink { fill: #1d1c1a; }
   .st-recent { fill: #2a62c9; }
+  /* Learn: the chord to play now, behind its noteheads */
+  .st-target { fill: rgb(46 204 113 / 0.28); stroke: #1e9e57; stroke-width: 1.2; }
   .st-hollow { fill: #fbfaf6; stroke: #1d1c1a; }
   .st-text { fill: #1d1c1a; font-family: Georgia, serif; }
   .st-clef { fill: #1d1c1a; font-family: "Segoe UI Symbol", "Noto Music", "Apple Symbols", "Noto Sans Symbols 2", serif; }
@@ -815,8 +835,8 @@
     .pa-panel { grid-template-columns: 1fr 1.38fr 1fr; align-items: start; padding: 12px 14px; }
     .pa-dial-row, .pa-faders { display: none !important; }
     .pa-drawer .pa-controls { flex-direction: column; justify-content: center; margin: 0; padding: 0; }
-    .pa-drawer .pa-controls > div { flex-direction: column; flex-wrap: nowrap; }
-    .pa-drawer .pa-controls > div > :last-child { display: none; } /* no computer keyboard on a phone */
+    /* Split, Song, Metro, Reverb, Rec, Takes and MIDI in two columns beside the panel. */
+    .pa-drawer .pa-controls > div { display: grid; grid-template-columns: repeat(2, 96px); }
     .pa-drawer .pa-controls .pa-btn { width: 96px; }
     /* The joystick shows with the panel; while just playing, the keys get the full width. */
     .pa-left { display: none; }

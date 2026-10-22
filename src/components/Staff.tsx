@@ -13,7 +13,7 @@ const BASS_BOTTOM = 146; // y of the bass staff's bottom line (G2)
 const HEIGHT = 178;
 
 // `version` sums up what is shown; the staff redraws only when it changes.
-type Props = { notes: ScoreNote[]; meter: TimeSignature; fromBar: number; bars: number; cursor?: number; recent?: Set<number>; version: string };
+type Props = { notes: ScoreNote[]; meter: TimeSignature; fromBar: number; bars: number; cursor?: number; recent?: Set<number>; learnAt?: number; version: string };
 
 function staffY(staff: 'treble' | 'bass', step: number) {
   return staff === 'treble' ? TREBLE_BOTTOM - (step - 30) * HALF : BASS_BOTTOM - (step - 18) * HALF;
@@ -50,7 +50,7 @@ function Rest({ x, top, value }: { x: number; top: number; value: number }) {
 
 type Beam = { up: boolean; end: number };
 
-function Chord({ glyph, staff, x, nextX, recent, beam }: { glyph: Glyph; staff: 'treble' | 'bass'; x: number; nextX: number; recent: boolean; beam?: Beam }) {
+function Chord({ glyph, staff, x, nextX, recent, beam, target = false }: { glyph: Glyph; staff: 'treble' | 'bass'; x: number; nextX: number; recent: boolean; beam?: Beam; target?: boolean }) {
   const steps = glyph.midis.map(stepOf);
   const middle = staff === 'treble' ? 34 : 22;
   const average = steps.reduce((sum, step) => sum + step, 0) / steps.length;
@@ -72,6 +72,7 @@ function Chord({ glyph, staff, x, nextX, recent, beam }: { glyph: Glyph; staff: 
   const tone = recent ? 'st-recent' : 'st-ink';
   return (
     <g>
+      {target && <rect x={x - 9} y={high - 8} width={18} height={low - high + 16} rx={6} className="st-target" />}
       {[...ledgers].map((step) => (
         <line key={step} x1={x - 8} x2={x + 8} y1={staffY(staff, step)} y2={staffY(staff, step)} className="st-line" strokeWidth={1} />
       ))}
@@ -120,7 +121,7 @@ function beamOf(staff: 'treble' | 'bass', group: Glyph[]): Beam {
   return { up, end: up ? Math.min(...ys) - 28 : Math.max(...ys) + 28 };
 }
 
-function Staff({ notes, meter, fromBar, bars, cursor, recent }: Props) {
+function Staff({ notes, meter, fromBar, bars, cursor, recent, learnAt }: Props) {
   const bar = barLength(meter);
   const width = LEFT + bars * BAR_WIDTH + 6;
   const xOf = (time: number) => {
@@ -194,6 +195,7 @@ function Staff({ notes, meter, fromBar, bars, cursor, recent }: Props) {
               nextX={nextX}
               beam={beamed.get(`${staff}${glyph.start}`)}
               recent={Boolean(recent && glyph.midis.some((midi) => recent.has(midi)) && index === glyphs.length - 1)}
+              target={learnAt !== undefined && glyph.start === learnAt && !glyph.tie}
             />
           );
         }),

@@ -1,5 +1,11 @@
 export { prefetchGrand } from '../piano/arranger';
-import { memo, useEffect, useReducer, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { songs } from '../piano/songs';
+import type { Hand } from '../piano/arranger';
+import TakesList from './TakesList';
+import { connectMidi, midiSupported } from '../piano/midiInput';
+import { TakeRecorder, listTakes, saveTake } from '../piano/recorder';
+import type { Take } from '../piano/recorder';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { Arranger, HIGH, LOW, PC_BASE_MAX, PC_BASE_MIN, PC_KEYS, PC_KEY_OFFSET, SPLIT, categories, isBlack, keyName, sounds, styleCategories, styleMeter } from '../piano/arranger';
 import { barLength, meterNamed, meters } from '../piano/notation';
@@ -14,9 +20,41 @@ const whiteWidth = 100 / whiteKeys.length;
 const noteLabel = (midi: number) => `${['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'][midi % 12]}${Math.floor(midi / 12) - 1}`;
 const IDLE_MS = 7000; // a select page returns to the main page after this long untouched
 
-function PanelButton({ label, onClick, active, tone = 'grey', className = '' }: { label: string; onClick: () => void; active?: boolean; tone?: 'grey' | 'red' | 'green'; className?: string }) {
+// A panel button. With `repeat`, holding it steps again and again, faster the longer it is held (Tempo, Transpose).
+function PanelButton({ label, onClick, active, tone = 'grey', className = '', repeat = false }: { label: string; onClick: () => void; active?: boolean; tone?: 'grey' | 'red' | 'green'; className?: string; repeat?: boolean }) {
+  const timer = useRef<number | undefined>(undefined);
+  const stop = () => {
+    window.clearTimeout(timer.current);
+    timer.current = undefined;
+  };
+  useEffect(() => stop, []);
+  const hold = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!repeat || event.button !== 0) return;
+    event.preventDefault();
+    onClick();
+    let gap = 140;
+    const step = () => {
+      onClick();
+      gap = Math.max(35, gap * 0.85);
+      timer.current = window.setTimeout(step, gap);
+    };
+    timer.current = window.setTimeout(step, 400);
+  };
   return (
-    <button type="button" onClick={onClick} aria-pressed={active} className={`pa-btn pa-btn-${tone} ${className}`}>
+    <button
+      type="button"
+      onClick={(event) => {
+        // A held press already stepped on pointer down; Enter and Space (detail 0) step here.
+        if (!repeat || event.detail === 0) onClick();
+      }}
+      onPointerDown={hold}
+      onPointerUp={stop}
+      onPointerLeave={stop}
+      onPointerCancel={stop}
+      onContextMenu={(event) => repeat && event.preventDefault()}
+      aria-pressed={active}
+      className={`pa-btn pa-btn-${tone} ${className}`}
+    >
       {active !== undefined && <span className={`pa-led ${active ? 'pa-led-on' : ''}`} aria-hidden="true" />}
       <span>{label}</span>
     </button>
@@ -40,10 +78,10 @@ function velocityOf(event: ReactPointerEvent<HTMLElement>) {
   return Math.min(1, Math.max(0.25, 0.3 + depth * 0.75));
 }
 
-type KeysProps = { arranger: Arranger; pressed: Set<number>; showLetters: boolean; pcBase: number; pointerDown: { current: boolean }; splitShown: boolean };
+type KeysProps = { arranger: Arranger; pressed: Set<number>; showLetters: boolean; pcBase: number; pointerDown: { current: boolean }; splitShown: boolean; targets: Set<number> };
 
 // The 61 keys, drawn only when a key goes up or down, the letters are toggled, or the computer-key range moves.
-const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointerDown, splitShown }: KeysProps) {
+const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointerDown, splitShown, targets }: KeysProps) {
   // One letter per key; when a second computer key plays the same note, the main letter gets a * instead of both.
   const labelFor = new Map<number, string>();
   for (const [code, offset, label] of PC_KEYS) {
@@ -77,7 +115,7 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
             type="button"
             aria-label={`Play ${keyName(key)}`}
             style={position}
-            className={`pa-key ${black ? 'pa-key-black' : 'pa-key-white'} ${pressed.has(key) ? 'pa-key-down' : ''}`}
+            className={`pa-key ${black ? 'pa-key-black' : 'pa-key-white'} ${pressed.has(key) ? 'pa-key-down' : ''} ${targets.has(key) ? 'pa-key-target' : ''}`}
             onPointerDown={(event) => {
               event.preventDefault();
               pointerDown.current = true;
@@ -251,6 +289,12 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const downbeat = useRef(0);
   const [showSheet, setShowSheet] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  const [hand, setHand] = useState<Hand>('right');
+  const recorder = useRef(new TakeRecorder());
+  const [recording, setRecording] = useState(false);
+  const [takes, setTakes] = useState<Take[]>([]);
+  const [midiDevices, setMidiDevices] = useState<string[] | null>(null);
+  const midiOff = useRef<(() => void) | null>(null);
   const [edges, setEdges] = useState({ left: false, right: false });
   const minimapWindow = useRef<HTMLSpanElement>(null);
 
@@ -500,6 +544,86 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
 
   const say = (text: string) => setMessage(text);
 
+  // Rec: records the output (keyboard, style and song) and the notes played; press again to stop and keep the take.
+  const toggleRecord = async () => {
+    if (recorder.current.recording) {
+      arranger.onPlayed = () => {};
+      const take = await recorder.current.stop(`Take ${takes.length + 1}`);
+      setRecording(false);
+      if (!take) return;
+      await saveTake(take);
+      setTakes(await listTakes());
+      open('rec');
+      say(`${take.name} saved. Play it here, or save it as WAV (any device) or MIDI (any DAW).`);
+      return;
+    }
+    if (!TakeRecorder.supported()) {
+      say('This browser cannot record audio.');
+      return;
+    }
+    const output = arranger.tap();
+    if (!output || !arranger.ctx) return;
+    setTakes(await listTakes());
+    recorder.current.start(arranger.ctx, output);
+    arranger.onPlayed = (event) => recorder.current.mark(event);
+    setRecording(true);
+    say('● Recording. Play, then press Rec again to stop.');
+  };
+
+  // MIDI: plays this piano from a real keyboard connected by USB or Bluetooth.
+  const toggleMidi = async () => {
+    if (midiOff.current) {
+      midiOff.current();
+      midiOff.current = null;
+      setMidiDevices(null);
+      say('MIDI keyboard disconnected.');
+      return;
+    }
+    if (!midiSupported()) {
+      say('This browser has no MIDI input. Use Chrome or Edge on a computer or Android.');
+      return;
+    }
+    try {
+      arranger.init();
+      midiOff.current = await connectMidi(arranger, (names) => {
+        setMidiDevices(names);
+        say(names.length ? `MIDI: ${names.join(', ')} plays the piano.` : 'MIDI is on. Connect your keyboard by USB and play.');
+      });
+    } catch {
+      say('MIDI access was blocked. Allow it in the browser and press MIDI again.');
+    }
+  };
+  useEffect(() => () => midiOff.current?.(), []);
+
+  // Learn: choose a piece and a hand; the keys to press glow green and the music waits until they are played.
+  const learn = arranger.learn;
+  const startLearn = (songId: string, chosen = hand) => {
+    const song = songs.find((item) => item.id === songId);
+    if (!song) return;
+    say(`Loading ${song.title}…`);
+    void arranger.startLearn(song, chosen).then(() => {
+      setShowSheet(true);
+      open('main');
+      say(`Learn: ${song.title}, ${chosen === 'both' ? 'both hands' : `${chosen} hand`}. Play the green keys; the music waits for you.`);
+    });
+  };
+  const targetList = [...arranger.learnTargets].map((pitch) => pitch - arranger.transpose - arranger.octave * 12).sort((a, b) => a - b);
+  const targetKey = targetList.join(',');
+  const targets = useMemo(() => new Set(targetKey ? targetKey.split(',').map(Number) : []), [targetKey]);
+  const finished = Boolean(learn && learn.at >= learn.steps.length);
+  useEffect(() => {
+    if (finished && learn) say(`Well played! ${learn.song.title} finished with ${learn.misses} wrong ${learn.misses === 1 ? 'note' : 'notes'}.`);
+  }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Keep the next keys in view on a narrow screen.
+  useEffect(() => {
+    const first = targetKey.split(',')[0];
+    const element = first ? scroller.current?.querySelector<HTMLElement>(`[aria-label$="${keyName(Number(first))}"]`) : null;
+    const box = scroller.current?.getBoundingClientRect();
+    if (!element || !box) return;
+    const rect = element.getBoundingClientRect();
+    if (rect.left < box.left + 20 || rect.right > box.right - 20) scroller.current?.scrollBy({ left: rect.left - box.left - box.width / 3, behavior: 'smooth' });
+  }, [targetKey]);
+
   // Music stand: the song's sheet music while a song plays, otherwise what you play, written to the current tempo.
   const songScore = arranger.songScore;
   let standNotes: ScoreNote[];
@@ -594,9 +718,17 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
               meterRef={(element) => {
                 meter.current = element;
               }}
+              recording={recording}
+              hand={hand}
+              onHand={(next) => {
+                setHand(next);
+                if (arranger.learn) startLearn(arranger.learn.song.id, next);
+              }}
+              onLearn={(songId) => startLearn(songId)}
+              takes={<TakesList takes={takes} ctx={() => arranger.ctx} onChange={() => void listTakes().then(setTakes)} say={say} />}
             />
             <div className="pa-dial-row mt-3 flex items-center justify-center gap-4">
-              <PanelButton label="Tempo −" onClick={() => arranger.changeTempo(-2)} />
+              <PanelButton label="Tempo −" repeat onClick={() => arranger.changeTempo(-2)} />
               <div
                 className="pa-dial"
                 role="slider"
@@ -639,7 +771,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                   <span className="pa-dial-mark" />
                 </span>
               </div>
-              <PanelButton label="Tempo +" onClick={() => arranger.changeTempo(2)} />
+              <PanelButton label="Tempo +" repeat onClick={() => arranger.changeTempo(2)} />
             </div>
           </div>
 
@@ -678,7 +810,27 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             <PanelButton label="Song" active={Boolean(arranger.song)} onClick={() => open('song')} />
             <PanelButton label="Metro" active={arranger.metronome} onClick={() => { arranger.toggleMetronome(); open('metro'); }} />
             <PanelButton label="Reverb" active={arranger.reverb} onClick={() => arranger.toggleReverb()} />
-            <PanelButton label="PC keys" active={showLetters} onClick={() => setShowLetters((value) => !value)} />
+            <PanelButton
+              label="Learn"
+              tone="green"
+              active={Boolean(learn)}
+              onClick={() => {
+                if (arranger.learn) {
+                  arranger.stopLearn();
+                  say('Learn stopped.');
+                } else open('learn');
+              }}
+            />
+            <PanelButton label={recording ? '■ Rec' : '● Rec'} tone="red" active={recording} onClick={() => void toggleRecord()} />
+            <PanelButton
+              label="Takes"
+              onClick={() => {
+                void listTakes().then(setTakes);
+                open('rec');
+              }}
+            />
+            <PanelButton label="MIDI" active={Boolean(midiDevices?.length)} onClick={() => void toggleMidi()} />
+            <PanelButton label="PC keys" className="pa-btn-pckeys" active={showLetters} onClick={() => setShowLetters((value) => !value)} />
           </div>
         </div>
 
@@ -720,7 +872,8 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                     bars={bars}
                     cursor={cursor}
                     recent={pressed}
-                    version={`${songScore ? 'song' : 'live'}:${standNotes.length}:${standNotes.reduce((sum, note) => sum + note.start + note.length * 3, 0)}:${fromBar}:${bars}:${standMeter.beats}/${standMeter.unit}:${cursor === undefined ? '' : Math.round(cursor * 2)}:${[...pressed].join(',')}`}
+                    learnAt={learn ? cursor : undefined}
+                    version={`${learn ? `learn${learn.at}` : ''}${songScore ? 'song' : 'live'}:${standNotes.length}:${standNotes.reduce((sum, note) => sum + note.start + note.length * 3, 0)}:${fromBar}:${bars}:${standMeter.beats}/${standMeter.unit}:${cursor === undefined ? '' : Math.round(cursor * 2)}:${[...pressed].join(',')}`}
                   />
                 </div>
               )}
@@ -805,7 +958,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           </div>
           <div className="pa-keybed-wrap">
             <div className="pa-keybed" ref={scroller}>
-              <Keys arranger={arranger} pressed={pressed} showLetters={showLetters} pcBase={pcBase} pointerDown={pointerDown} splitShown={arranger.running && arranger.split} />
+              <Keys arranger={arranger} pressed={pressed} showLetters={showLetters} pcBase={pcBase} pointerDown={pointerDown} splitShown={arranger.running && arranger.split} targets={targets} />
             </div>
             {edges.left && <button type="button" className="pa-edge pa-edge-left" aria-label="Show lower keys" onClick={() => scrollKeys(-1)}>‹</button>}
             {edges.right && <button type="button" className="pa-edge pa-edge-right" aria-label="Show higher keys" onClick={() => scrollKeys(1)}>›</button>}

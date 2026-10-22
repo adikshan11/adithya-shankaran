@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 import { categories, sounds, styleCategories, styleMeter, styles } from '../piano/arranger';
+import type { Hand } from '../piano/arranger';
 import type { Arranger } from '../piano/arranger';
 import { meters } from '../piano/notation';
 import { songs } from '../piano/songs';
 
 // The colour touchscreen. The main page shows the sound, style, song, tempo, time signature, settings and the chord
 // being played; tapping any of them opens its page, as on a Korg Pa300.
-export type Page = 'main' | 'sound' | 'style' | 'song' | 'metro' | 'tune';
+export type Page = 'main' | 'sound' | 'style' | 'song' | 'metro' | 'tune' | 'rec' | 'learn';
 
 type Props = {
   arranger: Arranger;
@@ -16,6 +17,11 @@ type Props = {
   message: string;
   beat: boolean;
   meterRef: (element: HTMLSpanElement | null) => void;
+  takes?: ReactNode;
+  recording?: boolean;
+  hand?: Hand;
+  onHand?: (hand: Hand) => void;
+  onLearn?: (songId: string) => void;
 };
 
 const signed = (value: number) => (value > 0 ? `+${value}` : `${value}`);
@@ -34,7 +40,8 @@ function SelectPage({ head, onExit, children, className = '' }: { head: ReactNod
   );
 }
 
-export default function PianoScreen({ arranger, page, category, open, message, beat, meterRef }: Props) {
+export default function PianoScreen({ arranger, page, category, open, message, beat, meterRef, takes, recording, hand = 'right', onHand, onLearn }: Props) {
+  const learn = arranger.learn;
   const sound = arranger.sound;
   const style = arranger.style;
   const song = arranger.song;
@@ -58,7 +65,13 @@ export default function PianoScreen({ arranger, page, category, open, message, b
       <div className="pa-screen-bar">
         <button type="button" className="pa-touch" onClick={exit}>{song ? 'SONG PLAY' : 'STYLE PLAY'}</button>
         <button type="button" className="pa-touch" onClick={() => open('metro')}>♩ {arranger.tempo} · {meter}</button>
-        <span>{song ? `${clock(arranger.songElapsed)} / ${clock(arranger.songLength)}` : `${arranger.measure}.${arranger.beat || 1}`}</span>
+        {learn ? (
+          <button type="button" className="pa-touch pa-learn-flag" onClick={() => open('learn')}>LEARN {Math.min(learn.at + 1, learn.steps.length)}/{learn.steps.length}</button>
+        ) : recording ? (
+          <button type="button" className="pa-touch pa-rec-flag" onClick={() => open('rec')}>● REC</button>
+        ) : (
+          <span>{song ? `${clock(arranger.songElapsed)} / ${clock(arranger.songLength)}` : `${arranger.measure}.${arranger.beat || 1}`}</span>
+        )}
       </div>
 
       {page === 'main' && (
@@ -194,6 +207,34 @@ export default function PianoScreen({ arranger, page, category, open, message, b
           <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeOctave(-1)}>−1</button>
           <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeOctave(1)}>+1</button>
           <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeOctave(-arranger.octave)}>Reset</button>
+        </SelectPage>
+      )}
+
+      {page === 'learn' && (
+        <SelectPage
+          head={
+            <div className="pa-tabs" role="tablist" aria-label="Hand">
+              {(['right', 'left', 'both'] as Hand[]).map((name) => (
+                <button key={name} type="button" role="tab" aria-selected={name === hand} className={`pa-tab ${name === hand ? 'pa-tab-on' : ''}`} onClick={() => onHand?.(name)}>
+                  {name === 'both' ? 'Both hands' : name === 'right' ? 'Right hand' : 'Left hand'}
+                </button>
+              ))}
+            </div>
+          }
+          onExit={exit}
+        >
+          {songs.filter((item) => item.file).map((item) => (
+            <button key={item.id} type="button" className={`pa-item ${learn?.song.id === item.id ? 'pa-item-on' : ''}`} onClick={() => onLearn?.(item.id)}>
+              <span className="pa-item-number">{learn?.song.id === item.id ? 'Learning' : 'Learn'} · {item.composer}</span>
+              {item.title}
+            </button>
+          ))}
+        </SelectPage>
+      )}
+
+      {page === 'rec' && (
+        <SelectPage head={<p className="pa-page-title">Recordings · saved in this browser</p>} onExit={exit} className="pa-grid-takes">
+          {takes}
         </SelectPage>
       )}
 

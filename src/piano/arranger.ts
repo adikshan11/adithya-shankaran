@@ -329,6 +329,7 @@ function scoreFor(notes: Note[], meter: { beats: number; unit: number }, beatSec
 type Voice = { stop: (time: number) => void };
 type Playing = { voice: Voice; sources: AudioBufferSourceNode[] };
 type SongNote = Note & { glide?: number };
+export type Hand = 'right' | 'left' | 'both';
 
 export class Arranger {
   ctx: AudioContext | null = null;
@@ -362,6 +363,8 @@ export class Arranger {
   songElapsed = 0;
   onChange: () => void = () => {};
   onNote: (key: number, on: boolean) => void = () => {};
+  // Every note and pedal change as played (sounding pitch), for the recorder's MIDI file.
+  onPlayed: (event: { type: 'on' | 'off' | 'pedal'; note?: number; velocity?: number; down?: boolean }) => void = () => {};
   onBeat: () => void = () => {};
 
   private bus!: GainNode;
@@ -391,6 +394,8 @@ export class Arranger {
   private crashNext = false;
   private songTimer: ReturnType<typeof setInterval> | null = null;
   private songNotes: SongNote[] = [];
+  // Learn mode (like MuseScore's wait-for-input practice): the score waits on each chord until its notes are played.
+  learn: { song: Song; hand: Hand; steps: { start16: number; notes: number[] }[]; at: number; remaining: Set<number>; misses: number } | null = null;
   private songAt = 0;
   private songStart = 0;
   private songVoices: Voice[] = [];
@@ -485,6 +490,11 @@ export class Arranger {
     const data = this.noise.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
     return true;
+  }
+
+  // The final output (after the limiter), for recording exactly what the speakers play.
+  tap(): AudioNode | null {
+    return this.init() ? this.analyser : null;
   }
 
   dispose() {
@@ -646,6 +656,7 @@ export class Arranger {
       this.held.get(key)?.voice.stop(time);
       this.held.set(key, this.play(pitch, soundNamed(this.lowerSound), time, this.bus, velocity * 0.75));
       this.onNote(key, true);
+      this.onPlayed({ type: 'on', note: pitch, velocity });
       this.onChange();
       return;
     }
@@ -653,6 +664,8 @@ export class Arranger {
     this.down.add(key);
     this.held.set(key, this.play(pitch, this.sound, time, this.bus, velocity));
     this.onNote(key, true);
+    this.onPlayed({ type: 'on', note: pitch, velocity });
+    this.learnHit(pitch);
     if (this.running && !this.split && this.down.size >= 3) {
       this.chord = detectChord([...this.down]) ?? this.chord;
       this.onChange();
@@ -669,6 +682,7 @@ export class Arranger {
 
   noteOff(key: number) {
     this.onNote(key, false);
+    this.onPlayed({ type: 'off', note: key + this.transpose + this.octave * 12 });
     this.left.delete(key);
     this.down.delete(key);
     if (this.pedal) return;
@@ -680,6 +694,7 @@ export class Arranger {
   setPedal(down: boolean) {
     if (this.pedal === down) return;
     this.pedal = down;
+    this.onPlayed({ type: 'pedal', down });
     if (!down && this.ctx) {
       for (const [key, playing] of this.held) {
         if (this.down.has(key)) continue;
@@ -886,6 +901,7 @@ export class Arranger {
 
   async playSong(song: Song) {
     if (!this.init() || !this.ctx) return;
+    this.learn = null;
     if (this.running) this.stopStyle();
     this.stopSong();
     this.song = song;
@@ -914,8 +930,59 @@ export class Arranger {
     this.onChange();
   }
 
+  // Learn: load a song's score without playing it, then wait for each chord (one hand or both) in turn.
+  async startLearn(song: Song, hand: Hand) {
+    if (!this.init()) return;
+    if (this.running) this.stopStyle();
+    this.stopSong();
+    this.learn = null;
+    this.song = song;
+    this.onChange();
+    const score = song.file
+      ? await fetch(song.file).then((response) => response.arrayBuffer()).then(parseScore)
+      : { notes: song.notes?.() ?? [], meter: { beats: 4, unit: 4 } };
+    if (this.song !== song) return;
+    this.songScore = scoreFor(score.notes, score.meter, song.beat);
+    const chosen = score.notes.filter((note) => hand === 'both' || (hand === 'right' ? note.midi >= 60 : note.midi < 60));
+    const byStart = new Map<number, Set<number>>();
+    for (const note of chosen) {
+      const start = (note.start16 ?? 0) + this.songScore.offset;
+      byStart.set(start, (byStart.get(start) ?? new Set()).add(note.midi));
+    }
+    const steps = [...byStart.entries()].sort((a, b) => a[0] - b[0]).map(([start16, notes]) => ({ start16, notes: [...notes] }));
+    this.learn = { song, hand, steps, at: 0, remaining: new Set(steps[0]?.notes), misses: 0 };
+    this.onChange();
+  }
+
+  stopLearn() {
+    this.learn = null;
+    this.song = null;
+    this.songScore = null;
+    this.onChange();
+  }
+
+  // The notes still to play in the current chord (sounding pitches).
+  get learnTargets() {
+    return this.learn?.remaining ?? new Set<number>();
+  }
+
+  private learnHit(pitch: number) {
+    const learn = this.learn;
+    if (!learn || learn.at >= learn.steps.length) return;
+    if (!learn.remaining.delete(pitch)) {
+      learn.misses++;
+      return;
+    }
+    if (!learn.remaining.size) {
+      learn.at++;
+      learn.remaining = new Set(learn.steps[learn.at]?.notes);
+    }
+    this.onChange();
+  }
+
   // Where the song is now, in semiquavers, for the sheet-music cursor.
   songPosition16() {
+    if (this.learn) return this.learn.steps[Math.min(this.learn.at, this.learn.steps.length - 1)]?.start16 ?? 0;
     if (!this.ctx || !this.songScore || !this.songLength) return 0;
     const elapsed = Math.max(0, this.ctx.currentTime - this.songStart);
     const notes = this.songNotes;
@@ -927,6 +994,7 @@ export class Arranger {
   }
 
   stopSong() {
+    this.learn = null;
     this.songScore = null;
     this.sounding.clear();
     if (this.songTimer) clearInterval(this.songTimer);
