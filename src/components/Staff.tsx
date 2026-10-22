@@ -11,8 +11,8 @@ const BAR_WIDTH = 230;
 const TREBLE_BOTTOM = 70; // y of the treble staff's bottom line (E4)
 const BASS_BOTTOM = 146; // y of the bass staff's bottom line (G2)
 const HEIGHT = 178;
-export const CROP_TOP = 16;
-export const CROP_HEIGHT = 152;
+export const CROP_TOP = 24; // about one ledger line above the treble staff
+export const CROP_HEIGHT = 138; // to about one ledger line below the bass staff
 export const STAFF_LEFT = 70; // clefs, time signature and the right margin
 export const STAFF_BAR = 230;
 

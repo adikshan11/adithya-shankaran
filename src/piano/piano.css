@@ -1105,10 +1105,11 @@
     .pa-body:not(:has(.pa-drawer-open)):not(:has(.pa-sheet-open)) .pa-grid-score { overflow: hidden; }
     .pa-body:not(:has(.pa-drawer-open)):not(:has(.pa-sheet-open)) .pa-grid-score .pa-coach { display: none; }
     /* Score page: the staff fills exactly the room the display has left (it scales inside; never cut off). */
-    .pa-body:not(:has(.pa-drawer-open)):not(:has(.pa-sheet-open)) .pa-screen:has(.pa-grid-score) .pa-screen-body { display: flex; flex-direction: column; padding-top: 6px; padding-bottom: 6px; }
+    .pa-body:not(:has(.pa-drawer-open)):not(:has(.pa-sheet-open)) .pa-screen:has(.pa-grid-score) .pa-screen-body { display: flex; flex-direction: column; min-height: 0; padding: 5px 6px; }
+    .pa-body:not(:has(.pa-drawer-open)):not(:has(.pa-sheet-open)) .pa-grid-score { margin: 0 !important; padding: 0 !important; gap: 0 !important; max-height: none !important; }
     .pa-body:not(:has(.pa-drawer-open)):not(:has(.pa-sheet-open)) .pa-screen:has(.pa-grid-score) .pa-page-head { display: none; } /* the ♪ button toggles Score off */
     .pa-body:not(:has(.pa-drawer-open)):not(:has(.pa-sheet-open)) .pa-grid-score { flex: 1; min-height: 0; display: flex !important; }
-    .pa-body:not(:has(.pa-drawer-open)):not(:has(.pa-sheet-open)) .pa-grid-score .pa-stand-screen { flex: 1; min-height: 0; display: flex; }
+    .pa-body:not(:has(.pa-drawer-open)):not(:has(.pa-sheet-open)) .pa-grid-score .pa-stand-screen { flex: 1; min-height: 0; display: flex; margin: 0; padding: 2px 4px; }
     .pa-body:not(:has(.pa-drawer-open)):not(:has(.pa-sheet-open)) .pa-grid-score .pa-staff-svg { flex: 1; min-height: 0; height: 100%; max-height: none; }
     .pa-body:not(:has(.pa-drawer-open)):not(:has(.pa-sheet-open)) .pa-screen .pa-page-head { margin-bottom: 4px; }
     .pa-body:not(:has(.pa-drawer-open)):not(:has(.pa-sheet-open)) .pa-phone-btn { white-space: nowrap; padding: 0 6px; font-size: 0.76rem; }
