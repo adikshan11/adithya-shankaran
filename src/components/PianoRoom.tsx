@@ -13,12 +13,14 @@ export default function PianoRoom() {
       <div className="card flex flex-wrap items-center justify-between gap-5 p-5">
         <div className="flex items-center gap-4">
           <span className="pa-seal" aria-hidden="true">
-            <span>8</span>
+            <span className="pa-seal-grade">8</span>
+            <span className="pa-seal-word">GRADE</span>
           </span>
           <div>
             <h2 id="piano-heading" className="text-2xl font-bold tracking-tight">Off the clock</h2>
-            <p className="mt-0.5 font-semibold text-ink">Grade 8 Electronic Keyboard, Trinity College London</p>
-            <p className="mt-0.5 text-sm text-muted">Behind the curtain: a playable arranger keyboard with a recorded concert grand.</p>
+            <p className="mt-1 text-xs font-bold tracking-[0.14em] text-accent uppercase">Certificate</p>
+            <p className="font-semibold text-ink">Grade 8 in Electronic Keyboard, Trinity Guildhall (Trinity College London)</p>
+            <p className="mt-0.5 text-sm text-muted">Earned while learning piano as a child. Behind the curtain is an arranger keyboard you can play.</p>
           </div>
         </div>
         <button

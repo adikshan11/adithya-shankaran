@@ -171,7 +171,33 @@ for (const song of songs) {
   await quiet();
 }
 
-// 9. Starting a style stops a playing song, and starting a song stops a style.
+// 9. Changing the sound mid-song switches the song to the new sound, smoothly and still audible.
+await engine.playSong(songs[1]);
+await wait(1500);
+engine.selectCategory('Strings');
+await engine.load(engine.sound.bank);
+const switched = await loudness(1800);
+check('Song', 'sound change mid-song (to String Ensemble)', engine.sound.name === 'String Ensemble' && switched > 0.01, `now ${engine.sound.name}, level ${switched.toFixed(3)}`);
+engine.selectCategory('Organ');
+const toOrgan = await loudness(1800);
+check('Song', 'second change mid-song (to Drawbar Organ)', engine.sound.name === 'Drawbar Organ' && toOrgan > 0.01, `now ${engine.sound.name}, level ${toOrgan.toFixed(3)}`);
+engine.stopSong();
+engine.selectSound(0);
+await quiet();
+
+// 10. Balance turns the accompaniment down and up.
+engine.selectStyle(0);
+engine.startStyle();
+engine.setBalance(0.5);
+const middle = await loudness(1500);
+engine.setBalance(0);
+const none = await loudness(1500);
+engine.setBalance(0.5);
+engine.stopStyle();
+await quiet();
+check('Balance', 'accompaniment follows the balance slider', middle > 0.01 && none < middle / 4, `centre ${middle.toFixed(3)}, keyboard only ${none.toFixed(3)}`);
+
+// 11. Starting a style stops a playing song, and starting a song stops a style.
 await engine.playSong(songs[0]);
 engine.startStyle();
 check('Switching', 'style stops the song', engine.song === null && engine.running, '');

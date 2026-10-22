@@ -10,7 +10,9 @@
     background: radial-gradient(circle at 35% 30%, #f8e3a0, #c99a3c 55%, #8a6420);
     box-shadow: 0 0 0 3px rgb(201 154 60 / 0.35), inset 0 -3px 6px rgb(0 0 0 / 0.3), 0 6px 14px -6px rgb(138 100 32 / 0.8);
   }
-  .pa-seal span { font-family: Georgia, serif; font-size: 1.7rem; font-weight: 700; color: #3a2508; text-shadow: 0 1px 0 rgb(255 255 255 / 0.5); }
+  .pa-seal { flex-direction: column; gap: 0; line-height: 1; }
+  .pa-seal-grade { font-family: Georgia, serif; font-size: 1.55rem; font-weight: 700; color: #3a2508; text-shadow: 0 1px 0 rgb(255 255 255 / 0.5); }
+  .pa-seal-word { font-size: 0.42rem; font-weight: 800; letter-spacing: 0.18em; color: #5a3d10; }
 
   .pa-handle {
     border-radius: 999px;
@@ -242,8 +244,35 @@
     transition: transform 0.06s, box-shadow 0.06s;
   }
   .pa-pedal-down { transform: translateY(3px); box-shadow: 0 1px 0 #3b3e45, inset 0 2px 5px rgb(0 0 0 / 0.35), 0 0 12px rgb(89 208 255 / 0.6); }
-  .pa-volume { display: flex; align-items: center; gap: 0.75rem; }
-  .pa-volume input { accent-color: #59d0ff; width: 9rem; }
+  /* Faders, as on the Pa300's top panel: a dark slot with a ribbed cap. */
+  .pa-faders { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+  .pa-fader { display: grid; gap: 2px; width: 11rem; }
+  .pa-fader-label { font-size: 0.58rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #9ea2ab; }
+  .pa-fader-scale { display: flex; justify-content: space-between; font-size: 0.5rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6f737b; }
+  .pa-fader input { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; margin: 0; background: transparent; cursor: pointer; }
+  .pa-fader input::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: #050506; box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.9), 0 1px 0 rgb(255 255 255 / 0.08); }
+  .pa-fader input::-moz-range-track { height: 6px; border-radius: 3px; background: #050506; box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.9), 0 1px 0 rgb(255 255 255 / 0.08); }
+  .pa-fader input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 24px;
+    margin-top: -9px;
+    border-radius: 3px;
+    background:
+      linear-gradient(90deg, transparent 6px, #f5f5f5 6px, #f5f5f5 10px, transparent 10px),
+      repeating-linear-gradient(180deg, #4a4c52 0 2px, #2a2b2f 2px 4px);
+    box-shadow: 0 3px 4px rgb(0 0 0 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.25);
+  }
+  .pa-fader input::-moz-range-thumb {
+    width: 16px;
+    height: 24px;
+    border: 0;
+    border-radius: 3px;
+    background:
+      linear-gradient(90deg, transparent 6px, #f5f5f5 6px, #f5f5f5 10px, transparent 10px),
+      repeating-linear-gradient(180deg, #4a4c52 0 2px, #2a2b2f 2px 4px);
+    box-shadow: 0 3px 4px rgb(0 0 0 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.25);
+  }
 
   /* Keybed */
   .pa-felt { height: 6px; margin: 10px -28px 0; background: linear-gradient(180deg, #6f0f19, #3c050c); box-shadow: inset 0 2px 3px rgb(0 0 0 / 0.5); }
@@ -370,14 +399,47 @@
   /* Joystick and pedal block, left of the keys */
   .pa-keyrow { display: grid; grid-template-columns: 92px 1fr; gap: 10px; align-items: stretch; }
   .pa-left { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 8px 0; border-radius: 10px; background: linear-gradient(180deg, #1c1d21, #121316); box-shadow: inset 0 0 0 1px #2f3136; }
-  .pa-joy { position: relative; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; cursor: grab; touch-action: none; background: radial-gradient(circle, #1e2024 40%, #0a0b0d); box-shadow: inset 0 3px 8px rgb(0 0 0 / 0.9), 0 0 0 2px #3b3e45; }
-  .pa-joy span { width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f2f3f5, #6d7179); box-shadow: 0 4px 6px rgb(0 0 0 / 0.75); transition: transform 0.08s; }
+  /* Joystick, Pa300-style: a square housing, a ribbed rubber boot, and a black stick that leans as it is pushed. */
+  .pa-joy {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
+    cursor: grab;
+    touch-action: none;
+    background: linear-gradient(145deg, #2e3035, #121316);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 -2px 4px rgb(0 0 0 / 0.6), 0 0 0 1px #050506, 0 4px 8px rgb(0 0 0 / 0.6);
+  }
+  .pa-joy:active { cursor: grabbing; }
+  .pa-joy-boot {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: repeating-radial-gradient(circle, #1a1b1e 0 3px, #25272b 3px 5px);
+    box-shadow: inset 0 2px 6px rgb(0 0 0 / 0.9);
+  }
+  .pa-joy-stick {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #5a5d64, #0c0d0f 70%);
+    box-shadow: 0 0 0 2px #050506, 4px 7px 7px rgb(0 0 0 / 0.75);
+    transition: transform 0.12s ease-out;
+  }
+  .pa-joy-arrow { position: absolute; font-size: 7px; color: #6f737b; pointer-events: none; }
+  .pa-joy-arrow-left { left: 4px; top: 50%; transform: translateY(-50%); }
+  .pa-joy-arrow-right { right: 4px; top: 50%; transform: translateY(-50%); }
+  .pa-joy-arrow-up { top: 3px; left: 50%; transform: translateX(-50%); }
   .pa-left-label { font-size: 0.52rem; font-weight: 700; letter-spacing: 0.06em; color: #9ea2ab; text-align: center; }
   .pa-left .pa-pedal { min-width: 0; width: 76px; padding: 0.45rem 0.3rem; }
   @media (max-width: 640px) {
     .pa-keyrow { grid-template-columns: 1fr; }
     .pa-left { flex-direction: row; padding: 6px; }
-    .pa-joy { width: 52px; height: 52px; }
+    .pa-joy { width: 60px; height: 60px; }
     .pa-main { grid-template-columns: 1fr 5.6rem; }
     .pa-grid-meters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }

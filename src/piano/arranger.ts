@@ -350,6 +350,9 @@ export class Arranger {
   private banks = new Map<string, Map<number, AudioBuffer>>();
   private bankLoads = new Map<string, Promise<void>>();
   private loudness = new Map<string, number>();
+  private ready = new Set<string>();
+  private songItem: Sound | null = null;
+  balance = 0.5;
   private held = new Map<number, Playing>();
   private down = new Set<number>();
   private left = new Set<number>();
@@ -509,7 +512,9 @@ export class Arranger {
       }
     };
     this.loading = 'Loading sounds 0%';
-    const promise = Promise.all(Array.from({ length: 6 }, worker)).then(() => undefined);
+    const promise = Promise.all(Array.from({ length: 6 }, worker)).then(() => {
+      this.ready.add(bankId);
+    });
     this.bankLoads.set(bankId, promise);
     this.onChange();
     return promise;
@@ -718,6 +723,15 @@ export class Arranger {
     this.onChange();
   }
 
+  setBalance(value: number) {
+    this.balance = value;
+    if (this.ctx) {
+      this.accompaniment.gain.setTargetAtTime(1.1 * value, this.ctx.currentTime, 0.03);
+      this.drums.gain.setTargetAtTime(1.2 * value, this.ctx.currentTime, 0.03);
+    }
+    this.onChange();
+  }
+
   toggleReverb() {
     this.reverb = !this.reverb;
     if (this.ctx) this.wet.gain.setTargetAtTime(this.reverb ? 0.22 : 0, this.ctx.currentTime, 0.05);
@@ -819,6 +833,8 @@ export class Arranger {
     this.songLength = 0;
     this.onChange();
     const item = soundNamed(song.sound);
+    this.soundIndex = sounds.indexOf(item);
+    this.songItem = item;
     const [score] = await Promise.all([
       song.file
         ? fetch(song.file).then((response) => response.arrayBuffer()).then(parseScore)
@@ -834,7 +850,7 @@ export class Arranger {
     this.songAt = 0;
     this.songStart = this.ctx.currentTime + 0.25;
     if (song.drone !== undefined) this.drone(song.drone, this.songStart, this.songLength + 1.5);
-    this.songTimer = setInterval(() => this.songTick(item), 30);
+    this.songTimer = setInterval(() => this.songTick(), 30);
     this.onChange();
   }
 
@@ -864,8 +880,16 @@ export class Arranger {
     }
   }
 
-  private songTick(item: Sound) {
+  // The song plays in the selected sound. Choosing another sound mid-song switches from the next note once that
+  // sound has loaded (until then the previous one carries on), and notes already ringing finish in their own sound.
+  private songTick() {
     if (!this.ctx) return;
+    const chosen = this.sound;
+    if (chosen !== this.songItem) {
+      if (this.ready.has(chosen.bank)) this.songItem = chosen;
+      else void this.load(chosen.bank);
+    }
+    const item = this.songItem ?? chosen;
     const horizon = this.ctx.currentTime + 0.2;
     while (this.songAt < this.songNotes.length && this.songStart + this.songNotes[this.songAt].time < horizon) {
       const note = this.songNotes[this.songAt++];

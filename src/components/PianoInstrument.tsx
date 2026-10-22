@@ -247,7 +247,7 @@ export default function PianoInstrument() {
             <span className="pa-brand-model">PRO ARRANGER · 61</span>
           </div>
           <span className="pa-grille" aria-hidden="true" />
-          <span className="pa-badge">Grade 8 · Trinity College London</span>
+          <span className="pa-badge">Touch screen · 33 sounds · 13 styles</span>
         </div>
 
         <div className="pa-panel">
@@ -336,10 +336,18 @@ export default function PianoInstrument() {
         </div>
 
         <div className="pa-controls">
-          <label className="pa-volume">
-            <span className="pa-label m-0">Master</span>
-            <input type="range" min={0} max={1} step={0.01} value={arranger.volume} onChange={(event) => arranger.setVolume(Number(event.target.value))} />
-          </label>
+          <div className="pa-faders">
+            <label className="pa-fader">
+              <span className="pa-fader-label">Master volume</span>
+              <input type="range" min={0} max={1} step={0.01} value={arranger.volume} onChange={(event) => arranger.setVolume(Number(event.target.value))} />
+              <span className="pa-fader-scale" aria-hidden="true"><span>Min</span><span>Max</span></span>
+            </label>
+            <label className="pa-fader">
+              <span className="pa-fader-label">Balance</span>
+              <input type="range" min={0} max={1} step={0.01} value={arranger.balance} onChange={(event) => arranger.setBalance(Number(event.target.value))} />
+              <span className="pa-fader-scale" aria-hidden="true"><span>Keyboard</span><span>Style · Song</span></span>
+            </label>
+          </div>
           <div className="flex flex-wrap gap-1.5">
             <PanelButton label="Song" active={Boolean(arranger.song)} onClick={() => open('song')} />
             <PanelButton label="Metro" active={arranger.metronome} onClick={() => { arranger.toggleMetronome(); open('metro'); }} />
@@ -374,9 +382,13 @@ export default function PianoInstrument() {
                 arranger.setModulation(0);
               }}
             >
-              <span style={{ transform: `translate(${joy.x * 18}px, ${-joy.y * 18}px)` }} />
+              <span className="pa-joy-boot" aria-hidden="true" />
+              <span className="pa-joy-stick" aria-hidden="true" style={{ transform: `translate(${joy.x * 14}px, ${-joy.y * 14}px) rotate(${joy.x * 18}deg)` }} />
+              <span className="pa-joy-arrow pa-joy-arrow-left" aria-hidden="true">◀</span>
+              <span className="pa-joy-arrow pa-joy-arrow-right" aria-hidden="true">▶</span>
+              <span className="pa-joy-arrow pa-joy-arrow-up" aria-hidden="true">▲</span>
             </div>
-            <span className="pa-left-label">Bend ↔ · Mod ↑</span>
+            <span className="pa-left-label">PITCH ◀ ▶ · MOD ▲</span>
             <button
               type="button"
               aria-pressed={arranger.pedal}
