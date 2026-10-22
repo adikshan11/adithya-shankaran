@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
+import { primeAudio } from '../piano/audioPrime';
 import type { CSSProperties } from 'react';
 
 // Each curtain half is drawn as velvet strips: they slide different distances and bunch at the side like real
@@ -112,7 +113,10 @@ export default function PianoRoom() {
           title={open ? 'Close the piano stage' : 'Open the curtain'}
           onPointerEnter={() => void loadInstrument()}
           onFocus={() => void loadInstrument()}
-          onClick={() => pianoStore.set(!open)}
+          onClick={() => {
+            if (!open) primeAudio(); // start phone audio inside this tap, so the piano can sound at once
+            pianoStore.set(!open);
+          }}
           className="pa-handle pa-card-button"
         >
           <PianoIcon open={open} />
@@ -140,7 +144,11 @@ export default function PianoRoom() {
                 </span>
               </div>
               <button ref={closer} type="button" className="pa-overlay-close" aria-label="Close the curtain" onClick={() => pianoStore.set(false)}>
-                <span aria-hidden="true">✕</span> Close <kbd>Esc</kbd>
+                {/* A drawn cross: the ✕ character renders thin and off-centre in some phone fonts. */}
+                <svg className="pa-close-icon" viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M4 4 L12 12 M12 4 L4 12" />
+                </svg>
+                <span className="pa-close-label">Close</span> <kbd>Esc</kbd>
               </button>
               <div id="piano-stage" className="pa-stage">
                 <Suspense fallback={<div className="pa-stage-wait" />}>

@@ -5,6 +5,7 @@
 import { parseScore } from './midi';
 import type { Note } from './midi';
 import { barLength, meters } from './notation';
+import { preferPlayback, takePrimed, unlock } from './audioPrime';
 import type { ScoreNote, TimeSignature } from './notation';
 import type { Song } from './songs';
 
@@ -479,7 +480,8 @@ export class Arranger {
     if (typeof window === 'undefined') return false;
     const Context = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Context) return false;
-    const ctx = new Context({ latencyHint: 'interactive' });
+    preferPlayback();
+    const ctx = takePrimed() ?? new Context({ latencyHint: 'interactive' });
     this.ctx = ctx;
     const limiter = ctx.createDynamicsCompressor();
     limiter.threshold.value = -10;
@@ -518,6 +520,11 @@ export class Arranger {
     const data = this.noise.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
     return true;
+  }
+
+  // Unlock audio from a completed tap or a click (iOS will not start sound from a finger going down).
+  unlockAudio() {
+    if (this.init() && this.ctx && this.ctx.state !== 'running') unlock(this.ctx);
   }
 
   // The final output (after the limiter), for recording exactly what the speakers play.

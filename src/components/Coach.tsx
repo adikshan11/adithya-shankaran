@@ -119,7 +119,7 @@ export default function Coach({ mood, text, tick, tempo }: { mood: Mood; text: s
           <path d={pose.mouth} className={mood === 'happy' || mood === 'astonished' ? 'co-mouth' : 'co-stroke'} strokeWidth={1.7} />
         </g>
       </svg>
-      <p className="pa-coach-bubble">{text}</p>
+      <p className="pa-coach-bubble"><span className="pa-coach-text">{text}</span></p>
     </div>
   );
 }

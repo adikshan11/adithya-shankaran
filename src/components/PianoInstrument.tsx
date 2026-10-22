@@ -257,8 +257,7 @@ function MeterPicker({ value, disabled, onPick }: { value: string; disabled: boo
   );
 }
 
-// The front panel's natural size at desktop width; a landscape phone scales it down to fit.
-const PANEL_WIDTH = 1400;
+// Smallest key height worth playing on a phone held sideways.
 const KEYS_MIN = 175;
 
 type Played = { midi: number; start: number; end?: number };
@@ -372,25 +371,15 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         const island = turn === 90 ? 'left' : turn === -90 || turn === 270 ? 'right' : 'both';
         root.style.setProperty('--island-l', island === 'right' ? '0px' : 'env(safe-area-inset-left)');
         root.style.setProperty('--island-r', island === 'left' ? '0px' : 'env(safe-area-inset-right)');
-        // Scale the panel to the width inside the safe area, then shrink it until the keys get KEYS_MIN pixels.
-        const bar = root.querySelector<HTMLElement>('.pa-phonebar');
-        const insets = bar ? parseFloat(getComputedStyle(bar).paddingLeft) - 8 + parseFloat(getComputedStyle(bar).paddingRight) - 48 : 0;
-        let scale = Math.min((root.clientWidth - 24 - Math.max(0, insets)) / PANEL_WIDTH, 1);
-        root.style.setProperty('--fit', scale.toFixed(3));
+        // Nothing is scaled down: the panel opens as its own full-size view (keys step aside), and the sheet music
+        // sits at full size above the keys, which take the height that is left.
+        root.style.removeProperty('--fit');
         const keys = root.querySelector<HTMLElement>('.pa-keys');
-        const panel = root.querySelector<HTMLElement>('.pa-drawer');
         const stage = root.closest<HTMLElement>('.pa-overlay');
-        if (!keys || !panel) return;
-        const top = () => keys.getBoundingClientRect().top + (stage?.scrollTop ?? 0);
-        const room = window.innerHeight - 4 - KEYS_MIN;
-        for (let pass = 0; pass < 4; pass++) {
-          const over = top() - room;
-          const height = panel.getBoundingClientRect().height;
-          if (over <= 1 || scale <= 0.42 || !height) break; // nothing to shrink while the panel is closed
-          scale = Math.max(0.42, (scale * (height - over)) / height);
-          root.style.setProperty('--fit', scale.toFixed(3));
-        }
-        root.style.setProperty('--keys-h', `${Math.max(KEYS_MIN - 20, Math.floor(window.innerHeight - top() - 4))}px`);
+        if (!keys || !keys.offsetParent) return;
+        const top = keys.getBoundingClientRect().top + (stage?.scrollTop ?? 0);
+        const homeBar = stage ? parseFloat(getComputedStyle(stage).paddingBottom) || 0 : 0; // iPhone home indicator inset
+        root.style.setProperty('--keys-h', `${Math.max(KEYS_MIN - 55, Math.floor(window.innerHeight - top - 4 - homeBar))}px`);
       } else if (window.matchMedia('(max-width: 760px) and (orientation: portrait)').matches) {
         // Portrait phone: the keys take the rest of the screen below the touch screen and quick bar.
         root.style.removeProperty('--fit');
@@ -606,6 +595,16 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   };
   useEffect(() => () => midiOff.current?.(), []);
 
+  // Phones: any completed tap, click or key press unlocks the audio if the browser still holds it back.
+  useEffect(() => {
+    const wake = () => arranger.unlockAudio();
+    const events = ['touchend', 'click', 'keydown'] as const;
+    for (const name of events) window.addEventListener(name, wake, { capture: true, passive: true });
+    return () => {
+      for (const name of events) window.removeEventListener(name, wake, { capture: true });
+    };
+  }, [arranger]);
+
   // Learn: choose a piece and a hand; the keys to press glow green and the music waits until they are played.
   const learn = arranger.learn;
   const startLearn = (songId: string, chosen = hand, pace = speed) => {
@@ -697,27 +696,6 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
 
         <div className={`pa-drawer ${drawer ? 'pa-drawer-open' : ''}`}>
         <div className="pa-panel">
-          <div className="pa-group pa-group-style">
-            <span className="pa-label">Style</span>
-            <div className="grid grid-cols-4 gap-1.5">
-              {styleCategories.map((name) => (
-                <PanelButton key={name} label={name} active={arranger.style.category === name} onClick={() => { arranger.selectStyleCategory(name); open('style', name); }} />
-              ))}
-            </div>
-            <span className="pa-label mt-3">Variation</span>
-            <div className="grid grid-cols-4 gap-1.5">
-              {[1, 2, 3, 4].map((variation) => (
-                <PanelButton key={variation} label={String(variation)} active={arranger.variation === variation} onClick={() => arranger.setVariation(variation)} />
-              ))}
-            </div>
-            <div className="mt-3 grid grid-cols-4 gap-1.5">
-              <PanelButton label="Intro" tone="red" active={arranger.intro} onClick={() => { arranger.startStyle(true); say('Intro: one bar count-in'); }} />
-              <PanelButton label="Fill" tone="red" onClick={() => { arranger.fill(); say('Fill on the next bar'); }} />
-              <PanelButton label="Ending" tone="red" onClick={() => { arranger.ending(); say('Ending on the next bar'); }} />
-              <PanelButton label={arranger.running ? 'Stop' : 'Start'} tone="green" active={arranger.running} onClick={() => arranger.toggleStyle()} />
-            </div>
-          </div>
-
           <div className="pa-centre">
             <PianoScreen
               arranger={arranger}
@@ -791,19 +769,44 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             </div>
           </div>
 
-          <div className="pa-group pa-group-sound">
-            <span className="pa-label">Sound</span>
-            <div className="grid grid-cols-4 gap-1.5">
-              {categories.map((name) => (
-                <PanelButton key={name} label={name} active={arranger.sound.category === name} onClick={() => { arranger.selectCategory(name); open('sound', name); }} />
-              ))}
+          {/* Style and Sound groups: either side of the screen on a desktop (grid areas), swipeable pages on a
+              phone held upright. */}
+          <div className="pa-pages">
+            <div className="pa-group pa-group-style">
+              <span className="pa-label">Style</span>
+              <div className="grid grid-cols-4 gap-1.5">
+                {styleCategories.map((name) => (
+                  <PanelButton key={name} label={name} active={arranger.style.category === name} onClick={() => { arranger.selectStyleCategory(name); open('style', name); }} />
+                ))}
+              </div>
+              <span className="pa-label mt-3">Variation</span>
+              <div className="grid grid-cols-4 gap-1.5">
+                {[1, 2, 3, 4].map((variation) => (
+                  <PanelButton key={variation} label={String(variation)} active={arranger.variation === variation} onClick={() => arranger.setVariation(variation)} />
+                ))}
+              </div>
+              <div className="mt-3 grid grid-cols-4 gap-1.5">
+                <PanelButton label="Intro" tone="red" active={arranger.intro} onClick={() => { arranger.startStyle(true); say('Intro: one bar count-in'); }} />
+                <PanelButton label="Fill" tone="red" onClick={() => { arranger.fill(); say('Fill on the next bar'); }} />
+                <PanelButton label="Ending" tone="red" onClick={() => { arranger.ending(); say('Ending on the next bar'); }} />
+                <PanelButton label={arranger.running ? 'Stop' : 'Start'} tone="green" active={arranger.running} onClick={() => arranger.toggleStyle()} />
+              </div>
             </div>
-            <span className="pa-label mt-3">Transpose and octave</span>
-            <div className="grid grid-cols-4 gap-1.5">
-              <PanelButton label="Trans −" onClick={() => arranger.changeTranspose(-1)} />
-              <PanelButton label="Trans +" onClick={() => arranger.changeTranspose(1)} />
-              <PanelButton label="Oct −" onClick={() => arranger.changeOctave(-1)} />
-              <PanelButton label="Oct +" onClick={() => arranger.changeOctave(1)} />
+
+            <div className="pa-group pa-group-sound">
+              <span className="pa-label">Sound</span>
+              <div className="grid grid-cols-4 gap-1.5">
+                {categories.map((name) => (
+                  <PanelButton key={name} label={name} active={arranger.sound.category === name} onClick={() => { arranger.selectCategory(name); open('sound', name); }} />
+                ))}
+              </div>
+              <span className="pa-label mt-3">Transpose and octave</span>
+              <div className="grid grid-cols-4 gap-1.5">
+                <PanelButton label="Trans −" onClick={() => arranger.changeTranspose(-1)} />
+                <PanelButton label="Trans +" onClick={() => arranger.changeTranspose(1)} />
+                <PanelButton label="Oct −" onClick={() => arranger.changeOctave(-1)} />
+                <PanelButton label="Oct +" onClick={() => arranger.changeOctave(1)} />
+              </div>
             </div>
           </div>
         </div>
