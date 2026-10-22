@@ -25,8 +25,20 @@
     .pa-card-button .pa-handle-text { display: none; }
     .pa-card-button .pa-handle-wide { display: inline; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.04em; }
   }
-  .pa-seal-grade { font-family: Georgia, serif; font-size: 1.55rem; font-weight: 700; color: #3a2508; text-shadow: 0 1px 0 rgb(255 255 255 / 0.5); }
-  .pa-seal-word { font-size: 0.42rem; font-weight: 800; letter-spacing: 0.18em; color: #5a3d10; }
+  /* Medal: gold coin, engraved inner ring, a centred 8, and two ribbon tails behind it. */
+  .pa-seal { position: relative; isolation: isolate; box-shadow: inset 0 0 0 4px #e8c66e, inset 0 0 0 5px #a07a2c, 0 6px 14px -6px rgb(138 100 32 / 0.8); }
+  .pa-seal::before, .pa-seal::after {
+    content: "";
+    position: absolute;
+    top: 72%;
+    z-index: -1;
+    width: 15px;
+    height: 26px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+  }
+  .pa-seal::before { left: 12px; background: linear-gradient(180deg, #2a62c9, #1a428f); transform: rotate(14deg); }
+  .pa-seal::after { right: 12px; background: linear-gradient(180deg, #a3192b, #6e0d1a); transform: rotate(-14deg); }
+  .pa-seal-grade { font-family: Georgia, "Times New Roman", serif; font-size: 1.75rem; font-weight: 700; line-height: 1; color: #3a2508; text-shadow: 0 1px 0 rgb(255 255 255 / 0.55); transform: translateY(1px); }
 
   .pa-handle {
     display: inline-flex;
@@ -62,10 +74,10 @@
   .pa-stage-wait { min-height: 22rem; }
   /* The curtain and the keyboard's rise wait for "pa-go", added straight to them when the instrument is ready, so
      starting the motion restyles only those elements. (Not the screen: React rewrites its class on every beat.) */
-  .pa-tear:not(.pa-go) .pa-tear-half,
+  .pa-tear:not(.pa-go) .pa-strip,
+  .pa-tear:not(.pa-go) .pa-drape,
   .pa-tear:not(.pa-go) .pa-tear-valance,
-  .pa-tear:not(.pa-go),
-  .pa-keys:not(.pa-go) { animation-play-state: paused; }
+  .pa-tear:not(.pa-go) { animation-play-state: paused; }
   .pa-tuning {
     position: absolute;
     left: 50%;
@@ -328,7 +340,8 @@
   }
   .pa-key { position: absolute; top: 0; display: flex; align-items: flex-end; justify-content: center; }
   /* The keyboard rises as one piece (one layer); 61 keys animating separately cost a 180 ms frame. */
-  .pa-keys { animation: pa-key-rise 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.1) 0.5s both; }
+  /* No rise animation: the keys start invisible, so animating them in forced a 370 ms raster of all 61 keys in one
+     frame mid-curtain. They are drawn while the curtain is shut, and the curtain reveals them. */
   .pa-key-white {
     height: 100%;
     z-index: 1;
@@ -563,16 +576,28 @@
 
   /* Opening: full-screen red velvet curtains meet along a soft wavy fold and part left and right; the valance lifts
      away after. Three layers moving with transform only, so the motion stays on the compositor. */
-  .pa-tear { position: fixed; inset: 0; z-index: 88; pointer-events: none; animation: pa-tear-done 0s linear 1.7s forwards; }
-  .pa-tear-half {
+  .pa-tear { position: fixed; inset: 0; z-index: 88; pointer-events: none; animation: pa-tear-done 0s linear 1.75s forwards; }
+  /* Four strips per half, each a quarter of the half wide. Strip i slides so the strips end bunched at the side,
+     1.4 vw apart; then the bunched drape slides away. */
+  .pa-drape { position: absolute; top: 0; bottom: 0; width: 50%; will-change: transform; }
+  .pa-drape-left { left: 0; animation: pa-drape-left 0.45s cubic-bezier(0.4, 0, 1, 1) 1.25s forwards; }
+  .pa-drape-right { right: 0; transform: scaleX(-1); animation: pa-drape-right 0.45s cubic-bezier(0.4, 0, 1, 1) 1.25s forwards; }
+  .pa-strip {
     position: absolute;
-    inset: 0;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--i) * 100% / 4);
+    width: calc(100% / 4 + 12px);
     will-change: transform;
-    /* Red velvet: soft shading at the sides and folds of light and shadow (pleats). */
     background:
-      linear-gradient(90deg, rgb(0 0 0 / 0.45), transparent 6%, transparent 42%, rgb(0 0 0 / 0.35) 50%, transparent 58%, transparent 94%, rgb(0 0 0 / 0.45)),
-      repeating-linear-gradient(90deg, #5c0812 0, #8e1222 1.6%, #b51c2e 2.6%, #8e1222 3.6%, #5c0812 5%);
+      linear-gradient(90deg, rgb(0 0 0 / 0.35), transparent 18%, transparent 70%, rgb(0 0 0 / 0.4)),
+      repeating-linear-gradient(90deg, #5c0812 0, #8e1222 22px, #b51c2e 36px, #8e1222 50px, #5c0812 70px);
+    animation: pa-strip 1.2s cubic-bezier(0.33, 0, 0.2, 1) 0.05s forwards;
   }
+  .pa-strip-edge { clip-path: polygon(0 0, calc(100% - 12px + 6.0px) 0.0%, calc(100% - 12px + 10.9px) 2.5%, calc(100% - 12px + 11.7px) 5.0%, calc(100% - 12px + 7.9px) 7.5%, calc(100% - 12px + 2.5px) 10.0%, calc(100% - 12px + 0.0px) 12.5%, calc(100% - 12px + 2.5px) 15.0%, calc(100% - 12px + 7.9px) 17.5%, calc(100% - 12px + 11.7px) 20.0%, calc(100% - 12px + 10.9px) 22.5%, calc(100% - 12px + 6.0px) 25.0%, calc(100% - 12px + 1.1px) 27.5%, calc(100% - 12px + 0.3px) 30.0%, calc(100% - 12px + 4.1px) 32.5%, calc(100% - 12px + 9.5px) 35.0%, calc(100% - 12px + 12.0px) 37.5%, calc(100% - 12px + 9.5px) 40.0%, calc(100% - 12px + 4.1px) 42.5%, calc(100% - 12px + 0.3px) 45.0%, calc(100% - 12px + 1.1px) 47.5%, calc(100% - 12px + 6.0px) 50.0%, calc(100% - 12px + 10.9px) 52.5%, calc(100% - 12px + 11.7px) 55.0%, calc(100% - 12px + 7.9px) 57.5%, calc(100% - 12px + 2.5px) 60.0%, calc(100% - 12px + 0.0px) 62.5%, calc(100% - 12px + 2.5px) 65.0%, calc(100% - 12px + 7.9px) 67.5%, calc(100% - 12px + 11.7px) 70.0%, calc(100% - 12px + 10.9px) 72.5%, calc(100% - 12px + 6.0px) 75.0%, calc(100% - 12px + 1.1px) 77.5%, calc(100% - 12px + 0.3px) 80.0%, calc(100% - 12px + 4.1px) 82.5%, calc(100% - 12px + 9.5px) 85.0%, calc(100% - 12px + 12.0px) 87.5%, calc(100% - 12px + 9.5px) 90.0%, calc(100% - 12px + 4.1px) 92.5%, calc(100% - 12px + 0.3px) 95.0%, calc(100% - 12px + 1.1px) 97.5%, calc(100% - 12px + 6.0px) 100.0%, 0 100%); }
+  @keyframes pa-strip { to { transform: translateX(calc(var(--i) * (1.6vw - 50vw / 4))); } }
+  @keyframes pa-drape-left { to { transform: translateX(-22%); } }
+  @keyframes pa-drape-right { to { transform: scaleX(-1) translateX(-22%); } }
   .pa-tear-valance {
     /* Gold-trimmed valance across the top; it lifts away once the curtains have parted. */
     position: absolute;
@@ -584,12 +609,8 @@
     background: radial-gradient(ellipse at 50% 100%, transparent 62%, #4d0610 64%) 0 0 / 80px 46px repeat-x, linear-gradient(180deg, #7c0f1d, #4d0610);
     border-bottom: 2px solid #c99a3c;
     box-shadow: 0 6px 14px rgb(0 0 0 / 0.45);
-    animation: pa-valance-up 0.5s ease-in 1.1s forwards;
+    animation: pa-valance-up 0.5s cubic-bezier(0.4, 0, 0.6, 1) 1.1s forwards;
   }
-  .pa-tear-left { clip-path: polygon(0% 0%, calc(50% + 0.0px + 1px) 0.00%, calc(50% + 6.4px + 1px) 2.08%, calc(50% + 9.0px + 1px) 4.17%, calc(50% + 6.4px + 1px) 6.25%, calc(50% + 0.0px + 1px) 8.33%, calc(50% + -6.4px + 1px) 10.42%, calc(50% + -9.0px + 1px) 12.50%, calc(50% + -6.4px + 1px) 14.58%, calc(50% + -0.0px + 1px) 16.67%, calc(50% + 6.4px + 1px) 18.75%, calc(50% + 9.0px + 1px) 20.83%, calc(50% + 6.4px + 1px) 22.92%, calc(50% + 0.0px + 1px) 25.00%, calc(50% + -6.4px + 1px) 27.08%, calc(50% + -9.0px + 1px) 29.17%, calc(50% + -6.4px + 1px) 31.25%, calc(50% + -0.0px + 1px) 33.33%, calc(50% + 6.4px + 1px) 35.42%, calc(50% + 9.0px + 1px) 37.50%, calc(50% + 6.4px + 1px) 39.58%, calc(50% + 0.0px + 1px) 41.67%, calc(50% + -6.4px + 1px) 43.75%, calc(50% + -9.0px + 1px) 45.83%, calc(50% + -6.4px + 1px) 47.92%, calc(50% + -0.0px + 1px) 50.00%, calc(50% + 6.4px + 1px) 52.08%, calc(50% + 9.0px + 1px) 54.17%, calc(50% + 6.4px + 1px) 56.25%, calc(50% + -0.0px + 1px) 58.33%, calc(50% + -6.4px + 1px) 60.42%, calc(50% + -9.0px + 1px) 62.50%, calc(50% + -6.4px + 1px) 64.58%, calc(50% + -0.0px + 1px) 66.67%, calc(50% + 6.4px + 1px) 68.75%, calc(50% + 9.0px + 1px) 70.83%, calc(50% + 6.4px + 1px) 72.92%, calc(50% + 0.0px + 1px) 75.00%, calc(50% + -6.4px + 1px) 77.08%, calc(50% + -9.0px + 1px) 79.17%, calc(50% + -6.4px + 1px) 81.25%, calc(50% + -0.0px + 1px) 83.33%, calc(50% + 6.4px + 1px) 85.42%, calc(50% + 9.0px + 1px) 87.50%, calc(50% + 6.4px + 1px) 89.58%, calc(50% + 0.0px + 1px) 91.67%, calc(50% + -6.4px + 1px) 93.75%, calc(50% + -9.0px + 1px) 95.83%, calc(50% + -6.4px + 1px) 97.92%, calc(50% + -0.0px + 1px) 100.00%, 0% 100%); animation: pa-part-left 1.25s cubic-bezier(0.65, 0, 0.3, 1) 0.1s forwards; }
-  .pa-tear-right { clip-path: polygon(100% 0%, calc(50% + 0.0px - 1px) 0.00%, calc(50% + 6.4px - 1px) 2.08%, calc(50% + 9.0px - 1px) 4.17%, calc(50% + 6.4px - 1px) 6.25%, calc(50% + 0.0px - 1px) 8.33%, calc(50% + -6.4px - 1px) 10.42%, calc(50% + -9.0px - 1px) 12.50%, calc(50% + -6.4px - 1px) 14.58%, calc(50% + -0.0px - 1px) 16.67%, calc(50% + 6.4px - 1px) 18.75%, calc(50% + 9.0px - 1px) 20.83%, calc(50% + 6.4px - 1px) 22.92%, calc(50% + 0.0px - 1px) 25.00%, calc(50% + -6.4px - 1px) 27.08%, calc(50% + -9.0px - 1px) 29.17%, calc(50% + -6.4px - 1px) 31.25%, calc(50% + -0.0px - 1px) 33.33%, calc(50% + 6.4px - 1px) 35.42%, calc(50% + 9.0px - 1px) 37.50%, calc(50% + 6.4px - 1px) 39.58%, calc(50% + 0.0px - 1px) 41.67%, calc(50% + -6.4px - 1px) 43.75%, calc(50% + -9.0px - 1px) 45.83%, calc(50% + -6.4px - 1px) 47.92%, calc(50% + -0.0px - 1px) 50.00%, calc(50% + 6.4px - 1px) 52.08%, calc(50% + 9.0px - 1px) 54.17%, calc(50% + 6.4px - 1px) 56.25%, calc(50% + -0.0px - 1px) 58.33%, calc(50% + -6.4px - 1px) 60.42%, calc(50% + -9.0px - 1px) 62.50%, calc(50% + -6.4px - 1px) 64.58%, calc(50% + -0.0px - 1px) 66.67%, calc(50% + 6.4px - 1px) 68.75%, calc(50% + 9.0px - 1px) 70.83%, calc(50% + 6.4px - 1px) 72.92%, calc(50% + 0.0px - 1px) 75.00%, calc(50% + -6.4px - 1px) 77.08%, calc(50% + -9.0px - 1px) 79.17%, calc(50% + -6.4px - 1px) 81.25%, calc(50% + -0.0px - 1px) 83.33%, calc(50% + 6.4px - 1px) 85.42%, calc(50% + 9.0px - 1px) 87.50%, calc(50% + 6.4px - 1px) 89.58%, calc(50% + 0.0px - 1px) 91.67%, calc(50% + -6.4px - 1px) 93.75%, calc(50% + -9.0px - 1px) 95.83%, calc(50% + -6.4px - 1px) 97.92%, calc(50% + -0.0px - 1px) 100.00%, 100% 100%); animation: pa-part-right 1.25s cubic-bezier(0.65, 0, 0.3, 1) 0.1s forwards; }
-  @keyframes pa-part-left { 0% { transform: none; } 10% { transform: translateX(-8px); } 100% { transform: translateX(-102%); } }
-  @keyframes pa-part-right { 0% { transform: none; } 10% { transform: translateX(8px); } 100% { transform: translateX(102%); } }
   @keyframes pa-valance-up { to { transform: translateY(-110%); } }
   @keyframes pa-tear-done { to { visibility: hidden; } }
 
@@ -634,9 +655,34 @@
   .pa-sheet-chevron { display: inline-block; color: #59d0ff; transition: transform 0.25s ease; }
   .pa-sheet-open .pa-sheet-chevron { transform: rotate(90deg); }
   .pa-sheet-hint { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.66rem; font-weight: 500; letter-spacing: 0.02em; text-transform: none; color: #8d9098; }
-  .pa-sheet-meter { display: inline-flex; align-items: center; gap: 6px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #9ea2ab; }
-  .pa-sheet-meter select { padding: 3px 6px; border-radius: 5px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0; color: #eef0f4; background: #22242a; box-shadow: inset 0 0 0 1px #3b3e45; }
-  .pa-sheet-meter select:disabled { opacity: 0.6; }
+  .pa-meter-picker { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+  .pa-meter-picker-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #9ea2ab; }
+  .pa-meter-button { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; color: #eef0f4; background: #22242a; box-shadow: inset 0 0 0 1px #3b3e45; }
+  .pa-meter-button:hover:not(:disabled) { box-shadow: inset 0 0 0 1px #59d0ff; }
+  .pa-meter-button span { font-size: 0.7rem; color: #59d0ff; }
+  .pa-meter-button:disabled { opacity: 0.55; cursor: not-allowed; }
+  .pa-meter-pop {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 8px);
+    z-index: 30;
+    display: grid;
+    gap: 10px;
+    width: 18.5rem;
+    padding: 12px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #13284f, #0a1730);
+    box-shadow: 0 0 0 1px #2a62c9, 0 18px 40px rgb(0 0 0 / 0.6);
+    animation: pa-pop-in 0.16s ease-out;
+  }
+  .pa-meter-group-name { display: block; margin-bottom: 6px; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #8ca3c9; }
+  .pa-meter-options { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+  .pa-meter-option { display: grid; place-items: center; height: 44px; border-radius: 7px; color: #eef4ff; background: rgb(255 255 255 / 0.06); transition: background 0.12s, box-shadow 0.12s; }
+  .pa-meter-option:hover { background: rgb(89 208 255 / 0.18); }
+  .pa-meter-option-on { background: rgb(89 208 255 / 0.25); box-shadow: inset 0 0 0 1.5px #59d0ff; }
+  .pa-meter-frac { display: grid; justify-items: center; font-family: "Times New Roman", Times, serif; font-variant-numeric: lining-nums; line-height: 0.95; }
+  .pa-meter-frac b { font-size: 1rem; }
+  @keyframes pa-pop-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   .pa-sheet-clear { padding: 3px 12px; border-radius: 999px; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #d8dbe1; background: rgb(255 255 255 / 0.06); box-shadow: inset 0 0 0 1px #3b3e45; }
   .pa-sheet-clear:hover { background: rgb(255 255 255 / 0.12); }
   .pa-sheet-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.35s ease; }
@@ -667,40 +713,73 @@
 
   .pa-phonebar, .pa-drawer-head, .pa-rotate-hint { display: none; }
 
-  /* Phones, portrait or landscape: the keyboard first. The panel, faders and sheet music open as a drawer from
-     the toolbar; keys are finger-sized and play on touch (the mini keyboard and ‹ › move along the keyboard). */
+  /* Phones. The instrument stays one body, as on a real arranger: no pop-over drawer.
+     Portrait: brand, the touch screen, a quick bar, then finger-sized keys; Panel shows the full button panel in
+     place. Landscape: the whole desktop front panel (styles, screen, sounds) scaled to fit the width, with the
+     joystick and big keys below, like holding the real keyboard. */
   @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
-    .pa-overlay { padding: 8px 8px 16px; }
-    .pa-overlay-close { position: fixed; top: 8px; right: 8px; padding: 5px 10px; font-size: 0.75rem; background: rgb(20 22 26 / 0.9); }
+    .pa-overlay { padding: 10px 12px 20px; }
+    .pa-overlay-close { position: static; display: flex; width: max-content; margin: 0 0 10px auto; padding: 6px 14px; font-size: 0.8rem; }
     .pa-overlay-close kbd { display: none; }
-    .pa-body { padding: 10px 12px 12px; border-radius: 16px; }
-    .pa-top { padding-right: 84px; }
-    .pa-phonebar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
-    .pa-phone-btn { min-width: 34px; height: 36px; padding: 0 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #eceef2; background: linear-gradient(180deg, #45474d, #2c2e33); box-shadow: 0 2px 0 #0b0b0d, inset 0 1px 0 rgb(255 255 255 / 0.12); }
+    .pa-body { padding: 14px 14px 14px; border-radius: 18px; }
+    .pa-body::before, .pa-body::after { display: none; }
+    .pa-top { padding: 0 2px 12px; }
+    .pa-phonebar { display: grid; grid-template-columns: 44px 1fr 44px; gap: 8px; margin-top: 12px; }
+    .pa-phone-btn { height: 40px; padding: 0 10px; border-radius: 10px; font-size: 0.82rem; font-weight: 700; color: #eceef2; background: linear-gradient(180deg, #45474d, #2c2e33); box-shadow: 0 2px 0 #0b0b0d, inset 0 1px 0 rgb(255 255 255 / 0.12); }
     .pa-phone-btn:active { transform: translateY(1px); }
     .pa-phone-on { box-shadow: 0 2px 0 #0b0b0d, inset 0 0 0 1px #59d0ff, 0 0 10px rgb(89 208 255 / 0.4); }
-    .pa-phone-sound { flex: 1; min-width: 6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; font-size: 0.9rem; font-weight: 700; color: #fff; }
-    .pa-drawer { display: none; }
-    .pa-drawer-open { display: block; position: fixed; inset: 0 0 auto 0; z-index: 95; max-height: 90dvh; overflow-y: auto; overscroll-behavior: contain; padding: 10px 10px 16px; background: #111216; box-shadow: 0 20px 40px rgb(0 0 0 / 0.7); border-radius: 0 0 18px 18px; animation: pa-drawer-in 0.25s ease-out; }
-    .pa-drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: #9ea2ab; }
-    .pa-drawer-done { padding: 5px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0; text-transform: none; color: #071a33; background: #59d0ff; }
+    .pa-phone-sound { display: grid; place-items: center; min-width: 0; height: 40px; padding: 0 8px; border-radius: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; font-weight: 700; color: #dff6ff; background: #0d1a33; box-shadow: inset 0 0 0 1px #2a62c9; }
     .pa-left { display: none; }
     .pa-keyrow { grid-template-columns: 1fr; }
     .pa-keys { min-width: calc(36 * 44px); touch-action: none; }
     .pa-keybed { margin: 0; padding: 0; scrollbar-width: none; }
     .pa-keybed::-webkit-scrollbar { display: none; }
-    .pa-felt { margin: 8px -12px 0; }
+    .pa-felt { margin: 12px -14px 0; }
+    .pa-panel { padding: 10px; }
   }
   @media (max-width: 760px) and (orientation: portrait) {
-    .pa-keys { height: 46dvh; min-height: 240px; }
-    .pa-rotate-hint { display: block; width: 100%; padding-top: 2px; text-align: center; font-size: 0.72rem; color: #9ea2ab; }
+    /* The quick bar: sound ‹ name › on the first row, Style, Sustain and Panel in three equal buttons below. */
+    .pa-phonebar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .pa-phonebar > :nth-child(1) { grid-column: 1; grid-row: 1; }
+    .pa-phonebar > :nth-child(2) { grid-column: 1 / 4; grid-row: 1; margin: 0 52px; }
+    .pa-phonebar > :nth-child(3) { grid-column: 3; grid-row: 1; justify-self: end; }
+    .pa-phonebar > :nth-child(1), .pa-phonebar > :nth-child(3) { width: 44px; position: relative; z-index: 1; }
+    .pa-phonebar > :nth-child(4), .pa-phonebar > :nth-child(5), .pa-phonebar > :nth-child(6) { grid-row: 2; grid-column: auto; }
+    /* !important: the dial row also carries Tailwind's flex utility, whose layer wins over this one. */
+    .pa-drawer:not(.pa-drawer-open) .pa-group,
+    .pa-drawer:not(.pa-drawer-open) .pa-dial-row,
+    .pa-drawer:not(.pa-drawer-open) .pa-controls,
+    .pa-drawer:not(.pa-drawer-open) .pa-sheet { display: none !important; }
+    .pa-drawer:not(.pa-drawer-open) .pa-panel { padding: 0; border: 0; background: none; box-shadow: none; }
+    .pa-drawer-open { animation: pa-drawer-in 0.25s ease-out; }
+    .pa-keys { height: var(--keys-h, 44dvh); min-height: 220px; }
+    .pa-rotate-hint { display: block; grid-column: 1 / -1; text-align: center; font-size: 0.72rem; color: #9ea2ab; }
   }
   @media (max-height: 500px) and (orientation: landscape) {
-    .pa-top { display: none; }
-    .pa-phonebar { margin-top: 0; padding-right: 92px; } /* room for the floating Close button */
-    .pa-keys { height: calc(100dvh - 116px); min-height: 160px; }
-    .pa-howto, .pa-credits { display: none; }
-    .pa-overlay { padding-top: 6px; }
+    .pa-overlay { padding: 6px 10px 12px; }
+    /* A round ✕ in the corner, clear of the panel's buttons. */
+    .pa-overlay-close { position: absolute; top: 6px; right: 12px; z-index: 90; display: grid; place-items: center; width: 30px; height: 30px; margin: 0; padding: 0; font-size: 0; background: rgb(20 22 26 / 0.92); }
+    .pa-overlay-close span { font-size: 0.85rem; }
+    .pa-top, .pa-phonebar, .pa-howto, .pa-credits { display: none; }
+    .pa-body { padding: 10px 12px 10px; }
+    /* The desktop panel, drawn at its desktop size and scaled to fit (zoom keeps it crisp and its taps exact). */
+    /* Split, Song, Metro, Reverb and PC keys stand in a column beside the panel instead of a row under it. */
+    .pa-drawer { zoom: var(--fit, 0.6); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; width: 1400px; margin: 0 auto; }
+    .pa-drawer .pa-sheet { grid-column: 1 / -1; margin: 0; }
+    .pa-panel { grid-template-columns: 1fr 1.38fr 1fr; align-items: start; padding: 12px 14px; }
+    .pa-dial-row, .pa-faders { display: none !important; }
+    .pa-drawer .pa-controls { flex-direction: column; justify-content: flex-end; margin: 0; padding: 0 0 2px; }
+    .pa-drawer .pa-controls > div { flex-direction: column; flex-wrap: nowrap; }
+    /* A phone has no computer keyboard, so PC keys goes; that leaves the top of the column free for ✕. */
+    .pa-drawer .pa-controls > div > :last-child { display: none; }
+    .pa-drawer .pa-controls .pa-btn { width: 96px; }
+    .pa-left { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 6px; }
+    .pa-left-label { display: none; }
+    .pa-joy { width: 64px; height: 64px; }
+    .pa-left .pa-pedal { width: 64px; font-size: 0.6rem; padding: 0.35rem 0.2rem; }
+    .pa-keyrow { grid-template-columns: auto 1fr; gap: 8px; }
+    .pa-keys { height: var(--keys-h, calc(100dvh - 230px)); min-height: 150px; min-width: calc(36 * 48px); }
+    .pa-felt { margin: 8px -12px 0; }
   }
   @keyframes pa-drawer-in { from { transform: translateY(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
 

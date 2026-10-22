@@ -93,6 +93,14 @@ const BANKS: Record<string, Bank> = {
   koto: fluid('koto', false, 0.4, fluidMid),
 };
 
+// Download the grand piano's notes nearest middle C into the browser cache while the page is idle, so opening the
+// piano only has to decode them. No AudioContext is needed for this.
+export function prefetchGrand(count = 3) {
+  const nearest = [...salamanderFiles].sort((a, b) => Math.abs(a[1] - 62) - Math.abs(b[1] - 62)).slice(0, count);
+  for (const [file] of nearest) void fetch(`/samples/salamander/${file}.mp3`).catch(() => undefined);
+}
+
+
 type Kind = 'piano' | 'epiano' | 'organ' | 'pluck' | 'strings' | 'brass' | 'lead' | 'pad' | 'bass';
 export type Sound = { category: string; name: string; bank: string; kind: Kind; bright?: boolean };
 

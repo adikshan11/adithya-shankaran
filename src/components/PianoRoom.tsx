@@ -1,5 +1,10 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
+import type { CSSProperties } from 'react';
+
+// Each curtain half is drawn as velvet strips: they slide different distances and bunch at the side like real
+// fabric being drawn, using transform only (squashing one big layer with scaleX re-rasterised it every frame).
+const STRIPS = 4;
 import { pianoStore } from '../piano/store';
 
 // The instrument is its own download. It is fetched when the browser is idle after the page loads (or on hover),
@@ -33,7 +38,7 @@ export default function PianoRoom() {
 
   useEffect(() => {
     const idle = (window as Window & { requestIdleCallback?: (callback: () => void) => number }).requestIdleCallback;
-    const warm = () => void loadInstrument();
+    const warm = () => void loadInstrument().then((module) => module.prefetchGrand());
     if (idle) idle(warm);
     else setTimeout(warm, 2500);
   }, []);
@@ -64,8 +69,20 @@ export default function PianoRoom() {
   const partCurtain = useCallback(() => {
     const idle = (window as Window & { requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number }).requestIdleCallback;
     const go = () => document.querySelectorAll('.pa-tear, #piano-stage .pa-keys').forEach((element) => element.classList.add('pa-go'));
-    if (idle) idle(go, { timeout: 400 });
-    else setTimeout(go, 100);
+    // Start only after the main thread has been quiet for three frames in a row (audio start-up can block it for over
+    // a second on Windows), so the curtain never stalls mid-motion. Give up waiting after 2.5 s.
+    const started = performance.now();
+    let calm = 0;
+    let last = started;
+    const watch = (now: number) => {
+      calm = now - last < 25 ? calm + 1 : 0;
+      last = now;
+      if (calm >= 3 || now - started > 2500) {
+        if (idle) idle(go, { timeout: 200 });
+        else go();
+      } else requestAnimationFrame(watch);
+    };
+    requestAnimationFrame(watch);
   }, []);
 
   return (
@@ -73,7 +90,6 @@ export default function PianoRoom() {
       <div className="card pa-card p-5">
         <span className="pa-seal pa-card-seal" aria-hidden="true">
           <span className="pa-seal-grade">8</span>
-          <span className="pa-seal-word">GRADE</span>
         </span>
         <div className="pa-card-title">
           <h2 id="piano-heading" className="text-2xl font-bold tracking-tight">Off the clock</h2>
@@ -106,8 +122,13 @@ export default function PianoRoom() {
           <div className="pa-overlay" role="dialog" aria-modal="true" aria-label="Piano stage" onClick={(event) => event.target === event.currentTarget && pianoStore.set(false)}>
             <div className="pa-overlay-frame">
               <div className="pa-tear" aria-hidden="true">
-                <span className="pa-tear-half pa-tear-left" />
-                <span className="pa-tear-half pa-tear-right" />
+                {(['left', 'right'] as const).map((side) => (
+                  <span key={side} className={`pa-drape pa-drape-${side}`}>
+                    {Array.from({ length: STRIPS }, (_, index) => (
+                      <span key={index} className={`pa-strip ${index === STRIPS - 1 ? 'pa-strip-edge' : ''}`} style={{ '--i': index } as CSSProperties} />
+                    ))}
+                  </span>
+                ))}
                 <span className="pa-tear-valance" />
                 <span className="pa-tuning">
                   <span className="pa-tuning-dots"><span /><span /><span /></span>

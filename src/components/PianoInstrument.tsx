@@ -1,3 +1,4 @@
+export { prefetchGrand } from '../piano/arranger';
 import { memo, useEffect, useReducer, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { Arranger, HIGH, LOW, PC_BASE_MAX, PC_BASE_MIN, PC_KEYS, PC_KEY_OFFSET, SPLIT, categories, isBlack, keyName, sounds, styleCategories, styleMeter } from '../piano/arranger';
@@ -124,6 +125,81 @@ function KeyMap() {
   );
 }
 
+// Time-signature picker: a themed popover with simple metres (crotchet beats) and quaver metres in two rows.
+function MeterPicker({ value, disabled, onPick }: { value: string; disabled: boolean; onPick: (label: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const away = (event: PointerEvent) => {
+      if (!box.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        setOpen(false);
+      }
+    };
+    window.addEventListener('pointerdown', away);
+    window.addEventListener('keydown', escape, true);
+    return () => {
+      window.removeEventListener('pointerdown', away);
+      window.removeEventListener('keydown', escape, true);
+    };
+  }, [open]);
+  const groups = [
+    { name: 'Crotchet beats', items: meters.filter((item) => item.unit === 4) },
+    { name: 'Quaver beats', items: meters.filter((item) => item.unit === 8) },
+  ];
+  return (
+    <div className="pa-meter-picker" ref={box}>
+      <span className="pa-meter-picker-label">Time</span>
+      <button
+        type="button"
+        className="pa-meter-button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        disabled={disabled}
+        title={disabled ? 'The style sets the time signature while it plays' : 'Time signature for what you write'}
+        onClick={() => setOpen((current) => !current)}
+      >
+        {value}
+        <span aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="pa-meter-pop" role="listbox" aria-label="Time signature">
+          {groups.map((group) => (
+            <div key={group.name} className="pa-meter-group">
+              <span className="pa-meter-group-name">{group.name}</span>
+              <div className="pa-meter-options">
+                {group.items.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    role="option"
+                    aria-selected={item.label === value}
+                    className={`pa-meter-option ${item.label === value ? 'pa-meter-option-on' : ''}`}
+                    onClick={() => {
+                      onPick(item.label);
+                      setOpen(false);
+                    }}
+                  >
+                    <span className="pa-meter-frac"><b>{item.beats}</b><b>{item.unit}</b></span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// The front panel's natural size at desktop width; a landscape phone scales it down to fit.
+const PANEL_WIDTH = 1400;
+const KEYS_MIN = 175;
+
 type Played = { midi: number; start: number; end?: number };
 
 function PianoInstrument({ onReady }: { onReady?: () => void }) {
@@ -198,7 +274,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       setTimeout(() => setBeat(false), 90);
       refresh();
     };
-    // Tell the stage the instrument is ready once the grand piano's middle notes have loaded (or after 2.5 s at most).
+    // Tell the stage the instrument is ready once the grand piano's middle notes have loaded (the 3 nearest middle C; the rest stream in while you play), or after 1.5 s at most.
     let told = false;
     const ready = () => {
       if (told) return;
@@ -206,8 +282,8 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       arranger.pauseLoading(2400); // let the curtain part without decoding competing for the CPU
       onReady?.();
     };
-    const fallback = setTimeout(ready, 2500);
-    void arranger.loadFirst('salamander').then(ready);
+    const fallback = setTimeout(ready, 1500);
+    void arranger.loadFirst('salamander', 3).then(ready);
     arranger.chime();
     const greeting = 'Concert Grand ready. Tap the screen to choose sounds, styles and songs.';
     setMessage(greeting);
@@ -215,12 +291,48 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       const element = scroller.current;
       if (element) element.scrollLeft = (element.scrollWidth - element.clientWidth) / 2;
     }, 50);
-    const fit = () => setBars(window.innerWidth < 700 ? 2 : window.innerWidth < 1000 ? 3 : 4);
+    const fit = () => {
+      setBars(window.innerWidth < 700 ? 2 : window.innerWidth < 1000 ? 3 : 4);
+      const root = scroller.current?.closest<HTMLElement>('.pa-instrument');
+      if (!root) return;
+      if (window.matchMedia('(max-height: 500px) and (orientation: landscape)').matches) {
+        // Scale the panel to the width first, then shrink it until the keys get at least KEYS_MIN pixels of height.
+        let scale = Math.min((root.clientWidth - 24) / PANEL_WIDTH, 1);
+        root.style.setProperty('--fit', scale.toFixed(3));
+        const keys = root.querySelector<HTMLElement>('.pa-keys');
+        const panel = root.querySelector<HTMLElement>('.pa-drawer');
+        const stage = root.closest<HTMLElement>('.pa-overlay');
+        if (!keys || !panel) return;
+        const top = () => keys.getBoundingClientRect().top + (stage?.scrollTop ?? 0);
+        const room = window.innerHeight - 14 - KEYS_MIN;
+        for (let pass = 0; pass < 4; pass++) {
+          const over = top() - room;
+          if (over <= 1 || scale <= 0.42) break;
+          const height = panel.getBoundingClientRect().height;
+          scale = Math.max(0.42, (scale * (height - over)) / height);
+          root.style.setProperty('--fit', scale.toFixed(3));
+        }
+        root.style.setProperty('--keys-h', `${Math.max(KEYS_MIN - 20, Math.floor(window.innerHeight - top() - 14))}px`);
+      } else if (window.matchMedia('(max-width: 760px) and (orientation: portrait)').matches) {
+        // Portrait phone: the keys take the rest of the screen below the touch screen and quick bar.
+        root.style.removeProperty('--fit');
+        const keys = root.querySelector<HTMLElement>('.pa-keys');
+        const stage = root.closest<HTMLElement>('.pa-overlay');
+        if (!keys) return;
+        const top = keys.getBoundingClientRect().top + (stage?.scrollTop ?? 0);
+        root.style.setProperty('--keys-h', `${Math.max(220, Math.floor(window.innerHeight - top - 30))}px`);
+      } else {
+        root.style.removeProperty('--fit');
+        root.style.removeProperty('--keys-h');
+      }
+    };
     fit();
+    const refit = setTimeout(fit, 400); // again once fonts and the stage have settled
     window.addEventListener('resize', fit);
     return () => {
       clearTimeout(fallback);
       clearTimeout(centre);
+      clearTimeout(refit);
       window.removeEventListener('resize', fit);
       if (idle.current) clearTimeout(idle.current);
       arranger.dispose();
@@ -412,12 +524,8 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         </div>
 
         <div className={`pa-drawer ${drawer ? 'pa-drawer-open' : ''}`}>
-        <div className="pa-drawer-head">
-          <span>Panel</span>
-          <button type="button" className="pa-drawer-done" onClick={() => setDrawer(false)}>Done</button>
-        </div>
         <div className="pa-panel">
-          <div className="pa-group">
+          <div className="pa-group pa-group-style">
             <span className="pa-label">Style</span>
             <div className="grid grid-cols-4 gap-1.5">
               {styleCategories.map((name) => (
@@ -450,7 +558,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                 meter.current = element;
               }}
             />
-            <div className="mt-3 flex items-center justify-center gap-4">
+            <div className="pa-dial-row mt-3 flex items-center justify-center gap-4">
               <PanelButton label="Tempo −" onClick={() => arranger.changeTempo(-2)} />
               <div
                 className="pa-dial"
@@ -484,7 +592,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             </div>
           </div>
 
-          <div className="pa-group">
+          <div className="pa-group pa-group-sound">
             <span className="pa-label">Sound</span>
             <div className="grid grid-cols-4 gap-1.5">
               {categories.map((name) => (
@@ -532,19 +640,11 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             </button>
             {!songScore && (
               <>
-                <label className="pa-sheet-meter">
-                  Time
-                  <select
-                    value={standMeter.beats + '/' + standMeter.unit}
-                    disabled={arranger.running}
-                    title={arranger.running ? 'The style sets the time signature while it plays' : 'Time signature for what you write'}
-                    onChange={(event) => arranger.setMeter(meters.findIndex((item) => item.label === event.target.value))}
-                  >
-                    {meters.map((item) => (
-                      <option key={item.label} value={item.label}>{item.label}</option>
-                    ))}
-                  </select>
-                </label>
+                <MeterPicker
+                  value={`${standMeter.beats}/${standMeter.unit}`}
+                  disabled={arranger.running}
+                  onPick={(label) => arranger.setMeter(meters.findIndex((item) => item.label === label))}
+                />
                 <button
                   type="button"
                   className="pa-sheet-clear"
@@ -598,7 +698,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           >
             Sustain
           </button>
-          <button type="button" className="pa-phone-btn pa-phone-wide" aria-expanded={drawer} onClick={() => setDrawer((value) => !value)}>☰ Panel</button>
+          <button type="button" className="pa-phone-btn pa-phone-wide" aria-expanded={drawer} onClick={() => setDrawer((value) => !value)}>{drawer ? '▴ Less' : '☰ Panel'}</button>
           <span className="pa-rotate-hint">↻ Turn sideways for a bigger keyboard</span>
         </div>
 
