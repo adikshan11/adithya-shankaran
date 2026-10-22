@@ -1337,3 +1337,26 @@
   .pa-overlay .pa-body .pa-drawer-open .pa-ctl-row { gap: 4px; }
   .pa-overlay .pa-body .pa-drawer-open .pa-ctl-group > .pa-label { display: none; } /* the buttons name themselves; as in landscape */
 }
+
+/* Keys only (phones): the fold button sits centred on the line between the controls and the keys; pressed, every
+   part above the keys goes and the keys take the whole screen, with the button at their top edge to bring it back. */
+.pa-fold { display: none; }
+@media (max-width: 760px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
+  .pa-keyrow { position: relative; }
+  .pa-fold {
+    flex: none; display: grid; place-items: center; width: 36px; height: 18px; padding: 0; border-radius: 999px;
+    background: linear-gradient(180deg, #45474d, #2c2e33); box-shadow: 0 2px 6px rgb(0 0 0 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.12), 0 0 0 1px #1a1b1e;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pa-fold svg { width: 16px; height: 10px; fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .pa-fold:active { transform: scale(0.94); }
+  /* Keys only: nothing above the keys, not even the corner close (the fold button is the way back). */
+  .pa-keys-only .pa-body > :not(.pa-keyrow), .pa-keys-only ~ * , .pa-keys-only :is(.pa-howto, .pa-credits) { display: none !important; }
+  .pa-overlay:has(.pa-keys-only) .pa-overlay-close { display: none !important; }
+  .pa-keys-only .pa-body { display: block !important; }
+  .pa-keys-only .pa-fold { position: absolute; left: 50%; top: 0; z-index: 8; width: 44px; height: 20px; transform: translate(-50%, 0); border-radius: 0 0 12px 12px; }
+  .pa-keys-only .pa-fold:active { transform: translate(-50%, 0) scale(0.94); }
+}
+@media (max-width: 760px) and (orientation: portrait) {
+  .pa-overlay:has(.pa-keys-only) { padding-top: env(safe-area-inset-top); }
+}

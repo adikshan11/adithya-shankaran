@@ -303,6 +303,13 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const downbeat = useRef(0);
   const [showSheet, setShowSheet] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  // Phones: keys only. The fold button hides everything above the keys (the screen, the quick bar, the strip) so the
+  // keys take the whole screen, and brings it all back on the next tap.
+  const [keysOnly, setKeysOnly] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => refit.current());
+    return () => cancelAnimationFrame(frame);
+  }, [keysOnly]);
   const [hand, setHand] = useState<Hand>('right');
   // Bars on the screen's Score page, from its card's shape: bars that make the staff as wide (for its height) as the card.
   const [screenBars, setScreenBars] = useState(3);
@@ -910,6 +917,20 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     take.current = { origin: 0, last: 0, notes: [] };
     refresh();
   };
+  // Keys only: in the strip row (its own slot) while the controls show; at the top edge of the keys while hidden.
+  const foldButton = (
+    <button
+      type="button"
+      className="pa-fold"
+      aria-pressed={keysOnly}
+      aria-label={keysOnly ? 'Show the controls' : 'Keys only: hide the controls'}
+      title={keysOnly ? 'Show the controls' : 'Keys only'}
+      onClick={() => setKeysOnly((value) => !value)}
+    >
+      <svg viewBox="0 0 20 12" aria-hidden="true"><path d={keysOnly ? 'M3 10 L10 3 L17 10' : 'M3 2 L10 9 L17 2'} /></svg>
+    </button>
+  );
+
   // Phones have no sheet bar, so the stand carries the time signature picker and Clear beside the staff.
   const clearButton = !songScore && (
     <div className="pa-stand-tools">
@@ -994,7 +1015,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   };
 
   return (
-    <div role="region" aria-label="Piano" className="pa-instrument">
+    <div role="region" aria-label="Piano" className={`pa-instrument ${keysOnly ? 'pa-keys-only' : ''}`}>
       {learn?.result && (
         <LearnResult
           result={learn.result}
@@ -1293,6 +1314,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
 
         <div className="pa-felt" aria-hidden="true" />
         <div className="pa-mapbar">
+          {!keysOnly && foldButton}
           <div className={`pa-minimap ${edges.left || edges.right ? '' : 'pa-minimap-hidden'}`} onPointerDown={(event) => { capture(event); minimapTo(event); }} onPointerMove={(event) => { if (event.buttons) minimapTo(event); }} aria-hidden="true">
             <span ref={minimapWindow} className="pa-minimap-window" />
           </div>
@@ -1311,6 +1333,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           </label>
         </div>
         <div className="pa-keyrow">
+          {keysOnly && foldButton}
           <div className="pa-left">
             <div
               ref={joyBox}
