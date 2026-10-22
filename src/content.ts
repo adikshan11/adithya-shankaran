@@ -11,7 +11,7 @@ export const profile = {
     'Away from pipelines I play the [piano], cheer for Real Madrid, and lose more hours to Minecraft than I should.',
   ],
   status: [
-    { label: 'Live', text: 'Just shipped DQ enforcement in the shared pipeline framework: data-quality and profile scans now carry each table's domain labels' },
+    { label: 'Live', text: 'Just shipped DQ enforcement in the shared pipeline framework: data-quality and profile scans now carry each table’s domain labels' },
     { label: 'Certified', text: 'Xebia Forward Deployed Engineer, FDE-1 Level 2 on GCP, October 2026' },
   ],
   socials: [
