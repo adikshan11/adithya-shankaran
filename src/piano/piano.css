@@ -559,6 +559,34 @@
   .st-line { stroke: #2b2a27; }
   .st-ink { fill: #1d1c1a; }
   .st-recent { fill: #2a62c9; }
+  /* Grouped panel buttons: a small label over each group, as on the arranger's panel. */
+  .pa-ctl-groups { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 18px; }
+  .pa-ctl-group { display: flex; flex-direction: column; }
+  .pa-ctl-group .pa-label { margin-bottom: 4px; }
+  .pa-ctl-row { display: flex; gap: 6px; }
+  /* Learn coach */
+  .pa-coach { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; }
+  .pa-coach-face { flex: none; width: 54px; height: 54px; animation: pa-coach-pop 0.35s cubic-bezier(0.3, 1.6, 0.5, 1); }
+  .pa-coach-bubble { position: relative; flex: 1; min-width: 0; margin: 0; padding: 7px 12px; border-radius: 12px; font-size: 0.82rem; font-weight: 600; line-height: 1.35; color: #20232a; background: #fff; box-shadow: 0 1px 0 rgb(0 0 0 / 0.08), inset 0 0 0 1px #e1e4ea; }
+  .pa-coach-bubble::before { content: ""; position: absolute; left: -6px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #fff; transform: rotate(45deg); box-shadow: -1px 1px 0 #e1e4ea; }
+  .pa-coach-upset .pa-coach-bubble { background: #fff4e5; }
+  .pa-coach-upset .pa-coach-bubble::before { background: #fff4e5; }
+  .pa-coach-angry .pa-coach-bubble { background: #ffe9e7; }
+  .pa-coach-angry .pa-coach-bubble::before { background: #ffe9e7; }
+  .pa-coach-angry .pa-coach-face { animation: pa-coach-shake 0.4s ease-in-out; }
+  .co-body { fill: #ffcf4a; stroke: #c9931a; stroke-width: 1.5; }
+  .pa-coach-upset .co-body { fill: #ffbe5c; }
+  .pa-coach-angry .co-body { fill: #ff8a6b; stroke: #c4482b; }
+  .pa-coach-astonished .co-body { fill: #ffe066; }
+  .co-cap { fill: #f6f7f9; stroke: #20232a; stroke-width: 1.4; }
+  .co-cap-key { fill: #20232a; }
+  .co-cheek { fill: #ff8fa3; opacity: 0.55; }
+  .co-eye { fill: #20232a; }
+  .co-glint { fill: #fff; }
+  .co-line { fill: none; stroke: #20232a; stroke-width: 2.2; stroke-linecap: round; }
+  .co-mouth { fill: #7a2232; stroke: #20232a; stroke-width: 1.6; stroke-linejoin: round; }
+  @keyframes pa-coach-pop { from { transform: scale(0.8); } to { transform: none; } }
+  @keyframes pa-coach-shake { 0%, 100% { transform: none; } 25% { transform: translateX(-3px) rotate(-6deg); } 75% { transform: translateX(3px) rotate(6deg); } }
   /* Learn: the chord to play now, behind its noteheads */
   .st-target { fill: rgb(46 204 113 / 0.28); stroke: #1e9e57; stroke-width: 1.2; }
   .st-hollow { fill: #fbfaf6; stroke: #1d1c1a; }
@@ -836,8 +864,9 @@
     .pa-dial-row, .pa-faders { display: none !important; }
     .pa-drawer .pa-controls { flex-direction: column; justify-content: center; margin: 0; padding: 0; }
     /* Split, Song, Metro, Reverb, Rec, Takes and MIDI in two columns beside the panel. */
-    .pa-drawer .pa-controls > div { display: grid; grid-template-columns: repeat(2, 96px); }
-    .pa-drawer .pa-controls .pa-btn { width: 96px; }
+    .pa-drawer .pa-ctl-groups { flex-direction: column; align-items: stretch; gap: 6px; }
+    .pa-drawer .pa-ctl-row { display: grid; grid-template-columns: repeat(3, 84px); }
+    .pa-drawer .pa-controls .pa-btn { width: 84px; }
     /* The joystick shows with the panel; while just playing, the keys get the full width. */
     .pa-left { display: none; }
     .pa-body:has(.pa-drawer-open) .pa-left { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 4px; }

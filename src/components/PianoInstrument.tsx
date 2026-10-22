@@ -3,6 +3,7 @@ import { memo, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { songs } from '../piano/songs';
 import type { Hand } from '../piano/arranger';
 import TakesList from './TakesList';
+import Coach from './Coach';
 import { connectMidi, midiSupported } from '../piano/midiInput';
 import { TakeRecorder, listTakes, saveTake } from '../piano/recorder';
 import type { Take } from '../piano/recorder';
@@ -805,11 +806,19 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
               <span className="pa-fader-scale" aria-hidden="true"><span>Keyboard</span><span>Style · Song</span></span>
             </label>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="pa-ctl-groups">
+            <div className="pa-ctl-group">
+              <span className="pa-label">Keyboard</span>
+              <div className="pa-ctl-row">
             <PanelButton label="Split" active={arranger.split} onClick={() => { arranger.toggleSplit(); say(arranger.split ? 'Split: left of middle C plays chords and strings' : 'Full keyboard: chords from three or more notes'); }} />
-            <PanelButton label="Song" active={Boolean(arranger.song)} onClick={() => open('song')} />
-            <PanelButton label="Metro" active={arranger.metronome} onClick={() => { arranger.toggleMetronome(); open('metro'); }} />
             <PanelButton label="Reverb" active={arranger.reverb} onClick={() => arranger.toggleReverb()} />
+            <PanelButton label="Metro" active={arranger.metronome} onClick={() => { arranger.toggleMetronome(); open('metro'); }} />
+              </div>
+            </div>
+            <div className="pa-ctl-group">
+              <span className="pa-label">Player</span>
+              <div className="pa-ctl-row">
+            <PanelButton label="Song" active={Boolean(arranger.song) && !learn} onClick={() => open('song')} />
             <PanelButton
               label="Learn"
               tone="green"
@@ -821,6 +830,11 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                 } else open('learn');
               }}
             />
+              </div>
+            </div>
+            <div className="pa-ctl-group">
+              <span className="pa-label">Record</span>
+              <div className="pa-ctl-row">
             <PanelButton label={recording ? '■ Rec' : '● Rec'} tone="red" active={recording} onClick={() => void toggleRecord()} />
             <PanelButton
               label="Takes"
@@ -829,8 +843,15 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                 open('rec');
               }}
             />
+              </div>
+            </div>
+            <div className="pa-ctl-group">
+              <span className="pa-label">Connect</span>
+              <div className="pa-ctl-row">
             <PanelButton label="MIDI" active={Boolean(midiDevices?.length)} onClick={() => void toggleMidi()} />
             <PanelButton label="PC keys" className="pa-btn-pckeys" active={showLetters} onClick={() => setShowLetters((value) => !value)} />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -865,6 +886,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             <div className="pa-sheet-inner">
               {showSheet && (
                 <div className="pa-stand" aria-label="Music stand">
+                  {learn && <Coach mood={arranger.coach.mood} text={arranger.coach.text} tick={arranger.coach.tick} />}
                   <Staff
                     notes={standNotes}
                     meter={standMeter}

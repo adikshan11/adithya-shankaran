@@ -330,6 +330,9 @@ type Voice = { stop: (time: number) => void };
 type Playing = { voice: Voice; sources: AudioBufferSourceNode[] };
 type SongNote = Note & { glide?: number };
 export type Hand = 'right' | 'left' | 'both';
+export type Mood = 'idle' | 'happy' | 'astonished' | 'upset' | 'angry';
+// A note name for the coach, with a real sharp sign and the octave: C♯4.
+const spoken = (midi: number) => `${NOTE_NAMES[midi % 12].replace('#', '♯')}${Math.floor(midi / 12) - 1}`;
 
 export class Arranger {
   ctx: AudioContext | null = null;
@@ -395,7 +398,9 @@ export class Arranger {
   private songTimer: ReturnType<typeof setInterval> | null = null;
   private songNotes: SongNote[] = [];
   // Learn mode (like MuseScore's wait-for-input practice): the score waits on each chord until its notes are played.
-  learn: { song: Song; hand: Hand; steps: { start16: number; notes: number[] }[]; at: number; remaining: Set<number>; misses: number } | null = null;
+  learn: { song: Song; hand: Hand; steps: { start16: number; notes: number[] }[]; at: number; remaining: Set<number>; misses: number; streak: number; wrongRun: number } | null = null;
+  // What the coach says and how it looks after each note in Learn mode.
+  coach: { mood: Mood; text: string; tick: number } = { mood: 'idle', text: '', tick: 0 };
   private songAt = 0;
   private songStart = 0;
   private songVoices: Voice[] = [];
@@ -950,7 +955,8 @@ export class Arranger {
       byStart.set(start, (byStart.get(start) ?? new Set()).add(note.midi));
     }
     const steps = [...byStart.entries()].sort((a, b) => a[0] - b[0]).map(([start16, notes]) => ({ start16, notes: [...notes] }));
-    this.learn = { song, hand, steps, at: 0, remaining: new Set(steps[0]?.notes), misses: 0 };
+    this.learn = { song, hand, steps, at: 0, remaining: new Set(steps[0]?.notes), misses: 0, streak: 0, wrongRun: 0 };
+    this.say('idle', `Let's learn ${song.title}. Play the green key${steps[0]?.notes.length > 1 ? 's' : ''}: ${(steps[0]?.notes ?? []).map(spoken).join(' + ')}.`);
     this.onChange();
   }
 
@@ -966,16 +972,42 @@ export class Arranger {
     return this.learn?.remaining ?? new Set<number>();
   }
 
+  private say(mood: Mood, text: string) {
+    this.coach = { mood, text, tick: this.coach.tick + 1 };
+  }
+
   private learnHit(pitch: number) {
     const learn = this.learn;
     if (!learn || learn.at >= learn.steps.length) return;
     if (!learn.remaining.delete(pitch)) {
+      // A wrong note: find the note that was meant (the closest one still to play) and say what went wrong.
       learn.misses++;
+      learn.streak = 0;
+      learn.wrongRun++;
+      const wanted = [...learn.remaining].sort((a, b) => Math.abs(a - pitch) - Math.abs(b - pitch))[0];
+      if (wanted !== undefined) {
+        const gap = pitch - wanted;
+        const steps = Math.abs(gap);
+        let tip: string;
+        if (steps % 12 === 0) tip = `Right note, wrong octave: ${spoken(wanted)} is ${steps / 12 === 1 ? 'one octave' : `${steps / 12} octaves`} ${gap > 0 ? 'lower' : 'higher'}.`;
+        else if (steps <= 2) tip = `You played ${spoken(pitch)}, ${steps === 1 ? 'one semitone' : 'a whole tone'} too ${gap > 0 ? 'high' : 'low'}. The note is ${spoken(wanted)}${isBlack(pitch) !== isBlack(wanted) ? `, a ${isBlack(wanted) ? 'black' : 'white'} key` : ''}.`;
+        else tip = `You played ${spoken(pitch)}. The note is ${spoken(wanted)}, ${steps} keys to the ${gap > 0 ? 'left' : 'right'}.`;
+        if (learn.wrongRun >= 3) tip = `Three wrong in a row! Slow down and read the green note. ${tip}`;
+        this.say(learn.wrongRun >= 3 ? 'angry' : 'upset', tip);
+      }
+      this.onChange();
       return;
     }
-    if (!learn.remaining.size) {
+    learn.wrongRun = 0;
+    if (learn.remaining.size) {
+      this.say('happy', `Good! Now also ${[...learn.remaining].map(spoken).join(' + ')}.`);
+    } else {
       learn.at++;
+      learn.streak++;
       learn.remaining = new Set(learn.steps[learn.at]?.notes);
+      if (learn.at >= learn.steps.length) this.say('astonished', `Wow, you finished ${learn.song.title} with ${learn.misses} wrong ${learn.misses === 1 ? 'note' : 'notes'}!`);
+      else if (learn.streak % 10 === 0) this.say('astonished', `${learn.streak} right in a row! Keep going.`);
+      else this.say('happy', ['Nice!', 'Yes!', 'Good!', 'Lovely.', 'That’s it!'][learn.at % 5] + ` Next: ${[...learn.remaining].map(spoken).join(' + ')}.`);
     }
     this.onChange();
   }
