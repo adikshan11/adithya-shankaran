@@ -378,14 +378,14 @@
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 3px 4px rgb(0 0 0 / 0.55), 0 1px 1px rgb(0 0 0 / 0.6);
   }
   .pa-key-white { background: linear-gradient(180deg, #cfd1d5 0%, #f4f4f2 7%, #fbfbf9 60%, #f1f1ee 94%, #dcdcd8 100%); }
-  /* Pressed: the key sinks a little and lights up blue, clearly, so you can see what you played. A black key keeps
-     its shape: its front lip shrinks (less of the front shows when a key is down) instead of the key going flat. */
-  .pa-key-white.pa-key-down { background: linear-gradient(180deg, #b9c9e3 0%, #d6e6fb 12%, #cfe2fb 85%, #b7cbe8 100%); box-shadow: inset 0 0 0 1px rgb(46 120 220 / 0.55), inset 0 6px 14px rgb(42 98 201 / 0.35), 0 0 16px rgb(89 208 255 / 0.6); transform: translateY(2px); }
+  /* Pressed: the key sinks a little and glows warm gold, like lamplight on a wooden piano, so you can see what you
+     played. A black key keeps its shape: its front lip shrinks (less of the front shows when a key is down). */
+  .pa-key-white.pa-key-down { background: linear-gradient(180deg, #e6cf9a 0%, #fbeccb 12%, #f7e4bb 85%, #e2c690 100%); box-shadow: inset 0 0 0 1px rgb(201 154 60 / 0.65), inset 0 6px 14px rgb(176 120 30 / 0.3), 0 0 16px rgb(245 197 66 / 0.6); transform: translateY(2px); }
   .pa-key-black.pa-key-down {
     background:
       linear-gradient(90deg, rgb(255 255 255 / 0.05), transparent 14%, transparent 86%, rgb(0 0 0 / 0.35)),
-      linear-gradient(180deg, #0a1a2c 0%, #12304f 45%, #1b4a78 86%, #3d6f9e 88%, #13283f 95%, #08111b 100%);
-    box-shadow: inset 0 0 0 1px rgb(89 208 255 / 0.55), 0 0 14px rgb(89 208 255 / 0.75), 0 2px 3px rgb(0 0 0 / 0.5);
+      linear-gradient(180deg, #1a1206 0%, #3a2a0e 45%, #6b4c16 86%, #a07a2c 88%, #3a2a0e 95%, #140d04 100%);
+    box-shadow: inset 0 0 0 1px rgb(245 197 66 / 0.55), 0 0 14px rgb(245 197 66 / 0.7), 0 2px 3px rgb(0 0 0 / 0.5);
     transform: translateY(2px);
   }
   /* The stretch of keys the computer keyboard reaches right now: a thin bar along the felt. */
