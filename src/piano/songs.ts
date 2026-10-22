@@ -15,6 +15,7 @@ export type Song = {
   meter?: { beats: number; unit: number }; // time signature of a generated piece (4/4 if not given)
   shift16?: number; // semiquavers that put the first note in its place in the bar (a pickup), for generated pieces
   easy?: boolean; // a beginner's piece: listed first in Learn
+  short?: string; // a name that fits a small screen
 };
 
 // A tune from [MIDI note, beats] pairs, one crotchet beat lasting `beat` seconds.
@@ -106,15 +107,15 @@ const hamsadhwani = () => {
 const janaGanaMana = () => tune(0.48, [[72, 0.5], [74, 0.5], [76, 0.5], [76, 0.5], [76, 0.5], [76, 0.5], [76, 0.5], [76, 0.5], [76, 1], [76, 0.5], [76, 0.5], [74, 0.5], [76, 0.5], [77, 1], [76, 1], [76, 0.5], [76, 0.5], [74, 1], [74, 0.5], [74, 0.5], [71, 0.5], [74, 0.5], [72, 2], [72, 1], [79, 1], [79, 0.5], [79, 0.5], [79, 0.5], [79, 0.5], [79, 0.5], [79, 0.5], [79, 1], [79, 0.5], [78, 0.5], [79, 0.5], [78, 0.5], [79, 1], [77, 1], [77, 0.5], [77, 0.5], [77, 1], [77, 0.5], [76, 0.5], [74, 0.5], [77, 0.5], [76, 3], [76, 1], [76, 0.5], [76, 0.5], [76, 1], [76, 0.5], [74, 0.5], [79, 0.5], [79, 0.5], [79, 0.5], [77, 0.5], [77, 1], [77, 1], [76, 1], [76, 0.5], [76, 0.5], [74, 1], [74, 0.5], [74, 0.5], [71, 0.5], [74, 0.5], [72, 3], [76, 0.5], [76, 0.5], [76, 0.5], [76, 0.5], [76, 1], [76, 0.5], [77, 0.5], [74, 0.5], [76, 0.5], [77, 3], [76, 0.5], [77, 0.5], [79, 0.5], [79, 0.5], [79, 1], [77, 0.5], [76, 0.5], [74, 0.5], [77, 0.5], [76, 3], [76, 1], [76, 1], [74, 0.5], [74, 0.5], [74, 0.5], [74, 0.5], [71, 0.5], [74, 0.5], [72, 3], [79, 0.5], [79, 0.5], [79, 0.5], [79, 0.5], [79, 1], [79, 0.5], [78, 0.5], [79, 1], [79, 0.5], [79, 0.5], [78, 0.5], [81, 0.5], [79, 1], [77, 1], [77, 0.5], [77, 0.5], [76, 1], [76, 0.5], [76, 0.25], [77, 0.25], [74, 0.5], [77, 0.5], [76, 2], [83, 0.5], [83, 0.5], [84, 3], [83, 0.5], [81, 0.5], [83, 3], [81, 0.5], [79, 0.5], [81, 4], [72, 0.5], [72, 0.5], [74, 0.5], [74, 0.5], [76, 0.5], [76, 0.5], [74, 0.5], [76, 0.5], [77, 4]]);
 
 export const songs: Song[] = [
-  { id: 'twinkle', title: 'Twinkle, Twinkle, Little Star', composer: 'Traditional', detail: 'A first piece: one hand, five notes', sound: 'Grand Piano', notes: twinkle, beat: 0.6, easy: true },
-  { id: 'anthem', title: 'Jana Gana Mana', composer: 'Rabindranath Tagore', detail: 'The national anthem of India, full version', sound: 'Grand Piano', notes: janaGanaMana, beat: 0.48, shift16: 0, easy: true },
-  { id: 'birthday', title: 'Happy Birthday to You', composer: 'Mildred & Patty Hill', detail: 'In 3/4, with a pickup and a dotted rhythm', sound: 'Grand Piano', notes: birthday, beat: 0.55, meter: { beats: 3, unit: 4 }, shift16: 8, easy: true },
-  { id: 'bach', title: 'Prelude in C major, BWV 846', composer: 'J. S. Bach', detail: 'The Well-Tempered Clavier, Book I', sound: 'Grand Piano', file: '/songs/wtk1-prelude1.mid' },
-  { id: 'elise', title: 'Für Elise, WoO 59', composer: 'L. van Beethoven', detail: 'Bagatelle in A minor', sound: 'Grand Piano', file: '/songs/fur_Elise_WoO59.mid' },
-  { id: 'turca', title: 'Rondo alla Turca, K. 331', composer: 'W. A. Mozart', detail: 'Piano Sonata No. 11, third movement', sound: 'Grand Piano', file: '/songs/KV331_3_RondoAllaTurca.mid' },
-  { id: 'prelude4', title: 'Prelude in E minor, Op. 28 No. 4', composer: 'F. Chopin', detail: '24 Preludes', sound: 'Grand Piano', file: '/songs/Chop-28-4.mid' },
-  { id: 'raindrop', title: '“Raindrop” Prelude, Op. 28 No. 15', composer: 'F. Chopin', detail: '24 Preludes', sound: 'Grand Piano', file: '/songs/Chop-28-15.mid' },
-  { id: 'minute', title: '“Minute” Waltz, Op. 64 No. 1', composer: 'F. Chopin', detail: 'Waltz in D-flat major', sound: 'Grand Piano', file: '/songs/chopin_valse_op64_no1.mid' },
-  { id: 'yaman', title: 'Raga Yaman', composer: 'Hindustani classical', detail: 'Alaap and taans on sitar, over tanpura', sound: 'Sitar', notes: yaman, drone: 61, beat: 0.55 },
-  { id: 'hamsadhwani', title: 'Raga Hamsadhwani', composer: 'Carnatic classical', detail: 'Phrases and a tihai on flute (venu), over tanpura', sound: 'Flute', notes: hamsadhwani, drone: 62, beat: 0.5 },
+  { id: 'twinkle', short: 'Twinkle Twinkle', title: 'Twinkle, Twinkle, Little Star', composer: 'Traditional', detail: 'A first piece: one hand, five notes', sound: 'Grand Piano', notes: twinkle, beat: 0.6, easy: true },
+  { id: 'anthem', short: 'Jana Gana Mana', title: 'Jana Gana Mana', composer: 'Rabindranath Tagore', detail: 'The national anthem of India, full version', sound: 'Grand Piano', notes: janaGanaMana, beat: 0.48, shift16: 0, easy: true },
+  { id: 'birthday', short: 'Happy Birthday', title: 'Happy Birthday to You', composer: 'Mildred & Patty Hill', detail: 'In 3/4, with a pickup and a dotted rhythm', sound: 'Grand Piano', notes: birthday, beat: 0.55, meter: { beats: 3, unit: 4 }, shift16: 8, easy: true },
+  { id: 'bach', short: 'Bach Prelude', title: 'Prelude in C major, BWV 846', composer: 'J. S. Bach', detail: 'The Well-Tempered Clavier, Book I', sound: 'Grand Piano', file: '/songs/wtk1-prelude1.mid' },
+  { id: 'elise', short: 'Für Elise', title: 'Für Elise, WoO 59', composer: 'L. van Beethoven', detail: 'Bagatelle in A minor', sound: 'Grand Piano', file: '/songs/fur_Elise_WoO59.mid' },
+  { id: 'turca', short: 'Rondo alla Turca', title: 'Rondo alla Turca, K. 331', composer: 'W. A. Mozart', detail: 'Piano Sonata No. 11, third movement', sound: 'Grand Piano', file: '/songs/KV331_3_RondoAllaTurca.mid' },
+  { id: 'prelude4', short: 'Prelude E minor', title: 'Prelude in E minor, Op. 28 No. 4', composer: 'F. Chopin', detail: '24 Preludes', sound: 'Grand Piano', file: '/songs/Chop-28-4.mid' },
+  { id: 'raindrop', short: 'Raindrop Prelude', title: '“Raindrop” Prelude, Op. 28 No. 15', composer: 'F. Chopin', detail: '24 Preludes', sound: 'Grand Piano', file: '/songs/Chop-28-15.mid' },
+  { id: 'minute', short: 'Minute Waltz', title: '“Minute” Waltz, Op. 64 No. 1', composer: 'F. Chopin', detail: 'Waltz in D-flat major', sound: 'Grand Piano', file: '/songs/chopin_valse_op64_no1.mid' },
+  { id: 'yaman', short: 'Raga Yaman', title: 'Raga Yaman', composer: 'Hindustani classical', detail: 'Alaap and taans on sitar, over tanpura', sound: 'Sitar', notes: yaman, drone: 61, beat: 0.55 },
+  { id: 'hamsadhwani', short: 'Hamsadhwani', title: 'Raga Hamsadhwani', composer: 'Carnatic classical', detail: 'Phrases and a tihai on flute (venu), over tanpura', sound: 'Flute', notes: hamsadhwani, drone: 62, beat: 0.5 },
 ];

@@ -37,7 +37,7 @@ export default function TakesList({ takes, ctx, onChange, say }: { takes: Take[]
     if (!context) return;
     say('Preparing the WAV file…');
     try {
-      download(await toWav(take.audio, context), `${fileName(take)}.wav`);
+      await download(await toWav(take.audio, context), `${fileName(take)}.wav`);
       say(`Saved ${take.name} as a WAV file: it plays on any phone or computer.`);
     } catch {
       download(take.audio, `${fileName(take)}.${take.mime.includes('mp4') ? 'm4a' : 'webm'}`);
@@ -74,7 +74,7 @@ export default function TakesList({ takes, ctx, onChange, say }: { takes: Take[]
           </span>
           <button type="button" className="pa-take-btn" onClick={() => play(take)}>{playing === take.id ? '■' : '▶'}</button>
           <button type="button" className="pa-take-btn" onClick={() => void saveWav(take)}>WAV</button>
-          <button type="button" className="pa-take-btn" disabled={!take.events.length} onClick={() => download(toMidi(take.events, take.name), `${fileName(take)}.mid`)}>MIDI</button>
+          <button type="button" className="pa-take-btn" disabled={!take.events.length} onClick={() => void download(toMidi(take.events, take.name), `${fileName(take)}.mid`)}>MIDI</button>
           <button
             type="button"
             className="pa-take-btn"

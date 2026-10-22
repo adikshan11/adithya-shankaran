@@ -124,7 +124,20 @@ export function toMidi(events: PlayedEvent[], name: string) {
   return new Blob([new Uint8Array([...header, ...track, ...body])], { type: 'audio/midi' });
 }
 
-export function download(blob: Blob, fileName: string) {
+// Save a file. On phones the share sheet is the reliable way (iPhone Safari cannot download a file made in the page
+// through a link: it opens it as a page and fails with "WebKitBlobResource error 1"), so offer Save to Files,
+// AirDrop or Messages there; elsewhere a normal download.
+export async function download(blob: Blob, fileName: string) {
+  const file = new File([blob], fileName, { type: blob.type || 'application/octet-stream' });
+  const phone = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+  if (phone && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: fileName });
+      return;
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') return; // the person closed the share sheet
+    }
+  }
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -132,7 +145,7 @@ export function download(blob: Blob, fileName: string) {
   document.body.append(link);
   link.click();
   link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 // Saved takes, in this browser's IndexedDB. If storage is blocked (private mode), takes live until the page closes.

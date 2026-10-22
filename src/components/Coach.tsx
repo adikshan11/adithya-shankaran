@@ -25,6 +25,8 @@ const POSES: Record<Look, Pose> = {
   grumpy: { arms: ['M36 96 q-10 -2 -8 10 q3 3 8 -1'], eyes: 'drowsy', mouth: 'M55 66 q5 -3 10 0', brows: 'M38 37 l10 2 M82 37 l-10 2', ears: 24 },
   sleepy: { arms: [], eyes: 'drowsy', mouth: 'M60 66 m-4 0 a4 5.5 0 1 0 8 0 a4 5.5 0 1 0 -8 0', ears: 8 },
   asleep: { arms: [], eyes: 'closed', mouth: 'M56 64 q4 2 8 0', ears: 14 },
+  // Ashamed: paws over its eyes, ears flat, a little frown.
+  ashamed: { arms: ['M36 92 q-6 -24 8 -44', 'M84 92 q6 -24 -8 -44'], eyes: 'closed', mouth: 'M55 67 q5 -4 10 0', ears: 28 },
 };
 
 export default function Coach({ mood: coachMood, text: coachText, tick, tempo }: { mood: Mood; text: string; tick: number; tempo: number }) {

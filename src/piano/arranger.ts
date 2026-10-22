@@ -331,7 +331,23 @@ type Voice = { stop: (time: number) => void };
 type Playing = { voice: Voice; sources: AudioBufferSourceNode[] };
 type SongNote = Note & { glide?: number };
 export type Hand = 'right' | 'left' | 'both';
-export type Mood = 'idle' | 'happy' | 'astonished' | 'upset' | 'angry';
+export type Mood = 'idle' | 'happy' | 'astonished' | 'upset' | 'angry' | 'ashamed';
+export type Grade = 'perfect' | 'great' | 'good' | 'practice' | 'poor';
+export type LearnResult = { grade: Grade; stars: number; accuracy: number; misses: number; notes: number; seconds: number; steady: boolean; bar: number[] };
+
+// The grade for a finished piece. The bar is set by how hard the attempt was: an easy piece at half speed with one
+// hand expects nearly every note right; a classical piece, both hands or full speed allows a few more slips.
+export function gradeOf(notes: number, misses: number, easy: boolean, hand: Hand, speed: number) {
+  const accuracy = notes / Math.max(1, notes + misses);
+  let relief = easy ? 0 : 0.05;
+  if (hand === 'both') relief += 0.04;
+  if (speed >= 1) relief += 0.03;
+  else if (speed >= 0.75) relief += 0.015;
+  const bar = [0.95 - relief, 0.85 - relief, 0.7 - relief];
+  const grade: Grade = misses === 0 ? 'perfect' : accuracy >= bar[0] ? 'great' : accuracy >= bar[1] ? 'good' : accuracy >= bar[2] ? 'practice' : 'poor';
+  const stars = { perfect: 3, great: 3, good: 2, practice: 1, poor: 0 }[grade];
+  return { grade, stars, accuracy, bar };
+}
 // A note name for the coach, with a real sharp sign and the octave: C♯4.
 // Written note values by length in semiquavers.
 const NOTE_VALUES: Record<number, string> = { 4: 'crotchet', 6: 'dotted crotchet', 8: 'minim', 12: 'dotted minim', 16: 'semibreve' };
@@ -412,6 +428,8 @@ export class Arranger {
     wrongRun: number;
     // Right (true) or wrong (false) for the last ten chords, for the 'almost perfect' reaction.
     recent: boolean[];
+    startedAt: number;
+    result: LearnResult | null;
     // Rhythm: practice speed (share of the piece's tempo), seconds per semiquaver at that speed, the time signature,
     // when the last chord was completed, and how long each gap took compared with the score (1 = in time).
     speed: number;
@@ -999,9 +1017,9 @@ export class Arranger {
     this.tempo = Math.min(240, Math.max(40, Math.round(pieceTempo * speed)));
     const meterIndex = meters.findIndex((item) => item.label === meterLabel);
     if (meterIndex >= 0) this.setMeter(meterIndex);
-    this.learn = { song, hand, steps, at: 0, remaining: new Set(steps[0]?.notes), misses: 0, streak: 0, wrongRun: 0, recent: [], speed, per16: songPer16 / speed, meterLabel, lastAt: 0, ratios: [], held: new Map(), holdUntil: 0, tipAt: -10 };
+    this.learn = { song, hand, steps, at: 0, remaining: new Set(steps[0]?.notes), misses: 0, streak: 0, wrongRun: 0, recent: [], startedAt: 0, result: null, speed, per16: songPer16 / speed, meterLabel, lastAt: 0, ratios: [], held: new Map(), holdUntil: 0, tipAt: -10 };
     const count = meter.unit === 8 ? `${meter.beats} quavers` : `${meter.beats} crotchet beats`;
-    this.say('idle', `${song.title} is in ${meterLabel}: count ${count} a bar. We start at ${Math.round(speed * 100)}% speed (♩ = ${this.tempo}); press Metro for a click. First: ${(steps[0]?.notes ?? []).map(spoken).join(' + ')}.`);
+    this.say('idle', `${meterLabel}: count ${count} a bar. ${Math.round(speed * 100)}% speed (♩ = ${this.tempo}); Metro gives a click. First: ${(steps[0]?.notes ?? []).map(spoken).join(' + ')}.`);
     this.onChange();
   }
 
@@ -1106,6 +1124,7 @@ export class Arranger {
         if (learn.ratios.length > 8) learn.ratios.shift();
       }
       learn.lastAt = now;
+      if (!learn.startedAt) learn.startedAt = now;
       learn.at++;
       learn.streak++;
       learn.recent = [...learn.recent, true].slice(-10);
@@ -1115,8 +1134,17 @@ export class Arranger {
       const pace = this.pace();
       if (learn.at >= learn.steps.length) {
         const steady = pace === 'steady';
-        const nextSpeed = learn.speed < 0.75 ? 75 : learn.speed < 1 ? 100 : 0;
-        this.say('astonished', `You finished ${learn.song.title} with ${learn.misses} wrong ${learn.misses === 1 ? 'note' : 'notes'}${steady ? ' and a steady rhythm' : ''}!${steady && nextSpeed && learn.misses <= learn.steps.length / 10 ? ` Ready for ${nextSpeed}% speed.` : learn.misses > learn.steps.length / 5 ? ' Play it once more at this speed.' : ''}`);
+        const { grade, stars, accuracy, bar } = gradeOf(learn.steps.length, learn.misses, Boolean(learn.song.easy), learn.hand, learn.speed);
+        learn.result = { grade, stars, accuracy, misses: learn.misses, notes: learn.steps.length, seconds: (performance.now() - learn.startedAt) / 1000, steady, bar };
+        const slips = `${learn.misses} wrong ${learn.misses === 1 ? 'note' : 'notes'}`;
+        const said: Record<Grade, [Mood, string]> = {
+          perfect: ['astonished', `PERFECT! Not a single wrong note in ${learn.song.title}. Three gold stars!`],
+          great: ['happy', `Excellent! Only ${slips}. Three stars, you earned a treat!`],
+          good: ['happy', `Well played, ${slips}. Two stars. Smooth out the slips and go for three.`],
+          practice: ['upset', `${slips}. One star. Practise the tricky bars slowly, then play it through again.`],
+          poor: ['ashamed', `${slips}… I can't watch. No treat this time: play it again, slower.`],
+        };
+        this.say(...said[grade]);
       } else if (learn.at % 8 === 0 && pace === 'rushing') {
         this.tip('upset', `You're rushing. In ${learn.meterLabel}, count ${this.countWords()} and give each note its full value.${next}`);
       } else if (learn.at % 8 === 0 && pace === 'dragging') {

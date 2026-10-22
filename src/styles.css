@@ -357,4 +357,4 @@
 
 /* While the piano stage is open, the root behind the phone's floating browser bars is the stage's dark colour,
    not the light page colour (it showed as a white strip under Safari's bottom bar). */
-html:has(.pa-overlay) { background-color: #1d1e22; }
+html:has(.pa-overlay), html:has(.pa-overlay) body { background-color: #26282d; } /* the same grey as the piano's top and Safari's bar tint */

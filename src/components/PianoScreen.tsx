@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { categories, sounds, styleCategories, styleMeter, styles } from '../piano/arranger';
 import type { Hand } from '../piano/arranger';
@@ -27,6 +27,7 @@ type Props = {
   onLearn?: (songId: string) => void;
   speed?: number;
   onSpeed?: (speed: number) => void;
+  stars?: Record<string, number>;
 };
 
 const signed = (value: number) => (value > 0 ? `+${value}` : `${value}`);
@@ -45,11 +46,32 @@ function SelectPage({ head, onExit, children, className = '' }: { head: ReactNod
   );
 }
 
-export default function PianoScreen({ arranger, page, category, open, message, beat, meterRef, takes, score, onClear, recording, hand = 'right', onHand, onLearn, speed = 0.5, onSpeed }: Props) {
+export default function PianoScreen({ arranger, page, category, open, message, beat, meterRef, takes, score, onClear, recording, hand = 'right', onHand, onLearn, speed = 0.5, onSpeed, stars = {} }: Props) {
   const learn = arranger.learn;
   // The power-on flicker plays once, when the piano opens. (A CSS animation restarts whenever a hidden element is
   // shown again, so on a phone it replayed each time the sheet music gave the screen back.)
   const [booting, setBooting] = useState(true);
+  // Names longer than their box slide sideways to show the whole title (like a scrolling display), then back.
+  const screenRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const measure = () => {
+      for (const item of screenRef.current?.querySelectorAll<HTMLElement>('.pa-grid .pa-item') ?? []) {
+        item.classList.remove('pa-marquee');
+        const over = item.scrollWidth - item.clientWidth;
+        if (over > 2) {
+          item.style.setProperty('--shift', `${-over - 6}px`);
+          item.style.setProperty('--slide', `${Math.max(3, Math.min(9, over / 18 + 2)).toFixed(1)}s`);
+          item.classList.add('pa-marquee');
+        }
+      }
+    };
+    const frame = requestAnimationFrame(measure);
+    window.addEventListener('resize', measure);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', measure);
+    };
+  });
   useEffect(() => {
     const done = setTimeout(() => setBooting(false), 1100);
     return () => clearTimeout(done);
@@ -73,7 +95,7 @@ export default function PianoScreen({ arranger, page, category, open, message, b
   );
 
   return (
-    <div className={`pa-screen ${booting ? 'pa-screen-booting' : ''} ${beat ? 'pa-screen-beat' : ''}`}>
+    <div ref={screenRef} className={`pa-screen ${booting ? 'pa-screen-booting' : ''} ${beat ? 'pa-screen-beat' : ''}`}>
       <div className="pa-screen-bar">
         {/* Style Play / Song Play switch, as on the Pa300: from the main page it opens the Song Book; from any page it
             comes back to the main page. */}
@@ -212,7 +234,7 @@ export default function PianoScreen({ arranger, page, category, open, message, b
                 }}
               >
                 <span className="pa-item-number">{playing ? '■ Stop' : '▶ Play'} · {item.composer}</span>
-                {item.title}
+                <span className="pa-t-full">{item.title}</span><span className="pa-t-short">{item.short ?? item.title}</span>
               </button>
             );
           })}
@@ -226,9 +248,9 @@ export default function PianoScreen({ arranger, page, category, open, message, b
               {item.label}
             </button>
           ))}
-          <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeTempo(-1)}>Tempo −</button>
+          <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeTempo(-1)} aria-label="Tempo down"><span className="pa-t-full">Tempo −</span><span className="pa-t-short">♩ −</span></button>
           <span className="pa-item pa-item-center pa-item-static">♩ {arranger.tempo}</span>
-          <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeTempo(1)}>Tempo +</button>
+          <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeTempo(1)} aria-label="Tempo up"><span className="pa-t-full">Tempo +</span><span className="pa-t-short">♩ +</span></button>
           <button type="button" className={`pa-item pa-item-center pa-item-wide ${arranger.metronome ? 'pa-item-on' : ''}`} onClick={() => arranger.toggleMetronome()}>
             {arranger.metronome ? 'Click on' : 'Click off'}
           </button>
@@ -269,7 +291,8 @@ export default function PianoScreen({ arranger, page, category, open, message, b
           {[...songs.filter((item) => item.easy), ...songs.filter((item) => item.file)].map((item) => (
             <button key={item.id} type="button" className={`pa-item ${learn?.song.id === item.id ? 'pa-item-on' : ''}`} onClick={() => onLearn?.(item.id)}>
               <span className="pa-item-number">{learn?.song.id === item.id ? 'Learning' : item.easy ? 'Easy' : 'Learn'} · {item.composer}</span>
-              {item.title}
+              <span className="pa-t-full">{item.title}</span><span className="pa-t-short">{item.short ?? item.title}</span>
+              {(stars[`${item.id}:${hand}`] ?? 0) > 0 && <span className="pa-item-stars" aria-label={`best ${stars[`${item.id}:${hand}`]} stars`}>{'★'.repeat(stars[`${item.id}:${hand}`])}</span>}
             </button>
           ))}
         </SelectPage>

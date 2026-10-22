@@ -4,10 +4,12 @@ import { songs } from '../piano/songs';
 import type { Hand } from '../piano/arranger';
 import TakesList from './TakesList';
 import Coach from './Coach';
+import LearnResult, { bestStars, saveStars } from './LearnResult';
 import { connectMidi, midiSupported } from '../piano/midiInput';
 import { TakeRecorder, listTakes, saveTake } from '../piano/recorder';
 import type { Take } from '../piano/recorder';
 import type { PointerEvent as ReactPointerEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { Arranger, HIGH, LOW, PC_BASE_MAX, PC_BASE_MIN, PC_KEYS, PC_KEY_OFFSET, SPLIT, categories, isBlack, keyName, sounds, styleCategories, styleMeter } from '../piano/arranger';
 import { barLength, meterNamed, meters } from '../piano/notation';
 import type { ScoreNote } from '../piano/notation';
@@ -194,13 +196,16 @@ function KeyMap() {
 }
 
 // Time-signature picker: a themed popover with simple metres (crotchet beats) and quaver metres in two rows.
-function MeterPicker({ value, disabled, onPick }: { value: string; disabled: boolean; onPick: (label: string) => void }) {
+// floating: on the phone's music stand the list opens in the middle of the screen, above everything (the stand is
+// too short to hold it and the keys would cover it).
+function MeterPicker({ value, disabled, onPick, floating = false }: { value: string; disabled: boolean; onPick: (label: string) => void; floating?: boolean }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
     const away = (event: PointerEvent) => {
-      if (!box.current?.contains(event.target as Node)) setOpen(false);
+      if (!box.current?.contains(event.target as Node) && !pop.current?.contains(event.target as Node)) setOpen(false);
     };
     const escape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -219,6 +224,32 @@ function MeterPicker({ value, disabled, onPick }: { value: string; disabled: boo
     { name: 'Crotchet beats', items: meters.filter((item) => item.unit === 4) },
     { name: 'Quaver beats', items: meters.filter((item) => item.unit === 8) },
   ];
+  const list = open && (
+    <div ref={pop} className="pa-meter-pop" role="listbox" aria-label="Time signature">
+      {groups.map((group) => (
+        <div key={group.name} className="pa-meter-group">
+          <span className="pa-meter-group-name">{group.name}</span>
+          <div className="pa-meter-options">
+            {group.items.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                role="option"
+                aria-selected={item.label === value}
+                className={`pa-meter-option ${item.label === value ? 'pa-meter-option-on' : ''}`}
+                onClick={() => {
+                  onPick(item.label);
+                  setOpen(false);
+                }}
+              >
+                <span className="pa-meter-frac"><b>{item.beats}</b><b>{item.unit}</b></span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
   return (
     <div className="pa-meter-picker" ref={box}>
       <span className="pa-meter-picker-label">Time</span>
@@ -234,32 +265,7 @@ function MeterPicker({ value, disabled, onPick }: { value: string; disabled: boo
         {value}
         <span aria-hidden="true">▾</span>
       </button>
-      {open && (
-        <div className="pa-meter-pop" role="listbox" aria-label="Time signature">
-          {groups.map((group) => (
-            <div key={group.name} className="pa-meter-group">
-              <span className="pa-meter-group-name">{group.name}</span>
-              <div className="pa-meter-options">
-                {group.items.map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    role="option"
-                    aria-selected={item.label === value}
-                    className={`pa-meter-option ${item.label === value ? 'pa-meter-option-on' : ''}`}
-                    onClick={() => {
-                      onPick(item.label);
-                      setOpen(false);
-                    }}
-                  >
-                    <span className="pa-meter-frac"><b>{item.beats}</b><b>{item.unit}</b></span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {list && (floating ? createPortal(<div className="pa-meter-float">{list}</div>, document.body) : list)}
     </div>
   );
 }
@@ -340,6 +346,36 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const [midiDevices, setMidiDevices] = useState<string[] | null>(null);
   const midiOff = useRef<(() => void) | null>(null);
   const [edges, setEdges] = useState({ left: false, right: false });
+  // Keys slider (as in Perfect Piano): how many white keys fit the screen. Kept in this browser; until it is moved,
+  // the layout's own key size applies and the slider shows how many keys that gives.
+  const [shownKeys, setShownKeys] = useState(15);
+  const [zoomKeys, setZoomKeys] = useState<number | null>(() => {
+    try {
+      const saved = Number(localStorage.getItem('piano-keys-shown'));
+      return saved >= 7 && saved <= whiteKeys.length ? saved : null;
+    } catch {
+      return null;
+    }
+  });
+  const setZoom = (count: number) => {
+    setZoomKeys(count);
+    try {
+      localStorage.setItem('piano-keys-shown', String(count));
+    } catch {
+      // storage blocked: the setting lasts until the page closes
+    }
+  };
+  // Resize the keys and keep the same notes in the middle of the screen.
+  useEffect(() => {
+    const bed = scroller.current;
+    const keys = bed?.querySelector<HTMLElement>('.pa-keys');
+    if (!bed || !keys || zoomKeys === null) return;
+    const middle = (bed.scrollLeft + bed.clientWidth / 2) / bed.scrollWidth;
+    keys.style.minWidth = `${(100 * whiteKeys.length) / zoomKeys}%`;
+    keys.style.width = keys.style.minWidth;
+    bed.scrollLeft = middle * bed.scrollWidth - bed.clientWidth / 2;
+    bed.dispatchEvent(new Event('scroll'));
+  }, [zoomKeys]);
   const minimapWindow = useRef<HTMLSpanElement>(null);
 
   // Screen pages; a select page closes itself after a while, like the Pa300's auto-exit.
@@ -572,6 +608,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         span.style.left = `${(100 * scrollLeft) / scrollWidth}%`;
         span.style.width = `${(100 * clientWidth) / scrollWidth}%`;
       }
+      setShownKeys(Math.max(7, Math.min(whiteKeys.length, Math.round((clientWidth / scrollWidth) * whiteKeys.length))));
       const next = { left: scrollLeft > 4, right: scrollLeft + clientWidth < scrollWidth - 4 };
       setEdges((previous) => (previous.left === next.left && previous.right === next.right ? previous : next));
     };
@@ -790,6 +827,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     if (!song) return;
     say(`Loading ${song.title}…`);
     void arranger.startLearn(song, chosen, pace).then(() => {
+      setDrawer(false); // one view at a time: the sheet music replaces the Panel
       setShowSheet(true);
       open('main');
       say(`Learn: ${song.title}, ${chosen === 'both' ? 'both hands' : `${chosen} hand`}, ${Math.round(pace * 100)}% speed. Play the green keys; the music waits for you.`);
@@ -800,7 +838,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const targets = useMemo(() => new Set(targetKey ? targetKey.split(',').map(Number) : []), [targetKey]);
   const finished = Boolean(learn && learn.at >= learn.steps.length);
   useEffect(() => {
-    if (finished && learn) say(`Well played! ${learn.song.title} finished with ${learn.misses} wrong ${learn.misses === 1 ? 'note' : 'notes'}.`);
+    if (finished && learn?.result) saveStars(`${learn.song.id}:${learn.hand}`, learn.result.stars);
   }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
   // Keep the next keys in view on a narrow screen.
   useEffect(() => {
@@ -811,6 +849,34 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     const rect = element.getBoundingClientRect();
     if (rect.left < box.left + 20 || rect.right > box.right - 20) scroller.current?.scrollBy({ left: rect.left - box.left - box.width / 3, behavior: 'smooth' });
   }, [targetKey]);
+
+  // Song play: when the song's notes sound off screen (the keyboard was slid elsewhere, or the tune moved), slide
+  // the keys to where they are playing. A slide by hand is left alone for 2 seconds so the two do not fight.
+  const follow = useRef({ auto: 0, manual: 0 });
+  useEffect(() => {
+    const bed = scroller.current;
+    if (!bed) return;
+    const scrolled = () => {
+      if (performance.now() > follow.current.auto) follow.current.manual = performance.now();
+    };
+    bed.addEventListener('scroll', scrolled, { passive: true });
+    return () => bed.removeEventListener('scroll', scrolled);
+  }, []);
+  useEffect(() => {
+    const bed = scroller.current;
+    if (!arranger.song || learn || !pressed.size || !bed) return;
+    const now = performance.now();
+    if (now - follow.current.manual < 2000 || now < follow.current.auto) return;
+    const box = bed.getBoundingClientRect();
+    const rects = [...pressed].map((key) => bed.querySelector<HTMLElement>(`[data-key="${key}"]`)?.getBoundingClientRect()).filter((rect): rect is DOMRect => Boolean(rect));
+    if (!rects.length || rects.every((rect) => rect.left >= box.left && rect.right <= box.right)) return;
+    const left = Math.min(...rects.map((rect) => rect.left));
+    const right = Math.max(...rects.map((rect) => rect.right));
+    // Centre the sounding notes; if they span more than the screen, keep the top (the tune) in view.
+    const middle = right - left < box.width - 40 ? (left + right) / 2 : right - box.width / 2 + 20;
+    follow.current.auto = now + 900;
+    bed.scrollBy({ left: middle - (box.left + box.width / 2), behavior: 'smooth' });
+  }, [pressed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Music stand: the song's sheet music while a song plays, otherwise what you play, written to the current tempo.
   const songScore = arranger.songScore;
@@ -841,10 +907,19 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     take.current = { origin: 0, last: 0, notes: [] };
     refresh();
   };
+  // Phones have no sheet bar, so the stand carries the time signature picker and Clear beside the staff.
   const clearButton = !songScore && (
-    <button type="button" className="pa-stand-clear" onClick={clearTake} aria-label="Clear the sheet">
-      Clear
-    </button>
+    <div className="pa-stand-tools">
+      <MeterPicker
+        floating
+        value={`${standMeter.beats}/${standMeter.unit}`}
+        disabled={arranger.running}
+        onPick={(label) => arranger.setMeter(meters.findIndex((item) => item.label === label))}
+      />
+      <button type="button" className="pa-stand-clear" onClick={clearTake} aria-label="Clear the sheet">
+        Clear
+      </button>
+    </div>
   );
 
   // The screen's Score page shows as many bars as fit the display's shape (a wide, short display shows more bars),
@@ -917,6 +992,22 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
 
   return (
     <div role="region" aria-label="Piano" className="pa-instrument">
+      {learn?.result && (
+        <LearnResult
+          result={learn.result}
+          title={learn.song.title}
+          speed={learn.speed}
+          onAgain={() => startLearn(learn.song.id, learn.hand, learn.speed)}
+          onSpeed={(next) => {
+            setSpeed(next);
+            startLearn(learn.song.id, learn.hand, next);
+          }}
+          onDone={() => {
+            arranger.stopLearn();
+            setShowSheet(false);
+          }}
+        />
+      )}
       <div className="pa-body">
         <div className="pa-top">
           <div className="pa-brand">
@@ -949,6 +1040,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                 if (arranger.learn) startLearn(arranger.learn.song.id, next);
               }}
               onLearn={(songId) => startLearn(songId)}
+              stars={bestStars()}
               speed={speed}
               onSpeed={(next) => {
                 setSpeed(next);
@@ -1196,8 +1288,23 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         </div>
 
         <div className="pa-felt" aria-hidden="true" />
-        <div className={`pa-minimap ${edges.left || edges.right ? '' : 'pa-minimap-hidden'}`} onPointerDown={(event) => { capture(event); minimapTo(event); }} onPointerMove={(event) => { if (event.buttons) minimapTo(event); }} aria-hidden="true">
-          <span ref={minimapWindow} className="pa-minimap-window" />
+        <div className="pa-mapbar">
+          <div className={`pa-minimap ${edges.left || edges.right ? '' : 'pa-minimap-hidden'}`} onPointerDown={(event) => { capture(event); minimapTo(event); }} onPointerMove={(event) => { if (event.buttons) minimapTo(event); }} aria-hidden="true">
+            <span ref={minimapWindow} className="pa-minimap-window" />
+          </div>
+          <label className="pa-zoom" title="How many white keys fit the screen">
+            <span className="pa-zoom-label">Keys</span>
+            <input
+              type="range"
+              min={7}
+              max={whiteKeys.length}
+              step={1}
+              value={zoomKeys ?? shownKeys}
+              aria-label="Number of white keys shown"
+              onChange={(event) => setZoom(Number(event.currentTarget.value))}
+            />
+            <b className="pa-zoom-count">{zoomKeys ?? shownKeys}</b>
+          </label>
         </div>
         <div className="pa-keyrow">
           <div className="pa-left">

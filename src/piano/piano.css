@@ -413,10 +413,23 @@
   .pa-edge:hover { background: rgb(42 98 201 / 0.85); }
   @keyframes pa-edge-hint { 50% { transform: translateX(var(--nudge, 3px)); } }
   .pa-edge-left { --nudge: -3px; }
+  /* The strip row: the mini keyboard (tap or drag to move along) and the Keys slider (how many keys fit). */
+  .pa-mapbar { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; }
+  .pa-zoom { flex: none; display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+  .pa-zoom-label { font-size: 0.56rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #9ea2ab; }
+  .pa-zoom-count { min-width: 1.4em; font-size: 0.72rem; font-weight: 800; color: #eef0f4; text-align: right; font-variant-numeric: tabular-nums; }
+  .pa-zoom input { -webkit-appearance: none; appearance: none; width: 96px; height: 16px; margin: 0; background: transparent; cursor: pointer; touch-action: none; }
+  .pa-zoom input:focus, .pa-zoom input:focus-visible { outline: none; }
+  .pa-zoom input::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: #050506; box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.9), 0 1px 0 rgb(255 255 255 / 0.08); }
+  .pa-zoom input::-moz-range-track { height: 4px; border-radius: 2px; background: #050506; }
+  .pa-zoom input::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -7px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff, #c9ccd2); box-shadow: 0 1px 3px rgb(0 0 0 / 0.6); }
+  .pa-zoom input::-moz-range-thumb { width: 18px; height: 18px; border: 0; border-radius: 50%; background: #e6e8ec; }
   .pa-minimap {
     position: relative;
+    flex: 1;
+    min-width: 0;
     height: 16px;
-    margin: 6px 0 4px;
+    margin: 0;
     border-radius: 4px;
     cursor: pointer;
     touch-action: none;
@@ -454,18 +467,25 @@
   /* Clear (what you played) on the sheet and the Score page. */
   .pa-stand { position: relative; }
   /* Clear sits beside the staff, never over it: the stand lays out staff then Clear in a row. */
-  .pa-stand:has(> .pa-stand-clear) { display: flex; align-items: center; gap: 8px; }
-  .pa-stand:has(> .pa-stand-clear) > .pa-staff-svg { flex: 1; min-width: 0; }
-  .pa-stand:has(> .pa-stand-clear) > .pa-coach { flex: none; }
-  .pa-stand-clear { order: 3; flex: none; align-self: center; z-index: 2; padding: 2px 10px; border-radius: 999px; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #3a2a12; background: #f3e6c4; box-shadow: inset 0 0 0 1px #c9a86a; }
+  .pa-stand:has(> .pa-stand-tools) { display: flex; align-items: center; gap: 8px; }
+  .pa-stand:has(> .pa-stand-tools) > .pa-staff-svg { flex: 1; min-width: 0; }
+  .pa-stand:has(> .pa-stand-tools) > .pa-coach { flex: none; }
+  .pa-stand-tools { order: 3; flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 2; }
+  .pa-stand-tools .pa-meter-picker { flex-direction: column; gap: 2px; }
+  .pa-stand-tools .pa-meter-picker-label { font-size: 0.5rem; color: #6b5a3a; }
+  .pa-stand-tools .pa-meter-button { gap: 4px; padding: 3px 8px; font-size: 0.74rem; color: #20232a; background: #fff; box-shadow: inset 0 0 0 1px #c9a86a; }
+  .pa-stand-tools .pa-meter-button span { color: #2a62c9; }
+  /* The picker opens in the middle of the screen: the stand is too short to hold it. */
+  .pa-meter-float .pa-meter-pop { position: fixed; inset: 0; margin: auto; z-index: 130; width: min(18.5rem, calc(100vw - 32px)); height: max-content; }
+  .pa-stand-clear { flex: none; align-self: center; padding: 2px 10px; border-radius: 999px; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #3a2a12; background: #f3e6c4; box-shadow: inset 0 0 0 1px #c9a86a; }
   .pa-stand-clear:active { transform: translateY(1px); }
-  .pa-stand-screen .pa-stand-clear { display: none !important; } /* on the screen, Clear is in the top bar */
+  .pa-stand-screen .pa-stand-tools { display: none !important; } /* on the screen, Clear and the time are in the top bar */
   /* Bar buttons with their own colours: dark text on light (the bar's button style must not override these). */
   .pa-screen .pa-screen-bar .pa-bar-clear { padding: 0 6px; border-radius: 4px; font-weight: 800; color: #3a2a12 !important; background: #f3e6c4 !important; opacity: 1 !important; box-shadow: none; }
   .pa-screen .pa-screen-bar .pa-score-btn-on { color: #071a33 !important; background: #9be3ff !important; opacity: 1 !important; }
-  .pa-sheet-bar ~ .pa-sheet-body .pa-stand-clear { display: none; } /* the laptop's sheet bar has its own Clear */
-  @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
-    .pa-sheet-bar ~ .pa-sheet-body .pa-stand-clear { display: block; }
+  .pa-sheet-bar ~ .pa-sheet-body .pa-stand-tools { display: none; } /* the laptop's sheet bar has its own Time and Clear */
+  @media (max-height: 500px) and (orientation: landscape) { /* phone sideways: the sheet bar is hidden there */
+    .pa-sheet-bar ~ .pa-sheet-body .pa-stand-tools { display: flex; }
   }
   /* Intro, Fill, Ending and Start on the screen: phones only. */
   .pa-arr-row { display: none; }
@@ -670,6 +690,59 @@
   .co-zzz { font: 700 9px system-ui, sans-serif; fill: #7a8aa8; opacity: 0; animation: co-float 1.8s ease-out infinite; }
   .co-heart { fill: #ff6b8a; opacity: 0; animation: co-float 1.4s ease-out forwards; }
   @keyframes co-float { 0% { opacity: 0; transform: translateY(6px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
+  .pa-coach-ashamed .pa-coach-bubble { background: #f1ecea; }
+  .pa-coach-ashamed .co-act { animation: co-slump 0.6s ease-out forwards; }
+  .pa-coach-ashamed .co-pendulum { animation: none; transform: rotate(-14deg); }
+  .pa-coach-ashamed .co-tail { animation: none; transform: rotate(42deg); }
+  /* Learn result card */
+  .pa-result { position: fixed; inset: 0; z-index: 110; display: grid; place-items: center; padding: 16px; background: rgb(6 8 12 / 0.6); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+  .pa-result-card { position: relative; width: min(420px, 100%); max-height: calc(100dvh - 32px); overflow: auto; padding: 18px 20px 16px; border-radius: 18px; text-align: center; color: #20232a; background: linear-gradient(180deg, #fffdf6, #f6efe0); box-shadow: 0 20px 60px rgb(0 0 0 / 0.5), inset 0 0 0 1.5px #e2d4b0; animation: pa-result-in 0.35s cubic-bezier(0.3, 1.5, 0.5, 1); }
+  .pa-result-title { margin: 0; font-size: 1.35rem; font-weight: 900; letter-spacing: 0.02em; }
+  .pa-result-poor .pa-result-title { color: #9b2c2c; }
+  .pa-result-practice .pa-result-title { color: #b06a10; }
+  .pa-result-good .pa-result-title { color: #2d6a4f; }
+  .pa-result-great .pa-result-title, .pa-result-perfect .pa-result-title { color: #a87a0c; }
+  .pa-result-stars { margin: 6px 0 2px; font-size: 2rem; letter-spacing: 6px; line-height: 1; }
+  .pa-result-stars .on { color: #f5b800; text-shadow: 0 2px 0 #b07f00, 0 0 12px rgb(245 184 0 / 0.6); }
+  .pa-result-stars .off { color: #d8d2c4; }
+  .pa-result-stars .on:nth-child(1) { animation: pa-star 0.4s 0.15s both; }
+  .pa-result-stars .on:nth-child(2) { animation: pa-star 0.4s 0.35s both; }
+  .pa-result-stars .on:nth-child(3) { animation: pa-star 0.4s 0.55s both; }
+  .pa-result-stats { display: flex; justify-content: center; gap: 14px; margin: 8px 0 10px; font-size: 0.78rem; color: #5b5f68; }
+  .pa-result-stats b { display: block; font-size: 1.05rem; color: #20232a; }
+  .pa-result-note { margin: 0 0 12px; font-size: 0.82rem; line-height: 1.4; }
+  .pa-result-reward { display: inline-block; margin: 0 0 12px; padding: 4px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 800; color: #6b4a00; background: #ffe9a8; }
+  .pa-result-shame { display: inline-block; margin: 0 0 12px; padding: 4px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 800; color: #7a1f1f; background: #fadcdc; }
+  .pa-result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .pa-result-actions button { padding: 8px 14px; border-radius: 10px; font-size: 0.82rem; font-weight: 800; color: #fff; background: #2a62c9; }
+  .pa-result-actions button.quiet { color: #20232a; background: #e8e2d4; }
+  .pa-confetti { position: fixed; inset: 0; z-index: 111; pointer-events: none; overflow: hidden; }
+  .pa-confetti i { position: absolute; top: -12px; width: 8px; height: 13px; border-radius: 2px; animation: pa-confetti 2.6s cubic-bezier(0.2, 0.6, 0.4, 1) forwards; }
+  @keyframes pa-confetti { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(110vh) translateX(var(--drift)) rotate(var(--spin)); opacity: 0.9; } }
+  @keyframes pa-star { from { transform: scale(0) rotate(-40deg); } 70% { transform: scale(1.3); } to { transform: none; } }
+  @keyframes pa-result-in { from { transform: scale(0.85); opacity: 0; } to { transform: none; opacity: 1; } }
+  .pa-t-short { display: none; }
+  /* Phones: while Panel is open the corner ✕ closes it, so the Panel button steps aside (no two buttons for one job). */
+  @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
+    .pa-phonebar > .pa-phone-panel[aria-expanded="true"] { display: none !important; }
+  }
+  /* Phones: Master volume and Balance live in the Panel. Portrait: in the strip with the other groups. Landscape:
+     beside MIDI, in the space the Panel button leaves. */
+  @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
+    .pa-overlay .pa-body .pa-drawer-open .pa-faders { display: flex !important; flex-direction: column; gap: 4px; min-width: 120px; }
+    .pa-overlay .pa-body .pa-drawer-open .pa-fader { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 6px; }
+    .pa-overlay .pa-body .pa-drawer-open .pa-fader-label { margin: 0; font-size: 0.55rem; letter-spacing: 0.08em; }
+    .pa-overlay .pa-body .pa-drawer-open .pa-fader-scale { display: none; }
+    .pa-overlay .pa-body .pa-drawer-open .pa-fader input { height: 18px; }
+  }
+  @media (max-height: 500px) and (orientation: landscape) {
+    .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-faders { grid-column: 8; grid-row: 2; align-self: center; min-width: 0; max-width: 100%; padding-left: 8px; overflow: hidden; gap: 8px; }
+    .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-fader { width: 100%; grid-template-columns: 1fr; gap: 4px; }
+    .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-fader-label { font-size: 0.5rem; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+  }
+  .pa-marquee { animation: pa-marquee var(--slide, 5s) ease-in-out 0.8s infinite alternate; }
+  @keyframes pa-marquee { 0%, 15% { text-indent: 0; } 85%, 100% { text-indent: var(--shift); } }
+  .pa-item-stars { margin-left: 4px; color: #f5b800; letter-spacing: 1px; }
   .pa-coach-bubble { position: relative; flex: 1; min-width: 0; margin: 0; padding: 9px 14px; border-radius: 14px; font-size: 0.86rem; font-weight: 600; line-height: 1.4; color: #20232a; background: #fff; box-shadow: 0 2px 0 rgb(0 0 0 / 0.08), inset 0 0 0 1.5px #e1e4ea; }
   .pa-coach-bubble::before { content: ""; position: absolute; left: -7px; top: 50%; width: 14px; height: 14px; margin-top: -7px; background: inherit; transform: rotate(45deg); box-shadow: -1.5px 1.5px 0 #e1e4ea; }
   .pa-coach-upset .pa-coach-bubble { background: #fff4e5; }
@@ -980,7 +1053,6 @@
     .pa-drawer-open .pa-panel { display: flex; flex-direction: column; gap: 12px; padding: 10px; }
     .pa-drawer-open .pa-centre { order: -1; }
     .pa-drawer-open .pa-sheet { display: none !important; }
-    .pa-faders { display: none !important; } /* the phone's own volume buttons do this */
     .pa-drawer-open .pa-pages { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; margin: 0 -10px; padding: 0 10px 4px; }
     .pa-drawer-open .pa-pages::-webkit-scrollbar { display: none; }
     .pa-drawer-open .pa-pages > .pa-group { flex: 0 0 86%; scroll-snap-align: start; padding: 10px; border-radius: 12px; background: rgb(255 255 255 / 0.03); box-shadow: inset 0 0 0 1px #2f3136; }
@@ -1047,7 +1119,7 @@
     /* An explicit height (not max-height): Safari does not shrink an SVG to a max-height, it cuts it off; with a set
        height the drawing scales to fit inside it in every browser. */
     .pa-stand .pa-staff-svg { flex: 1; min-width: 0; width: 100%; height: 118px; max-height: none; }
-    .pa-dial-row, .pa-faders { display: none !important; }
+    .pa-dial-row, .pa-body:not(:has(.pa-drawer-open)) .pa-faders { display: none !important; }
     .pa-drawer .pa-controls { margin: 0; padding: 0; }
     /* Split, Song, Metro, Reverb, Rec, Takes and MIDI in two columns beside the panel. */
 
@@ -1059,7 +1131,7 @@
     .pa-left .pa-pedal { width: 60px; font-size: 0.6rem; padding: 0.35rem 0.2rem; }
     .pa-body:has(.pa-drawer-open) .pa-keyrow { grid-template-columns: auto 1fr; gap: 6px; }
     .pa-felt { margin: 4px 0 0; height: 4px; }
-    .pa-minimap { margin: 4px calc(8px + env(safe-area-inset-right)) 4px calc(8px + env(safe-area-inset-left)); }
+    .pa-mapbar { margin: 4px calc(8px + env(safe-area-inset-right)) 4px calc(8px + env(safe-area-inset-left)); }
     .pa-keys { height: var(--keys-h, calc(100dvh - 70px)); min-height: 150px; min-width: calc(36 * 58px); }
   }
   /* Landscape with Safari's bars showing: the display drops its Song row and tightens, so the keys keep room. */
@@ -1068,6 +1140,8 @@
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)) .pa-arr-row { display: none; }
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)) .pa-main-left > .pa-row-split:first-of-type .pa-row-action { display: inline-flex; }
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)) .pa-screen { height: 124px; }
+    .pa-overlay .pa-body:not(:has(.pa-sheet-open)) .pa-screen:not(:has(.pa-main)):not(:has(.pa-grid-score)) { height: 136px; } /* list pages: two full rows */
+    .pa-overlay .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-screen-body:not(.pa-main) { padding-top: 4px; }
     /* Title-only page headers give way (the ⇄ switch returns to the main page); tabbed headers stay. */
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)) .pa-page-head:has(> .pa-page-head-main > .pa-page-title:only-child) { display: none; }
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)) .pa-screen-body { padding-top: 6px; }
@@ -1089,7 +1163,8 @@
     .pa-body:has(.pa-sheet-open) .pa-minimap, .pa-body:has(.pa-sheet-open) .pa-felt { display: none; }
     .pa-stand .pa-coach .pa-coach-figure { width: 58px; height: 75px; } /* smaller, not hidden */
     .pa-sheet .pa-stand .pa-coach { width: 250px; }
-    .pa-sheet .pa-stand .pa-coach .pa-coach-text { -webkit-line-clamp: 3; }
+    .pa-sheet .pa-stand .pa-coach .pa-coach-text { -webkit-line-clamp: 4; }
+    .pa-sheet .pa-stand .pa-coach .pa-coach-bubble { font-size: 0.68rem; line-height: 1.25; padding: 5px 9px; }
     .pa-sheet .pa-stand .pa-staff-svg { height: 74px; max-height: none; }
   }
   /* Landscape phone, playing (no Panel, no Sheet): laid out like the instrument on a laptop. The blue display sits in
@@ -1119,15 +1194,14 @@
     .pa-body:not(:has(.pa-sheet-open)) .pa-phonebar > :nth-child(8) { grid-column: 8; grid-row: 1; }
     .pa-body:not(:has(.pa-sheet-open)) .pa-phonebar > .pa-phone-panel { grid-column: 7 / 9; grid-row: 2; }
     .pa-body:not(:has(.pa-sheet-open)) .pa-rotate-hint { display: none; }
-    .pa-body:not(:has(.pa-sheet-open)) :is(.pa-felt, .pa-minimap, .pa-keyrow) { grid-column: 1 / -1; }
+    .pa-body:not(:has(.pa-sheet-open)) :is(.pa-felt, .pa-mapbar, .pa-keyrow) { grid-column: 1 / -1; }
     .pa-body:not(:has(.pa-sheet-open)) .pa-felt { grid-row: 3; margin-top: 6px; }
-    .pa-body:not(:has(.pa-sheet-open)) .pa-minimap { grid-row: 4; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-mapbar { grid-row: 4; }
     .pa-body:not(:has(.pa-sheet-open)) .pa-keyrow { grid-row: 5; align-self: end; }
     /* Panel in landscape: no pop-up. The screen stays; the controls beside it swap to Keyboard and Player (left),
        Record, Connect and the Panel button (right), so one button opens and closes it and the keys stay in view. */
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-phonebar > :not(.pa-phone-panel) { display: none; }
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) :is(.pa-controls, .pa-ctl-groups) { display: contents; }
-    .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-faders { display: none !important; }
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-group { align-self: center; min-width: 0; }
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-group:nth-child(1) { grid-column: 2 / 6; grid-row: 1; }
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-group:nth-child(2) { grid-column: 2 / 6; grid-row: 2; }
@@ -1167,8 +1241,16 @@
     .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid .pa-item { min-width: 0; }
     .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid .pa-item > :is(span, b) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid .pa-item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid:not(.pa-grid-tune, .pa-grid-score, .pa-grid-takes, .pa-grid-meters) { grid-auto-rows: 32px; }
-    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid:not(.pa-grid-tune, .pa-grid-score, .pa-grid-takes, .pa-grid-meters) .pa-item { height: 32px; padding: 0 8px; line-height: 32px; font-size: 0.74rem; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid:not(.pa-grid-tune, .pa-grid-score, .pa-grid-takes, .pa-grid-meters) { grid-auto-rows: 27px; gap: 4px; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid:not(.pa-grid-tune, .pa-grid-score, .pa-grid-takes, .pa-grid-meters) .pa-item { height: 27px; padding: 0 3px; line-height: 27px; font-size: 0.64rem; letter-spacing: -0.01em; text-align: center; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-screen-body:not(.pa-main) > .pa-grid { margin-top: 0; padding-top: 0; }
+    /* Full names; a name too long for its box slides across (pa-marquee, set in PianoScreen). */
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid .pa-item { text-overflow: clip !important; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-page-head { margin-bottom: 3px; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-page-head .pa-tab, .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-page-head .pa-exit { padding: 1px 7px; font-size: 0.62rem; line-height: 1.5; }
+    /* Metronome page: time signatures and the tempo row as compact one-line cells that fit the screen. */
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid-meters { grid-auto-rows: 24px; gap: 3px; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid-meters .pa-item { min-height: 0; height: 24px; padding: 0 1px; font-size: 0.66rem; letter-spacing: -0.01em; white-space: nowrap; overflow: visible; display: grid; place-items: center; }
     .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid:not(.pa-grid-tune, .pa-grid-score, .pa-grid-takes, .pa-grid-meters) .pa-item-number { display: none; } /* one line: the name */
     .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-page-head .pa-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
     .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid-tune .pa-item { flex-direction: row; align-items: center; justify-content: center; gap: 6px; min-height: 0; height: 30px; padding: 0 6px; }
@@ -1203,7 +1285,7 @@
   /* Landscape phone: the piano's body colour runs edge to edge, top and bottom (no black bands), and the joystick
      and Sustain sit in the Dynamic Island's strip, at the bottom below the island, so the keys keep their width. */
   @media (max-height: 500px) and (orientation: landscape) {
-    .pa-overlay { background: linear-gradient(180deg, #2a2c31, #17181b 45%, #0c0d0f); }
+    .pa-overlay { background: linear-gradient(180deg, #26282d, #26282d 60px, #17181b 45%, #0c0d0f); }
     .pa-body { background: transparent; }
     .pa-minimap { display: block !important; }
     .pa-instrument:is([data-island="left"], [data-island="right"]) .pa-left {
