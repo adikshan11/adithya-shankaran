@@ -243,6 +243,16 @@ const CHORD_TYPES: [string, number[]][] = [
   ['dim', [0, 3, 6]],
   ['aug', [0, 4, 8]],
   ['sus4', [0, 5, 7]],
+  // Common extras. The lowest held note is tried as the root first, so C E G A (lowest C) reads C6 and A C E G
+  // (lowest A) reads Am7; C D G reads Csus2 and G C D reads Gsus4.
+  ['sus2', [0, 2, 7]],
+  ['6', [0, 4, 7, 9]],
+  ['m6', [0, 3, 7, 9]],
+  ['7sus4', [0, 5, 7, 10]],
+  ['m7b5', [0, 3, 6, 10]],
+  ['dim7', [0, 3, 6, 9]],
+  ['add9', [0, 2, 4, 7]],
+  ['9', [0, 2, 4, 7, 10]],
 ];
 
 export type Chord = { root: number; type: string };

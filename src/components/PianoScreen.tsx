@@ -101,7 +101,16 @@ export default function PianoScreen({ arranger, page, category, open, message, b
           </div>
           <div className="pa-chord" aria-label="Chord">
             <span className="pa-chord-label">CHORD</span>
-            <span className="pa-chord-name">{arranger.displayChord || '–'}</span>
+            {(() => {
+              // Root large, chord quality smaller (A♯ then maj7), so long names stay inside the box.
+              const [, rootName = '–', quality = ''] = (arranger.displayChord || '–').match(/^([A-G][#b]?|–)(.*)$/) ?? [];
+              return (
+                <span className="pa-chord-name">
+                  {rootName.replace('#', '♯').replace(/b$/, '♭')}
+                  {quality && <span className="pa-chord-type">{quality.replace('b5', '♭5')}</span>}
+                </span>
+              );
+            })()}
             <div className="pa-beats" aria-hidden="true">
               {Array.from({ length: beats }, (_, index) => (
                 <span key={index} className={`${arranger.beat === index + 1 ? 'pa-beat-on' : ''} ${groupStarts.includes(index) ? 'pa-beat-accent' : ''}`} />

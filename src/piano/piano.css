@@ -465,9 +465,14 @@
     border-radius: 8px;
     background: linear-gradient(180deg, rgb(89 208 255 / 0.16), rgb(89 208 255 / 0.05));
     box-shadow: inset 0 0 0 1px rgb(89 208 255 / 0.3);
+    container-type: inline-size;
+    min-width: 0;
+    overflow: hidden;
   }
   .pa-chord-label { font-size: 0.55rem; font-weight: 800; letter-spacing: 0.14em; color: #8ca3c9; }
-  .pa-chord-name { font-size: 1.7rem; font-weight: 800; line-height: 1; color: #fff; text-shadow: 0 0 12px rgb(89 208 255 / 0.6); }
+  /* Sized to the box (cqi = 1% of its width), so A♯maj7 or C♯m7♭5 never spills out. */
+  .pa-chord-name { max-width: 100%; font-size: clamp(0.9rem, 26cqi, 1.7rem); font-weight: 800; line-height: 1; white-space: nowrap; color: #fff; text-shadow: 0 0 12px rgb(89 208 255 / 0.6); }
+  .pa-chord-type { margin-left: 1px; font-size: 0.62em; letter-spacing: -0.01em; }
   .pa-beats { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 6.5rem; }
   .pa-beats span { width: 8px; height: 8px; border-radius: 50%; background: rgb(255 255 255 / 0.15); }
   .pa-beats .pa-beat-accent { box-shadow: 0 0 0 1.5px rgb(255 200 87 / 0.7); }

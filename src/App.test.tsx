@@ -117,6 +117,14 @@ describe('portfolio', () => {
     expect(detectChord([57, 60, 64])).toEqual({ root: 9, type: 'm' });
     expect(detectChord([43, 47, 50, 53])).toEqual({ root: 7, type: '7' });
     expect(detectChord([50])).toEqual({ root: 2, type: '' });
+    // the extras, with the lowest note as the root when the same notes spell two chords
+    expect(detectChord([48, 50, 55])).toEqual({ root: 0, type: 'sus2' });
+    expect(detectChord([43, 48, 50])).toEqual({ root: 7, type: 'sus4' });
+    expect(detectChord([48, 52, 55, 57])).toEqual({ root: 0, type: '6' });
+    expect(detectChord([45, 48, 52, 55])).toEqual({ root: 9, type: 'm7' });
+    expect(detectChord([47, 50, 53, 57])).toEqual({ root: 11, type: 'm7b5' });
+    expect(detectChord([43, 48, 50, 53])).toEqual({ root: 7, type: '7sus4' });
+    expect(detectChord([48, 50, 52, 55, 58])).toEqual({ root: 0, type: '9' });
   });
 
   it('persists the theme and restores it on the next visit', () => {
