@@ -1,7 +1,7 @@
 import { memo, useEffect, useReducer, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { Arranger, HIGH, LOW, PC_BASE_MAX, PC_BASE_MIN, PC_KEYS, PC_KEY_OFFSET, SPLIT, categories, isBlack, keyName, styleCategories, styleMeter } from '../piano/arranger';
-import { barLength, meterNamed } from '../piano/notation';
+import { barLength, meterNamed, meters } from '../piano/notation';
 import type { ScoreNote } from '../piano/notation';
 import PianoScreen from './PianoScreen';
 import type { Page } from './PianoScreen';
@@ -44,7 +44,7 @@ type KeysProps = { arranger: Arranger; pressed: Set<number>; showLetters: boolea
 // The 61 keys, drawn only when a key goes up or down, the letters are toggled, or the computer-key range moves.
 const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointerDown, splitShown }: KeysProps) {
   const labelFor = new Map<number, string>();
-  for (const [, offset, label] of PC_KEYS) labelFor.set(pcBase + offset, label);
+  for (const [, offset, label] of PC_KEYS) labelFor.set(pcBase + offset, labelFor.has(pcBase + offset) ? `${labelFor.get(pcBase + offset)} ${label}` : label);
   const windowStart = whiteKeys.filter((white) => white < pcBase).length * whiteWidth;
   const windowEnd = whiteKeys.filter((white) => white <= Math.min(HIGH, pcBase + 31)).length * whiteWidth;
   return (
@@ -94,6 +94,36 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
   );
 });
 
+// A drawn computer keyboard: which key plays which note. Black-key rows sit between the white keys, as on a piano.
+const MAP_ROWS: { white: [string, string][]; black: (string | null)[] }[] = [
+  { white: [['Q', 'C'], ['W', 'D'], ['E', 'E'], ['R', 'F'], ['T', 'G'], ['Y', 'A'], ['U', 'B'], ['I', 'C'], ['O', 'D'], ['P', 'E'], ['[', 'F'], [']', 'G']], black: ['2', '3', null, '5', '6', '7', null, '9', '0', null, '='] },
+  { white: [['Z', 'C'], ['X', 'D'], ['C', 'E'], ['V', 'F'], ['B', 'G'], ['N', 'A'], ['M', 'B'], [',', 'C'], ['.', 'D'], ['/', 'E']], black: ['S', 'D', null, 'G', 'H', 'J'] },
+];
+
+function KeyMap() {
+  return (
+    <figure className="pa-keymap">
+      <figcaption>Computer keyboard</figcaption>
+      {MAP_ROWS.map((row, index) => (
+        <div key={index} className="pa-keymap-row">
+          <div className="pa-keymap-black">
+            {row.black.map((key, position) => (key ? <kbd key={position} style={{ left: `calc(${position + 1} * var(--cap) - var(--cap) / 2 + 1px)` }}>{key}</kbd> : null))}
+          </div>
+          <div className="pa-keymap-white">
+            {row.white.map(([key, note], position) => (
+              <kbd key={position}>
+                {key}
+                <small>{note}</small>
+              </kbd>
+            ))}
+          </div>
+        </div>
+      ))}
+      <p className="pa-keymap-note"><kbd>←</kbd> <kbd>→</kbd> move an octave · <kbd>Shift</kbd> louder · top row starts one octave above the bottom row</p>
+    </figure>
+  );
+}
+
 type Played = { midi: number; start: number; end?: number };
 
 function PianoInstrument({ onReady }: { onReady?: () => void }) {
@@ -119,6 +149,8 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const dial = useRef<{ y: number; tempo: number } | null>(null);
   const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
   const take = useRef<{ origin: number; last: number; notes: Played[] }>({ origin: 0, last: 0, notes: [] });
+  const downbeat = useRef(0);
+  const [showSheet, setShowSheet] = useState(false);
 
   // Screen pages; a select page closes itself after a while, like the Pa300's auto-exit.
   const open = (next: Page, nextCategory?: string) => {
@@ -138,12 +170,16 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         else next.delete(key);
         return next;
       });
-      // Capture what is played for the music stand (not the song player's notes). A pause of 4 s starts a new take.
+      // Capture what is played for the music stand (not the song player's notes), like writing on one page until
+      // Clear. With the metronome or a style running, bar 1 starts on its last downbeat so barlines match the clicks.
       if (arranger.song) return;
       const now = performance.now();
       const current = take.current;
       if (on) {
-        if (!current.notes.length || now - current.last > 4000) take.current = { origin: now, last: now, notes: [] };
+        if (!current.notes.length) {
+          const clocked = (arranger.metronome || arranger.running) && now - downbeat.current < 4000;
+          take.current = { origin: clocked ? downbeat.current : now, last: now, notes: [] };
+        }
         take.current.notes.push({ midi: key, start: now });
         if (take.current.notes.length > 400) take.current.notes.shift();
         take.current.last = now;
@@ -154,6 +190,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       }
     };
     arranger.onBeat = () => {
+      if (arranger.beat === 1) downbeat.current = performance.now();
       setBeat(true);
       setTimeout(() => setBeat(false), 90);
       refresh();
@@ -437,29 +474,58 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           </div>
         </div>
 
-        <div className="pa-stand" aria-label="Music stand">
-          <Staff
-            notes={standNotes}
-            meter={standMeter}
-            fromBar={fromBar}
-            bars={bars}
-            cursor={cursor}
-            recent={pressed}
-            version={`${songScore ? 'song' : 'live'}:${standNotes.length}:${standNotes.reduce((sum, note) => sum + note.start + note.length * 3, 0)}:${fromBar}:${bars}:${standMeter.beats}/${standMeter.unit}:${cursor === undefined ? '' : Math.round(cursor * 2)}:${[...pressed].join(',')}`}
-          />
-          <span className="pa-stand-caption">{songScore ? `${arranger.song?.title ?? ''}: sheet music` : 'Your playing, written as you play'}</span>
-          {!songScore && (
-            <button
-              type="button"
-              className="pa-stand-clear"
-              onClick={() => {
-                take.current = { origin: 0, last: 0, notes: [] };
-                refresh();
-              }}
-            >
-              Clear
+        <div className={`pa-sheet ${showSheet ? 'pa-sheet-open' : ''}`}>
+          <div className="pa-sheet-bar">
+            <button type="button" className="pa-sheet-toggle" aria-expanded={showSheet} aria-controls="pa-sheet-body" onClick={() => setShowSheet((value) => !value)}>
+              <span className="pa-sheet-chevron" aria-hidden="true">▸</span>
+              Sheet music
+              <span className="pa-sheet-hint">{songScore ? arranger.song?.title : take.current.notes.length ? `${take.current.notes.length} notes written` : 'writes what you play'}</span>
             </button>
-          )}
+            {!songScore && (
+              <>
+                <label className="pa-sheet-meter">
+                  Time
+                  <select
+                    value={standMeter.beats + '/' + standMeter.unit}
+                    disabled={arranger.running}
+                    title={arranger.running ? 'The style sets the time signature while it plays' : 'Time signature for what you write'}
+                    onChange={(event) => arranger.setMeter(meters.findIndex((item) => item.label === event.target.value))}
+                  >
+                    {meters.map((item) => (
+                      <option key={item.label} value={item.label}>{item.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="pa-sheet-clear"
+                  onClick={() => {
+                    take.current = { origin: 0, last: 0, notes: [] };
+                    refresh();
+                  }}
+                >
+                  Clear
+                </button>
+              </>
+            )}
+          </div>
+          <div id="pa-sheet-body" className="pa-sheet-body">
+            <div className="pa-sheet-inner">
+              {showSheet && (
+                <div className="pa-stand" aria-label="Music stand">
+                  <Staff
+                    notes={standNotes}
+                    meter={standMeter}
+                    fromBar={fromBar}
+                    bars={bars}
+                    cursor={cursor}
+                    recent={pressed}
+                    version={`${songScore ? 'song' : 'live'}:${standNotes.length}:${standNotes.reduce((sum, note) => sum + note.start + note.length * 3, 0)}:${fromBar}:${bars}:${standMeter.beats}/${standMeter.unit}:${cursor === undefined ? '' : Math.round(cursor * 2)}:${[...pressed].join(',')}`}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="pa-felt" aria-hidden="true" />
@@ -507,24 +573,15 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         </div>
       </div>
 
-      <dl className="pa-guide">
-        <div>
-          <dt>Play</dt>
-          <dd>Click or tap the keys. Strike lower on a key for a louder, brighter note. The screen is touch: tap a sound, style, song or tempo to change it.</dd>
-        </div>
-        <div>
-          <dt>Joystick and pedal</dt>
-          <dd>Left of the keys: drag sideways to bend, up for vibrato. Hold <kbd>Space</kbd> or press Sustain for the pedal.</dd>
-        </div>
-        <div>
-          <dt>Computer keys</dt>
-          <dd>Bottom row <kbd>Z</kbd> to <kbd>M</kbd> is one octave from C (black keys <kbd>S D</kbd> <kbd>G H J</kbd>). Top row <kbd>Q</kbd> to <kbd>]</kbd> carries on from the next C (black keys <kbd>2 3</kbd> <kbd>5 6 7</kbd> <kbd>9 0</kbd> <kbd>=</kbd>). <kbd>←</kbd> <kbd>→</kbd> move an octave; <kbd>Shift</kbd> plays louder.</dd>
-        </div>
-        <div>
-          <dt>Accompaniment and sheet music</dt>
-          <dd>Pick a style and press Start. With Split on, keys left of middle C set the chord and play strings; with it off, the whole keyboard plays your sound. The music stand writes what you play, or shows a song's score.</dd>
-        </div>
-      </dl>
+      <div className="pa-howto">
+        <ul className="pa-howto-list">
+          <li><b>Play</b> Click or tap the keys. Strike lower on a key for a louder note.</li>
+          <li><b>Choose</b> Tap the screen: the sound, style, song or tempo.</li>
+          <li><b>Accompany</b> Press Start. Your left hand, below middle C, picks the chord.</li>
+          <li><b>Express</b> Hold <kbd>Space</kbd> for the pedal. Push the joystick sideways to bend, up for vibrato.</li>
+        </ul>
+        <KeyMap />
+      </div>
       <p className="pa-credits">
         Piano: Salamander Grand Piano, a Yamaha C5 recorded by Alexander Holm. Other instruments: FluidR3 GM soundfont. Both CC BY 3.0.
         Scores: Mutopia Project, public domain. Raga pieces written for this page. Drums and tabla are synthesised.

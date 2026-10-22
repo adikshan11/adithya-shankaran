@@ -103,6 +103,9 @@ describe('portfolio', () => {
     const offsets = new Set(PC_KEYS.map(([, offset]) => offset));
     expect([...offsets].sort((a, b) => a - b)).toEqual(Array.from({ length: 32 }, (_, index) => index));
     expect(new Set(PC_KEYS.map(([code]) => code)).size).toBe(PC_KEYS.length);
+    // , . / continue the bottom row on the same notes as Q W E
+    const offsetOf = (code: string) => PC_KEYS.find(([key]) => key === code)?.[1];
+    expect([offsetOf('Comma'), offsetOf('Period'), offsetOf('Slash')]).toEqual([offsetOf('KeyQ'), offsetOf('KeyW'), offsetOf('KeyE')]);
   });
 
   it('recognises chords from the left hand', () => {

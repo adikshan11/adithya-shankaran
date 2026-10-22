@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { pianoStore } from '../piano/store';
 
-// The "piano" word in the intro: opens the piano section below and scrolls to it.
+// The "piano" word in the intro: opens the piano stage.
 export default function PianoKeys() {
   const open = useSyncExternalStore(pianoStore.subscribe, pianoStore.get, () => false);
   return (
@@ -11,7 +11,6 @@ export default function PianoKeys() {
       aria-controls="piano"
       onClick={() => {
         pianoStore.set(true);
-        setTimeout(() => document.getElementById('piano')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }), 60);
       }}
       className="underline decoration-accent/60 decoration-dotted underline-offset-4 transition hover:text-accent"
     >

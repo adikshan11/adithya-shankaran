@@ -1,4 +1,5 @@
-import { Suspense, lazy, useCallback, useEffect, useSyncExternalStore } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { pianoStore } from '../piano/store';
 
 // The instrument is its own download. It is fetched when the browser is idle after the page loads (or on hover),
@@ -37,6 +38,27 @@ export default function PianoRoom() {
     else setTimeout(warm, 2500);
   }, []);
 
+  // The stage pops out over the page: the page behind stops scrolling, focus moves into the stage, Escape closes it,
+  // and focus returns to the button that opened it.
+  const trigger = useRef<HTMLButtonElement>(null);
+  const closer = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const before = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closer.current?.focus({ preventScroll: true });
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') pianoStore.set(false);
+    };
+    window.addEventListener('keydown', escape);
+    return () => {
+      document.body.style.overflow = overflow;
+      window.removeEventListener('keydown', escape);
+      (before ?? trigger.current)?.focus({ preventScroll: true });
+    };
+  }, [open]);
+
   // Part the curtain once the page is idle again, so the motion never shares a frame with heavy work. Stable, so the
   // instrument does not redraw when the curtain opens.
   const partCurtain = useCallback(() => {
@@ -62,11 +84,12 @@ export default function PianoRoom() {
           </div>
         </div>
         <button
+          ref={trigger}
           type="button"
           aria-expanded={open}
           aria-controls="piano-stage"
-          aria-label={open ? 'Close the curtain' : 'Open the curtain'}
-          title={open ? 'Close the curtain' : 'Open the curtain'}
+          aria-label={open ? 'Close the piano stage' : 'Open the curtain'}
+          title={open ? 'Close the piano stage' : 'Open the curtain'}
           onPointerEnter={() => void loadInstrument()}
           onFocus={() => void loadInstrument()}
           onClick={() => pianoStore.set(!open)}
@@ -77,22 +100,31 @@ export default function PianoRoom() {
         </button>
       </div>
 
-      {open && (
-        <div id="piano-stage" className="pa-stage mt-5">
-          <Suspense fallback={<div className="pa-stage-wait" />}>
-            <PianoInstrument onReady={partCurtain} />
-          </Suspense>
-          <div className="pa-curtains" aria-hidden="true">
-            <span className="pa-curtain pa-curtain-left" />
-            <span className="pa-curtain pa-curtain-right" />
-            <span className="pa-valance" />
-            <span className="pa-tuning">
-              <span className="pa-tuning-dots"><span /><span /><span /></span>
-              Tuning the piano
-            </span>
-          </div>
-        </div>
-      )}
+      {open &&
+        createPortal(
+          <div className="pa-overlay" role="dialog" aria-modal="true" aria-label="Piano stage" onClick={(event) => event.target === event.currentTarget && pianoStore.set(false)}>
+            <div className="pa-overlay-frame">
+              <button ref={closer} type="button" className="pa-overlay-close" aria-label="Close the curtain" onClick={() => pianoStore.set(false)}>
+                <span aria-hidden="true">✕</span> Close <kbd>Esc</kbd>
+              </button>
+              <div id="piano-stage" className="pa-stage">
+                <Suspense fallback={<div className="pa-stage-wait" />}>
+                  <PianoInstrument onReady={partCurtain} />
+                </Suspense>
+                <div className="pa-curtains" aria-hidden="true">
+                  <span className="pa-curtain pa-curtain-left" />
+                  <span className="pa-curtain pa-curtain-right" />
+                  <span className="pa-valance" />
+                  <span className="pa-tuning">
+                    <span className="pa-tuning-dots"><span /><span /><span /></span>
+                    Tuning the piano
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </section>
   );
 }

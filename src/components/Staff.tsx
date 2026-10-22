@@ -144,10 +144,12 @@ function Staff({ notes, meter, fromBar, bars, cursor, recent }: Props) {
       <line x1={8} x2={8} y1={tops.treble} y2={BASS_BOTTOM} className="st-line" strokeWidth={2} />
       <text x={12} y={TREBLE_BOTTOM + 6} className="st-clef" fontSize={44}>𝄞</text>
       <text x={12} y={tops.bass + 25} className="st-clef" fontSize={30}>𝄢</text>
+      {/* Time signature: each number fills half the staff, the top one from the top line to the middle line, the
+          bottom one from the middle line to the bottom line, centred on each other. */}
       {(['treble', 'bass'] as const).map((staff) => (
-        <g key={staff} className="st-text" fontSize={15} fontWeight={700}>
-          <text x={42} y={tops[staff] + 14}>{meter.beats}</text>
-          <text x={42} y={tops[staff] + 30}>{meter.unit}</text>
+        <g key={staff} className="st-timesig" textAnchor="middle" fontSize={SPACE * 2.9}>
+          <text x={48} y={tops[staff] + SPACE * 2 - 0.5}>{meter.beats}</text>
+          <text x={48} y={tops[staff] + SPACE * 4 - 0.5}>{meter.unit}</text>
         </g>
       ))}
       {Array.from({ length: bars }, (_, index) => (
