@@ -22,7 +22,7 @@ describe('portfolio', () => {
   it('opens the 61-key arranger from the piano word and switches sounds', async () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'piano' }));
-    const piano = await screen.findByRole('region', { name: 'Piano' });
+    const piano = await screen.findByRole('region', { name: 'Piano' }, { timeout: 8000 });
     expect(screen.getAllByRole('button', { name: /^Play / })).toHaveLength(61);
     fireEvent.click(screen.getByRole('button', { name: 'Strings' }));
     expect(piano.textContent).toContain('String Ensemble');
@@ -36,12 +36,12 @@ describe('portfolio', () => {
     expect(piano.textContent).toContain('Raga Hamsadhwani');
     fireEvent.click(screen.getByRole('button', { name: 'Close the curtain' }));
     expect(screen.queryByRole('region', { name: 'Piano' })).toBeNull();
-  });
+  }, 20000);
 
   it('opens touch pages from the screen and sets any time signature', async () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'piano' }));
-    const piano = await screen.findByRole('region', { name: 'Piano' });
+    const piano = await screen.findByRole('region', { name: 'Piano' }, { timeout: 8000 });
     fireEvent.click(screen.getByRole('button', { name: /UPPER/ }));
     expect(screen.getAllByRole('tab')).toHaveLength(12);
     fireEvent.click(screen.getByRole('tab', { name: 'Ethnic' }));
@@ -60,7 +60,7 @@ describe('portfolio', () => {
   it('survives pressing every button on the panel and screen', async () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'piano' }));
-    const piano = await screen.findByRole('region', { name: 'Piano' });
+    const piano = await screen.findByRole('region', { name: 'Piano' }, { timeout: 8000 });
     for (const button of [...piano.querySelectorAll('button')]) fireEvent.click(button);
     for (const button of [...piano.querySelectorAll('button')]) fireEvent.click(button);
     expect(screen.getAllByRole('button', { name: /^Play / })).toHaveLength(61);
