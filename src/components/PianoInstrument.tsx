@@ -299,6 +299,28 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   // Bars on the screen's Score page, from its card's shape: bars that make the staff as wide (for its height) as the card.
   const [screenBars, setScreenBars] = useState(3);
   const scoreObserver = useRef<ResizeObserver | null>(null);
+  // The same for the music stand on a phone held sideways.
+  const [stageBars, setStageBars] = useState(4);
+  const stageObserver = useRef<ResizeObserver | null>(null);
+  const measureStand = (element: HTMLDivElement | null) => {
+    stageObserver.current?.disconnect();
+    if (!element || typeof ResizeObserver === 'undefined') return;
+    stageObserver.current = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (!width || !height) return;
+      const next = Math.max(2, Math.min(8, Math.round(((width / height) * CROP_HEIGHT - STAFF_LEFT) / STAFF_BAR)));
+      setStageBars((current) => (current === next ? current : next));
+    });
+    stageObserver.current.observe(element);
+  };
+  const [phoneLandscape, setPhoneLandscape] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia('(max-height: 500px) and (orientation: landscape)');
+    const update = () => setPhoneLandscape(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
   const measureScore = (element: HTMLDivElement | null) => {
     scoreObserver.current?.disconnect();
     if (!element || typeof ResizeObserver === 'undefined') return;
@@ -398,7 +420,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         const stage = root.closest<HTMLElement>('.pa-overlay');
         if (!keys || !keys.offsetParent) return;
         const top = keys.getBoundingClientRect().top + (stage?.scrollTop ?? 0);
-        const first = root.querySelector<HTMLElement>('.pa-phone-btn');
+        const first = [...root.querySelectorAll<HTMLElement>('.pa-ctl-row .pa-btn, .pa-phone-btn')].find((element) => element.offsetParent);
         if (first && stage) {
           const box = first.getBoundingClientRect();
           stage.style.setProperty('--close-top', `${Math.max(4, Math.round(box.top + box.height / 2 - 16 + stage.scrollTop))}px`);
@@ -685,12 +707,24 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const latest = cursor ?? standNotes.reduce((end, note) => Math.max(end, note.start), 0);
   const fromBar = Math.max(0, Math.floor(latest / bar) - (cursor !== undefined ? 1 : bars - 1));
 
+  // Clear: wipes what you played from the sheet (not shown for a song's own score).
+  const clearTake = () => {
+    take.current = { origin: 0, last: 0, notes: [] };
+    refresh();
+  };
+  const clearButton = !songScore && (
+    <button type="button" className="pa-stand-clear" onClick={clearTake} aria-label="Clear the sheet">
+      Clear
+    </button>
+  );
+
   // The screen's Score page shows as many bars as fit the display's shape (a wide, short display shows more bars),
   // so the staff fills it at the same note size instead of shrinking into the middle.
   const screenFromBar = Math.max(0, Math.floor(latest / bar) - (cursor !== undefined ? 1 : screenBars - 1));
   const scoreView = (
     <>
       {learn && <Coach mood={arranger.coach.mood} text={arranger.coach.text} tick={arranger.coach.tick} tempo={arranger.tempo} />}
+      {clearButton}
       <Staff
         notes={standNotes}
         meter={standMeter}
@@ -705,19 +739,25 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     </>
   );
 
-  // What the music stand shows (the coach while learning, then the staff).
+  // What the music stand shows (the coach while learning, then the staff). On a phone held sideways the stand is
+  // short and wide, so it shows as many bars as fit its shape (the same note size, filling the width).
+  const standFit = phoneLandscape;
+  const standBars = standFit ? stageBars : bars;
+  const standFrom = standFit ? Math.max(0, Math.floor(latest / bar) - (cursor !== undefined ? 1 : standBars - 1)) : fromBar;
   const standView = (
     <>
       {learn && <Coach mood={arranger.coach.mood} text={arranger.coach.text} tick={arranger.coach.tick} tempo={arranger.tempo} />}
+      {clearButton}
       <Staff
+        crop={standFit}
         notes={standNotes}
         meter={standMeter}
-        fromBar={fromBar}
-        bars={bars}
+        fromBar={standFrom}
+        bars={standBars}
         cursor={cursor}
         recent={pressed}
         learnAt={learn ? cursor : undefined}
-        version={`${learn ? `learn${learn.at}` : ''}${songScore ? 'song' : 'live'}:${standNotes.length}:${standNotes.reduce((sum, note) => sum + note.start + note.length * 3, 0)}:${fromBar}:${bars}:${standMeter.beats}/${standMeter.unit}:${cursor === undefined ? '' : Math.round(cursor * 2)}:${[...pressed].join(',')}`}
+        version={`${standFit ? 'fit' : ''}${learn ? `learn${learn.at}` : ''}${songScore ? 'song' : 'live'}:${standNotes.length}:${standNotes.reduce((sum, note) => sum + note.start + note.length * 3, 0)}:${standFrom}:${standBars}:${standMeter.beats}/${standMeter.unit}:${cursor === undefined ? '' : Math.round(cursor * 2)}:${[...pressed].join(',')}`}
       />
     </>
   );
@@ -749,18 +789,6 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   return (
     <div role="region" aria-label="Piano" className="pa-instrument">
       <div className="pa-body">
-        {(drawer || showSheet) && (
-          <button
-            type="button"
-            className="pa-view-close"
-            aria-label={drawer ? 'Close the panel' : 'Close the sheet music'}
-            onClick={() => (drawer ? setDrawer(false) : setShowSheet(false))}
-          >
-            <svg viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M4 4 L12 12 M12 4 L4 12" />
-            </svg>
-          </button>
-        )}
         <div className="pa-top">
           <div className="pa-brand">
             <span className="pa-brand-name">ADITHYA</span>
@@ -980,7 +1008,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           <div id="pa-sheet-body" className="pa-sheet-body">
             <div className="pa-sheet-inner">
               {showSheet && (
-                <div className="pa-stand" aria-label="Music stand">
+                <div ref={measureStand} className="pa-stand" aria-label="Music stand">
                   {standView}
                 </div>
               )}
