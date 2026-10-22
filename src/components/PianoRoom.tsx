@@ -56,6 +56,10 @@ export default function PianoRoom() {
     const rootOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    // Tint the browser's bars to the stage while it is open, and put the page's colour back after.
+    const tint = document.querySelector('meta[name="theme-color"]');
+    const pageTint = tint?.getAttribute('content');
+    tint?.setAttribute('content', '#08090b');
     closer.current?.focus({ preventScroll: true });
     const escape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') pianoStore.set(false);
@@ -64,6 +68,7 @@ export default function PianoRoom() {
     return () => {
       document.body.style.overflow = overflow;
       document.documentElement.style.overflow = rootOverflow;
+      if (pageTint) tint?.setAttribute('content', pageTint);
       window.removeEventListener('keydown', escape);
       (before ?? trigger.current)?.focus({ preventScroll: true });
     };

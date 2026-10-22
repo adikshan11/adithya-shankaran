@@ -223,7 +223,6 @@
     background: linear-gradient(180deg, #0c1c3a, #081329);
     border: 6px solid #050608;
     box-shadow: 0 0 0 1px #3b3e45, inset 0 0 22px rgb(0 0 0 / 0.6);
-    animation: pa-boot 0.8s steps(8) 0.2s both;
     transition: box-shadow 0.1s;
   }
   .pa-screen::after {
@@ -514,6 +513,14 @@
   .pa-page-head { display: flex; align-items: flex-start; gap: 8px; }
   .pa-page-head-main { flex: 1; min-width: 0; }
   .pa-page-head .pa-page-title { margin: 3px 0 0; }
+  /* Score page on the display: the staff on a light card, the coach small above it while learning. */
+  .pa-score-btn { padding: 0 6px; border-radius: 4px; font-weight: 800; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35); }
+  .pa-score-btn-on { color: #071a33; background: #9be3ff; }
+  .pa-grid-score { display: block !important; }
+  .pa-stand-screen { margin: 0; padding: 6px 8px; border-radius: 8px; }
+  .pa-stand-screen .pa-coach { gap: 8px; margin: 0 0 2px; }
+  .pa-stand-screen .pa-coach-figure { width: 42px; height: 49px; }
+  .pa-stand-screen .pa-coach-bubble { font-size: 0.72rem; padding: 5px 9px; }
   /* Recordings page */
   .pa-grid-takes { display: flex; flex-direction: column; gap: 6px; }
   .pa-take { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, auto); align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px; background: rgb(255 255 255 / 0.06); }
@@ -682,7 +689,7 @@
 
   /* Opening: full-screen red velvet curtains meet along a soft wavy fold and part left and right; the valance lifts
      away after. Three layers moving with transform only, so the motion stays on the compositor. */
-  .pa-tear { position: fixed; inset: 0; z-index: 88; pointer-events: none; animation: pa-tear-done 0s linear 1.75s forwards; }
+  .pa-tear { position: fixed; inset: 0; z-index: 120; /* above the close button and every stage control while shut */ pointer-events: none; animation: pa-tear-done 0s linear 1.75s forwards; }
   /* Four strips per half, each a quarter of the half wide. Strip i slides so the strips end bunched at the side,
      1.4 vw apart; then the bunched drape slides away. */
   .pa-drape { position: absolute; top: 0; bottom: 0; width: 50%; will-change: transform; }
@@ -854,6 +861,19 @@
     .pa-panel { padding: 10px; }
   }
   @media (max-width: 760px) and (orientation: portrait) {
+    /* Panel: the rightmost quick-bar button, gold while closed and blue while open, so its state is plain. */
+    .pa-phonebar > .pa-phone-panel { order: 10; color: #2a1a00; background: linear-gradient(180deg, #ffd27a, #f0a42c); }
+    .pa-phonebar > .pa-phone-panel[aria-expanded="true"] { color: #071a33; background: linear-gradient(180deg, #8fe0ff, #46b8ea); box-shadow: 0 2px 0 #0b0b0d, 0 0 12px rgb(89 208 255 / 0.5); }
+    .pa-phonebar > .pa-rotate-hint { order: 11; }
+    /* The display's top bar keeps to one line; the Score page gives the staff the room (the coach's words only). */
+    .pa-screen-bar { gap: 6px; font-size: 0.62rem; letter-spacing: 0.06em; white-space: nowrap; }
+    .pa-screen-bar .pa-long { display: none; } /* short labels instead of cut-off ones */
+    .pa-screen:has(.pa-grid-score) .pa-message, .pa-screen:has(.pa-grid-score) .pa-meter { display: none; }
+    .pa-grid-score .pa-coach-figure { display: none; }
+    .pa-grid-score .pa-coach-bubble { font-size: 0.7rem; }
+    .pa-grid-score .pa-coach-bubble::before { display: none; }
+    .pa-grid-score .pa-coach-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .pa-screen .pa-page-head .pa-page-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     /* The quick bar: sound ‹ name › on the first row, Style, Sustain and Panel in three equal buttons below. */
     .pa-phonebar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .pa-phonebar > :nth-child(1) { grid-column: 1; grid-row: 1; }
@@ -978,6 +998,7 @@
   @keyframes pa-tuning { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-4px); } }
   @keyframes pa-rise { from { opacity: 0; transform: translateY(18px) scale(0.985); } to { opacity: 1; transform: none; } }
   @keyframes pa-key-rise { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .pa-screen-booting { animation: pa-boot 0.8s steps(8) 0.2s both; }
   @keyframes pa-boot { 0% { opacity: 0; } 20% { opacity: 1; } 30% { opacity: 0.3; } 45% { opacity: 1; } 100% { opacity: 1; } }
 
   @media (prefers-reduced-motion: reduce) {

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { categories, sounds, styleCategories, styleMeter, styles } from '../piano/arranger';
 import type { Hand } from '../piano/arranger';
@@ -7,7 +8,7 @@ import { songs } from '../piano/songs';
 
 // The colour touchscreen. The main page shows the sound, style, song, tempo, time signature, settings and the chord
 // being played; tapping any of them opens its page, as on a Korg Pa300.
-export type Page = 'main' | 'sound' | 'style' | 'song' | 'metro' | 'tune' | 'rec' | 'learn';
+export type Page = 'main' | 'sound' | 'style' | 'song' | 'metro' | 'tune' | 'rec' | 'learn' | 'score';
 
 type Props = {
   arranger: Arranger;
@@ -18,6 +19,7 @@ type Props = {
   beat: boolean;
   meterRef: (element: HTMLSpanElement | null) => void;
   takes?: ReactNode;
+  score?: ReactNode;
   recording?: boolean;
   hand?: Hand;
   onHand?: (hand: Hand) => void;
@@ -42,8 +44,15 @@ function SelectPage({ head, onExit, children, className = '' }: { head: ReactNod
   );
 }
 
-export default function PianoScreen({ arranger, page, category, open, message, beat, meterRef, takes, recording, hand = 'right', onHand, onLearn, speed = 0.5, onSpeed }: Props) {
+export default function PianoScreen({ arranger, page, category, open, message, beat, meterRef, takes, score, recording, hand = 'right', onHand, onLearn, speed = 0.5, onSpeed }: Props) {
   const learn = arranger.learn;
+  // The power-on flicker plays once, when the piano opens. (A CSS animation restarts whenever a hidden element is
+  // shown again, so on a phone it replayed each time the sheet music gave the screen back.)
+  const [booting, setBooting] = useState(true);
+  useEffect(() => {
+    const done = setTimeout(() => setBooting(false), 1100);
+    return () => clearTimeout(done);
+  }, []);
   const sound = arranger.sound;
   const style = arranger.style;
   const song = arranger.song;
@@ -63,12 +72,14 @@ export default function PianoScreen({ arranger, page, category, open, message, b
   );
 
   return (
-    <div className={`pa-screen ${beat ? 'pa-screen-beat' : ''}`}>
+    <div className={`pa-screen ${booting ? 'pa-screen-booting' : ''} ${beat ? 'pa-screen-beat' : ''}`}>
       <div className="pa-screen-bar">
-        <button type="button" className="pa-touch" onClick={exit}>{song ? 'SONG PLAY' : 'STYLE PLAY'}</button>
+        <button type="button" className="pa-touch" onClick={exit}>{song ? 'SONG' : 'STYLE'}<span className="pa-long"> PLAY</span></button>
         <button type="button" className="pa-touch" onClick={() => open('metro')}>♩ {arranger.tempo} · {meter}</button>
+        {/* Score: the music on the display itself, as the Pa300's Score page shows it. */}
+        <button type="button" className={`pa-touch pa-score-btn ${page === 'score' ? 'pa-score-btn-on' : ''}`} aria-pressed={page === 'score'} onClick={() => open(page === 'score' ? 'main' : 'score')} aria-label="Score">♪<span className="pa-long"> SCORE</span></button>
         {learn ? (
-          <button type="button" className="pa-touch pa-learn-flag" onClick={() => open('learn')}>LEARN {Math.min(learn.at + 1, learn.steps.length)}/{learn.steps.length} · {Math.round(learn.speed * 100)}%</button>
+          <button type="button" className="pa-touch pa-learn-flag" onClick={() => open('learn')}><span className="pa-long">LEARN </span>{Math.min(learn.at + 1, learn.steps.length)}/{learn.steps.length}<span className="pa-long"> · {Math.round(learn.speed * 100)}%</span></button>
         ) : recording ? (
           <button type="button" className="pa-touch pa-rec-flag" onClick={() => open('rec')}>● REC</button>
         ) : (
@@ -247,6 +258,12 @@ export default function PianoScreen({ arranger, page, category, open, message, b
               {item.title}
             </button>
           ))}
+        </SelectPage>
+      )}
+
+      {page === 'score' && (
+        <SelectPage head={<p className="pa-page-title">Score{arranger.song ? ` · ${arranger.song.title}` : ' · what you play'}</p>} onExit={exit} className="pa-grid-score">
+          {score}
         </SelectPage>
       )}
 

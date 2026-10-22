@@ -354,3 +354,7 @@
 @media (min-width: 640px) {
   .site-header { top: calc(1rem + env(safe-area-inset-top)); }
 }
+
+/* While the piano stage is open, the root behind the phone's floating browser bars is the stage's dark colour,
+   not the light page colour (it showed as a white strip under Safari's bottom bar). */
+html:has(.pa-overlay) { background-color: #08090b; }

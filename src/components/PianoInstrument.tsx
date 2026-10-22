@@ -658,6 +658,23 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const latest = cursor ?? standNotes.reduce((end, note) => Math.max(end, note.start), 0);
   const fromBar = Math.max(0, Math.floor(latest / bar) - (cursor !== undefined ? 1 : bars - 1));
 
+  // What the music stand shows (the coach while learning, then the staff); also drawn on the screen's Score page.
+  const standView = (
+    <>
+      {learn && <Coach mood={arranger.coach.mood} text={arranger.coach.text} tick={arranger.coach.tick} tempo={arranger.tempo} />}
+      <Staff
+        notes={standNotes}
+        meter={standMeter}
+        fromBar={fromBar}
+        bars={bars}
+        cursor={cursor}
+        recent={pressed}
+        learnAt={learn ? cursor : undefined}
+        version={`${learn ? `learn${learn.at}` : ''}${songScore ? 'song' : 'live'}:${standNotes.length}:${standNotes.reduce((sum, note) => sum + note.start + note.length * 3, 0)}:${fromBar}:${bars}:${standMeter.beats}/${standMeter.unit}:${cursor === undefined ? '' : Math.round(cursor * 2)}:${[...pressed].join(',')}`}
+      />
+    </>
+  );
+
   // Joystick, left of the keys as on the Pa300: sideways bends the pitch (up to two semitones), up adds vibrato.
   const placeStick = (x: number, y: number, held: boolean) => {
     const element = stick.current;
@@ -708,6 +725,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                 meter.current = element;
               }}
               recording={recording}
+              score={<div className="pa-stand pa-stand-screen" aria-label="Score">{standView}</div>}
               hand={hand}
               onHand={(next) => {
                 setHand(next);
@@ -904,17 +922,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             <div className="pa-sheet-inner">
               {showSheet && (
                 <div className="pa-stand" aria-label="Music stand">
-                  {learn && <Coach mood={arranger.coach.mood} text={arranger.coach.text} tick={arranger.coach.tick} tempo={arranger.tempo} />}
-                  <Staff
-                    notes={standNotes}
-                    meter={standMeter}
-                    fromBar={fromBar}
-                    bars={bars}
-                    cursor={cursor}
-                    recent={pressed}
-                    learnAt={learn ? cursor : undefined}
-                    version={`${learn ? `learn${learn.at}` : ''}${songScore ? 'song' : 'live'}:${standNotes.length}:${standNotes.reduce((sum, note) => sum + note.start + note.length * 3, 0)}:${fromBar}:${bars}:${standMeter.beats}/${standMeter.unit}:${cursor === undefined ? '' : Math.round(cursor * 2)}:${[...pressed].join(',')}`}
-                  />
+                  {standView}
                 </div>
               )}
             </div>
@@ -948,7 +956,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           <button type="button" className={`pa-phone-btn pa-phone-wide ${showSheet ? 'pa-phone-on' : ''}`} aria-pressed={showSheet} onClick={() => { setShowSheet((value) => !value); setDrawer(false); }}>
             ♪ Sheet
           </button>
-          <button type="button" className="pa-phone-btn pa-phone-wide" aria-expanded={drawer} onClick={() => { setDrawer((value) => !value); setShowSheet(false); }}>{drawer ? '▴ Less' : '☰ Panel'}</button>
+          <button type="button" className="pa-phone-btn pa-phone-wide pa-phone-panel" aria-expanded={drawer} onClick={() => { setDrawer((value) => !value); setShowSheet(false); }}>{drawer ? '▴ Less' : '☰ Panel'}</button>
           <button
             type="button"
             className={`pa-phone-btn pa-phone-wide ${learn ? 'pa-phone-on' : ''}`}
