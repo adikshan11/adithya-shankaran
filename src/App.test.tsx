@@ -106,6 +106,9 @@ describe('portfolio', () => {
     // , . / continue the bottom row on the same notes as Q W E
     const offsetOf = (code: string) => PC_KEYS.find(([key]) => key === code)?.[1];
     expect([offsetOf('Comma'), offsetOf('Period'), offsetOf('Slash')]).toEqual([offsetOf('KeyQ'), offsetOf('KeyW'), offsetOf('KeyE')]);
+    // 3 and 4 are the black keys over Q W E, and L plays the same C# as 3
+    expect([offsetOf('Digit3'), offsetOf('Digit4'), offsetOf('KeyL')]).toEqual([13, 15, 13]);
+    expect(offsetOf('Digit2')).toBeUndefined();
   });
 
   it('recognises chords from the left hand', () => {

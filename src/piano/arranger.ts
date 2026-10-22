@@ -24,14 +24,14 @@ const mtof = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
 // Computer keyboard, two rows, one key per note, by physical key position (event.code) so any layout works.
 // Bottom row: Z X C V B N M are the white keys of one octave from the base C, with S D and G H J as its black keys,
-// laid out like a real keyboard; , . / continue it (C D E). Top row: Q W E R T Y U I O P [ ] are the white keys from
-// the next C up, with 2 3, 5 6 7, 9 0 and = as its black keys. Together they reach 32 notes. [code, offset, label]
+// laid out like a real keyboard; , . / continue it (C D E) with L as the black key between , and . (C#). Top row:
+// Q W E R T Y U I O P [ ] are the white keys from the next C up, with 3 4, 5 6 7, 9 0 and = as its black keys. Together they reach 32 notes. [code, offset, label]
 export const PC_KEYS: [string, number, string][] = [
   ['KeyZ', 0, 'Z'], ['KeyS', 1, 'S'], ['KeyX', 2, 'X'], ['KeyD', 3, 'D'], ['KeyC', 4, 'C'], ['KeyV', 5, 'V'], ['KeyG', 6, 'G'],
   ['KeyB', 7, 'B'], ['KeyH', 8, 'H'], ['KeyN', 9, 'N'], ['KeyJ', 10, 'J'], ['KeyM', 11, 'M'],
   // , . / carry the bottom row on into the next octave: the same C, D and E as Q, W and E.
-  ['Comma', 12, ','], ['Period', 14, '.'], ['Slash', 16, '/'],
-  ['KeyQ', 12, 'Q'], ['Digit2', 13, '2'], ['KeyW', 14, 'W'], ['Digit3', 15, '3'], ['KeyE', 16, 'E'], ['KeyR', 17, 'R'], ['Digit5', 18, '5'],
+  ['Comma', 12, ','], ['KeyL', 13, 'L'], ['Period', 14, '.'], ['Slash', 16, '/'],
+  ['KeyQ', 12, 'Q'], ['Digit3', 13, '3'], ['KeyW', 14, 'W'], ['Digit4', 15, '4'], ['KeyE', 16, 'E'], ['KeyR', 17, 'R'], ['Digit5', 18, '5'],
   ['KeyT', 19, 'T'], ['Digit6', 20, '6'], ['KeyY', 21, 'Y'], ['Digit7', 22, '7'], ['KeyU', 23, 'U'], ['KeyI', 24, 'I'], ['Digit9', 25, '9'],
   ['KeyO', 26, 'O'], ['Digit0', 27, '0'], ['KeyP', 28, 'P'], ['BracketLeft', 29, '['], ['Equal', 30, '='], ['BracketRight', 31, ']'],
 ];

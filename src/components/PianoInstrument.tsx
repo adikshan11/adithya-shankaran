@@ -97,8 +97,8 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
 
 // A drawn computer keyboard: which key plays which note. Black-key rows sit between the white keys, as on a piano.
 const MAP_ROWS: { white: [string, string][]; black: (string | null)[] }[] = [
-  { white: [['Q', 'C'], ['W', 'D'], ['E', 'E'], ['R', 'F'], ['T', 'G'], ['Y', 'A'], ['U', 'B'], ['I', 'C'], ['O', 'D'], ['P', 'E'], ['[', 'F'], [']', 'G']], black: ['2', '3', null, '5', '6', '7', null, '9', '0', null, '='] },
-  { white: [['Z', 'C'], ['X', 'D'], ['C', 'E'], ['V', 'F'], ['B', 'G'], ['N', 'A'], ['M', 'B'], [',', 'C'], ['.', 'D'], ['/', 'E']], black: ['S', 'D', null, 'G', 'H', 'J'] },
+  { white: [['Q', 'C'], ['W', 'D'], ['E', 'E'], ['R', 'F'], ['T', 'G'], ['Y', 'A'], ['U', 'B'], ['I', 'C'], ['O', 'D'], ['P', 'E'], ['[', 'F'], [']', 'G']], black: ['3', '4', null, '5', '6', '7', null, '9', '0', null, '='] },
+  { white: [['Z', 'C'], ['X', 'D'], ['C', 'E'], ['V', 'F'], ['B', 'G'], ['N', 'A'], ['M', 'B'], [',', 'C'], ['.', 'D'], ['/', 'E']], black: ['S', 'D', null, 'G', 'H', 'J', null, 'L'] },
 ];
 
 function KeyMap() {
@@ -305,15 +305,15 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         const stage = root.closest<HTMLElement>('.pa-overlay');
         if (!keys || !panel) return;
         const top = () => keys.getBoundingClientRect().top + (stage?.scrollTop ?? 0);
-        const room = window.innerHeight - 14 - KEYS_MIN;
+        const room = window.innerHeight - 4 - KEYS_MIN;
         for (let pass = 0; pass < 4; pass++) {
           const over = top() - room;
-          if (over <= 1 || scale <= 0.42) break;
           const height = panel.getBoundingClientRect().height;
+          if (over <= 1 || scale <= 0.42 || !height) break; // nothing to shrink while the panel is closed
           scale = Math.max(0.42, (scale * (height - over)) / height);
           root.style.setProperty('--fit', scale.toFixed(3));
         }
-        root.style.setProperty('--keys-h', `${Math.max(KEYS_MIN - 20, Math.floor(window.innerHeight - top() - 14))}px`);
+        root.style.setProperty('--keys-h', `${Math.max(KEYS_MIN - 20, Math.floor(window.innerHeight - top() - 4))}px`);
       } else if (window.matchMedia('(max-width: 760px) and (orientation: portrait)').matches) {
         // Portrait phone: the keys take the rest of the screen below the touch screen and quick bar.
         root.style.removeProperty('--fit');

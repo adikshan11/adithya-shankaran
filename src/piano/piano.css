@@ -767,33 +767,42 @@
     .pa-keys { height: var(--keys-h, 44dvh); min-height: 220px; }
     .pa-rotate-hint { display: block; grid-column: 1 / -1; text-align: center; font-size: 0.72rem; color: #9ea2ab; }
   }
+  /* Landscape phone, the way phone piano apps do it: the keys run edge to edge and fill the screen under one slim
+     toolbar. The full front panel (scaled to fit) or the sheet music opens above the keys from that toolbar. */
   @media (max-height: 500px) and (orientation: landscape) {
-    .pa-overlay { padding: 6px 10px 12px; }
-    /* A round ✕ in the corner, clear of the panel's buttons. */
-    .pa-overlay-close { position: absolute; top: 6px; right: 12px; z-index: 90; display: grid; place-items: center; width: 30px; height: 30px; margin: 0; padding: 0; font-size: 0; background: rgb(20 22 26 / 0.92); }
+    .pa-overlay { padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+    .pa-overlay-close { position: absolute; top: 5px; right: calc(8px + env(safe-area-inset-right)); z-index: 90; display: grid; place-items: center; width: 32px; height: 32px; margin: 0; padding: 0; font-size: 0; background: rgb(20 22 26 / 0.92); }
     .pa-overlay-close span { font-size: 0.85rem; }
-    .pa-top, .pa-phonebar, .pa-howto, .pa-credits { display: none; }
-    .pa-body { padding: 10px 12px 10px; }
-    /* The desktop panel, drawn at its desktop size and scaled to fit (zoom keeps it crisp and its taps exact). */
-    /* Split, Song, Metro, Reverb and PC keys stand in a column beside the panel instead of a row under it. */
-    .pa-drawer { zoom: var(--fit, 0.6); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; width: 1400px; margin: 0 auto; }
-    .pa-drawer .pa-sheet { grid-column: 1 / -1; margin: 0; }
+    .pa-top, .pa-howto, .pa-credits, .pa-rotate-hint { display: none !important; }
+    .pa-body { padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+    .pa-phonebar { display: flex; align-items: center; gap: 6px; margin: 0; padding: 5px 48px 5px 8px; }
+    .pa-phone-btn { height: 32px; font-size: 0.78rem; }
+    .pa-phone-sound { flex: 1; height: 32px; font-size: 0.82rem; }
+    .pa-phonebar > :nth-child(1), .pa-phonebar > :nth-child(3) { width: 38px; }
+    .pa-phone-wide { padding: 0 12px; }
+    /* Panel and sheet music: hidden until asked for, then drawn above the keys. */
+    .pa-drawer:not(.pa-drawer-open):not(:has(.pa-sheet-open)) { display: none; }
+    .pa-drawer-open .pa-sheet { display: none; }
     .pa-drawer:has(.pa-sheet-open) .pa-panel, .pa-drawer:has(.pa-sheet-open) .pa-controls { display: none; }
-    .pa-drawer .pa-sheet-bar { padding-right: 96px; } /* clear of the round ✕ */
+    /* The desktop panel, drawn at its desktop size and scaled to fit (zoom keeps it crisp and its taps exact). */
+    .pa-drawer { zoom: var(--fit, 0.6); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; width: 1400px; margin: 4px auto 0; }
+    .pa-drawer .pa-sheet { grid-column: 1 / -1; margin: 0; }
     .pa-panel { grid-template-columns: 1fr 1.38fr 1fr; align-items: start; padding: 12px 14px; }
     .pa-dial-row, .pa-faders { display: none !important; }
-    .pa-drawer .pa-controls { flex-direction: column; justify-content: flex-end; margin: 0; padding: 0 0 2px; }
+    .pa-drawer .pa-controls { flex-direction: column; justify-content: center; margin: 0; padding: 0; }
     .pa-drawer .pa-controls > div { flex-direction: column; flex-wrap: nowrap; }
-    /* A phone has no computer keyboard, so PC keys goes; that leaves the top of the column free for ✕. */
-    .pa-drawer .pa-controls > div > :last-child { display: none; }
+    .pa-drawer .pa-controls > div > :last-child { display: none; } /* no computer keyboard on a phone */
     .pa-drawer .pa-controls .pa-btn { width: 96px; }
-    .pa-left { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 6px; }
+    /* The joystick shows with the panel; while just playing, the keys get the full width. */
+    .pa-left { display: none; }
+    .pa-body:has(.pa-drawer-open) .pa-left { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 4px; }
     .pa-left-label { display: none; }
-    .pa-joy { width: 64px; height: 64px; }
-    .pa-left .pa-pedal { width: 64px; font-size: 0.6rem; padding: 0.35rem 0.2rem; }
-    .pa-keyrow { grid-template-columns: auto 1fr; gap: 8px; }
-    .pa-keys { height: var(--keys-h, calc(100dvh - 230px)); min-height: 150px; min-width: calc(36 * 48px); }
-    .pa-felt { margin: 8px -12px 0; }
+    .pa-joy { width: 60px; height: 60px; }
+    .pa-left .pa-pedal { width: 60px; font-size: 0.6rem; padding: 0.35rem 0.2rem; }
+    .pa-body:has(.pa-drawer-open) .pa-keyrow { grid-template-columns: auto 1fr; gap: 6px; }
+    .pa-felt { margin: 4px 0 0; height: 4px; }
+    .pa-minimap { margin: 4px 8px; }
+    .pa-keys { height: var(--keys-h, calc(100dvh - 70px)); min-height: 150px; min-width: calc(36 * 58px); }
   }
   @keyframes pa-drawer-in { from { transform: translateY(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
 

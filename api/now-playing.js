@@ -34,7 +34,10 @@ export async function GET() {
     const item = (await recent.json()).items?.[0]?.track;
     if (!item) return new Response('null', { headers });
     return new Response(JSON.stringify({ playing: false, ...trackOf(item) }), { headers });
-  } catch {
-    return new Response('null', { status: 502, headers });
+  } catch (error) {
+    // Spotify refused (for example an expired refresh token). Log it for the Vercel logs, and answer with a
+    // cached empty result so every visitor does not start the function again for the same failure.
+    console.error('now-playing', error instanceof Error ? error.message : error);
+    return new Response('null', { headers: { ...headers, 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' } });
   }
 }

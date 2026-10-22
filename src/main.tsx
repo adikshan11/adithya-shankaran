@@ -17,5 +17,7 @@ const app = (
   </StrictMode>
 );
 
-if (root.hasChildNodes()) hydrateRoot(root, app);
+// The page arrives already rendered, so let the browser paint it first and only then attach React (on a slow
+// phone, hydrating straight away held the first paint back until the script had run).
+if (root.hasChildNodes()) requestAnimationFrame(() => setTimeout(() => hydrateRoot(root, app), 0));
 else createRoot(root).render(app);
