@@ -165,9 +165,9 @@
 
   .pa-felt { height: 7px; margin: 10px -26px 0; background: linear-gradient(180deg, #7d1414, #4a0909); box-shadow: inset 0 2px 3px rgb(0 0 0 / 0.5); }
   .pa-keybed { position: relative; overflow-x: auto; overflow-y: hidden; margin: 0 -10px; padding: 0 10px 4px; perspective: 1100px; scrollbar-width: thin; }
-  .pa-keys { position: relative; min-width: 820px; height: 150px; touch-action: manipulation; user-select: none; }
+  .pa-keys { position: relative; min-width: 860px; height: 196px; touch-action: manipulation; user-select: none; }
   @media (max-width: 640px) {
-    .pa-keys { height: 120px; }
+    .pa-keys { height: 170px; min-width: 900px; }
     .pa-body { padding: 14px 16px 16px; }
     .pa-felt { margin: 10px -16px 0; }
   }
@@ -245,6 +245,60 @@
     animation: pa-float 2.4s ease-out both;
   }
 
+  .pa-seal {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 3.4rem;
+    height: 3.4rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #f8e3a0, #c99a3c 55%, #8a6420);
+    box-shadow: 0 0 0 3px rgb(201 154 60 / 0.35), inset 0 -3px 6px rgb(0 0 0 / 0.3), 0 6px 14px -6px rgb(138 100 32 / 0.8);
+  }
+  .pa-seal span { font-family: Georgia, serif; font-size: 1.7rem; font-weight: 700; color: #3a2508; text-shadow: 0 1px 0 rgb(255 255 255 / 0.5); }
+
+  .pa-dial {
+    position: relative;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    cursor: ns-resize;
+    touch-action: none;
+    background: repeating-conic-gradient(#2a2420 0 6deg, #3a332d 6deg 12deg);
+    box-shadow: 0 0 0 3px #8a6a2f, 0 4px 10px rgb(0 0 0 / 0.6), inset 0 2px 3px rgb(255 255 255 / 0.15);
+  }
+  .pa-dial::after { content: ""; position: absolute; inset: 12px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #4a423b, #1c1815); }
+  .pa-dial-mark { position: absolute; top: 5px; left: 50%; z-index: 1; width: 4px; height: 12px; margin-left: -2px; border-radius: 2px; background: #ffb347; box-shadow: 0 0 6px #ffb347; }
+
+  .pa-stick {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 70px;
+    height: 42px;
+    border-radius: 10px;
+    cursor: ew-resize;
+    touch-action: none;
+    background: radial-gradient(circle, #241a15, #0d0907);
+    box-shadow: inset 0 2px 6px rgb(0 0 0 / 0.8), 0 0 0 2px #5d4520;
+  }
+  .pa-stick span { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #d8d2c8, #6b645c); box-shadow: 0 3px 5px rgb(0 0 0 / 0.7); transition: transform 0.08s; }
+
+  .pa-pedal {
+    min-width: 5.5rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px 8px 14px 14px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #2a1a0c;
+    background: linear-gradient(180deg, #d6d0c4, #8f887d);
+    box-shadow: 0 4px 0 #3a332c, inset 0 1px 0 rgb(255 255 255 / 0.6);
+    transition: transform 0.06s, box-shadow 0.06s;
+  }
+  .pa-pedal-down { transform: translateY(3px); box-shadow: 0 1px 0 #3a332c, inset 0 2px 5px rgb(0 0 0 / 0.35), 0 0 12px rgb(255 179 71 / 0.55); }
+
   @keyframes pa-unfold {
     from { opacity: 0; transform: translateY(-12px) scaleY(0.6); clip-path: inset(0 0 100% 0); }
     to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); }
@@ -252,7 +306,8 @@
   @keyframes pa-lid {
     0% { transform: rotateX(0); opacity: 1; }
     70% { opacity: 1; }
-    100% { transform: rotateX(-100deg) translateY(-20%); opacity: 0; visibility: hidden; }
+    99% { transform: rotateX(-100deg) translateY(-20%); opacity: 0; }
+    100% { transform: scale(0); opacity: 0; visibility: hidden; }
   }
   @keyframes pa-key-rise {
     from { transform: translateY(26px); opacity: 0; }

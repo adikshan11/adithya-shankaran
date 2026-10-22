@@ -22,7 +22,7 @@ describe('portfolio', () => {
     const piano = screen.getByRole('region', { name: 'Piano' });
     expect(screen.getAllByRole('button', { name: /^Play / })).toHaveLength(61);
     fireEvent.click(screen.getByRole('button', { name: 'Strings' }));
-    expect(piano.textContent).toContain('Warm Strings');
+    expect(piano.textContent).toContain('String Ensemble');
     fireEvent.click(screen.getByRole('button', { name: 'Strings' }));
     expect(piano.textContent).toContain('Pizzicato');
     fireEvent.click(screen.getByRole('button', { name: 'Close the lid' }));

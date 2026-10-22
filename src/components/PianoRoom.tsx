@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useRef, useState, useSyncExternalStore } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { Arranger, HIGH, KEYMAP, LOW, categories, isBlack, keyName, sounds, styles } from '../piano/arranger';
 import { pianoStore } from '../piano/store';
 
@@ -9,13 +10,20 @@ const letterFor = Object.fromEntries(Object.entries(KEYMAP).map(([letter, offset
 const signed = (value: number) => (value > 0 ? `+${value}` : `${value}`);
 const notes = ['♪', '♫', '♩', '♬', '♪', '♫', '♬', '♩', '♪', '♫'];
 
-function PanelButton({ label, onClick, active, tone = 'cream', wide = false }: { label: string; onClick: () => void; active?: boolean; tone?: 'cream' | 'wine' | 'brass'; wide?: boolean }) {
+function PanelButton({ label, onClick, active, tone = 'cream', className = '' }: { label: string; onClick: () => void; active?: boolean; tone?: 'cream' | 'wine' | 'brass'; className?: string }) {
   return (
-    <button type="button" onClick={onClick} aria-pressed={active} className={`pa-btn pa-btn-${tone} ${wide ? 'col-span-2' : ''}`}>
+    <button type="button" onClick={onClick} aria-pressed={active} className={`pa-btn pa-btn-${tone} ${className}`}>
       {active !== undefined && <span className={`pa-led ${active ? 'pa-led-on' : ''}`} aria-hidden="true" />}
       {label}
     </button>
   );
+}
+
+// Velocity from where the key is struck: nearer the front edge is a firmer press, as on a real keybed.
+function velocityOf(event: ReactPointerEvent<HTMLElement>) {
+  const box = event.currentTarget.getBoundingClientRect();
+  const depth = box.height ? (event.clientY - box.top) / box.height : 0.7;
+  return Math.min(1, Math.max(0.25, 0.3 + depth * 0.75));
 }
 
 export default function PianoRoom() {
@@ -27,9 +35,12 @@ export default function PianoRoom() {
   const [pressed, setPressed] = useState<Set<number>>(() => new Set());
   const [message, setMessage] = useState('');
   const [beat, setBeat] = useState(false);
+  const [showLetters, setShowLetters] = useState(false);
+  const [stick, setStick] = useState(0);
   const meter = useRef<HTMLSpanElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const pointerDown = useRef(false);
+  const dial = useRef<{ y: number; tempo: number } | null>(null);
 
   useEffect(() => {
     arranger.onChange = refresh;
@@ -48,7 +59,7 @@ export default function PianoRoom() {
     return () => arranger.dispose();
   }, [arranger]);
 
-  // Opening: boot the screen, play a chime and centre the keyboard on middle C.
+  // Opening: boot the screen, load the grand piano, play a chime and centre the keyboard on middle C.
   useEffect(() => {
     if (!open) {
       arranger.releaseAll();
@@ -58,14 +69,14 @@ export default function PianoRoom() {
       return;
     }
     arranger.chime();
-    const greeting = 'Hello. Press START, or just play.';
+    const greeting = 'Grand Piano ready. Press START, or just play.';
     let shown = 0;
     setMessage('');
     const typing = setInterval(() => {
       shown++;
       setMessage(greeting.slice(0, shown));
       if (shown >= greeting.length) clearInterval(typing);
-    }, 45);
+    }, 40);
     const centre = setTimeout(() => {
       const element = scroller.current;
       if (element) element.scrollLeft = (element.scrollWidth - element.clientWidth) / 2;
@@ -76,15 +87,21 @@ export default function PianoRoom() {
     };
   }, [open, arranger]);
 
-  // Computer keyboard: A to ; play white keys from middle C, W E T Y U O P the black keys, Z and X move the octave.
+  // Computer keyboard: A to ; for white keys from middle C, W E T Y U O P for black keys, Z and X for octave, Space for sustain.
   useEffect(() => {
     if (!open) return;
-    const typing = (event: KeyboardEvent) => {
+    const ignore = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       return event.metaKey || event.ctrlKey || event.altKey || target?.closest('input, textarea, select, [contenteditable="true"]');
     };
     const down = (event: KeyboardEvent) => {
-      if (typing(event) || event.repeat) return;
+      if (ignore(event)) return;
+      if (event.code === 'Space') {
+        event.preventDefault();
+        arranger.setPedal(true);
+        return;
+      }
+      if (event.repeat) return;
       const key = event.key.toLowerCase();
       if (key === 'z' || key === 'x') {
         arranger.changeOctave(key === 'z' ? -1 : 1);
@@ -93,9 +110,13 @@ export default function PianoRoom() {
       const offset = KEYMAP[key];
       if (offset === undefined) return;
       event.preventDefault();
-      arranger.noteOn(60 + offset);
+      arranger.noteOn(60 + offset, 0.75);
     };
     const up = (event: KeyboardEvent) => {
+      if (event.code === 'Space') {
+        arranger.setPedal(false);
+        return;
+      }
       const offset = KEYMAP[event.key.toLowerCase()];
       if (offset !== undefined) arranger.noteOff(60 + offset);
     };
@@ -128,23 +149,29 @@ export default function PianoRoom() {
   const sound = arranger.sound;
   const soundNumber = String(arranger.soundIndex + 1).padStart(2, '0');
 
+  // Pitch-bend joystick: drag sideways for up to two semitones; it springs back on release.
+  const moveStick = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    const position = Math.max(-1, Math.min(1, ((event.clientX - box.left) / box.width) * 2 - 1));
+    setStick(position);
+    arranger.setBend(position * 2);
+  };
+
   return (
     <section id="piano" aria-labelledby="piano-heading" className="py-8">
-      <div className="card flex flex-wrap items-center justify-between gap-4 p-5">
-        <div>
-          <h2 id="piano-heading" className="flex items-baseline gap-3 text-2xl font-bold tracking-tight">
-            <span className="font-mono text-sm font-medium text-accent">♪</span>
-            Off the clock
-          </h2>
-          <p className="mt-1 text-muted">Grade 8 Electronic Keyboard, Trinity College London. There’s an arranger keyboard behind this lid.</p>
+      <div className="card flex flex-wrap items-center justify-between gap-5 p-5">
+        <div className="flex items-center gap-4">
+          <span className="pa-seal" aria-hidden="true">
+            <span>8</span>
+          </span>
+          <div>
+            <h2 id="piano-heading" className="text-2xl font-bold tracking-tight">Off the clock</h2>
+            <p className="mt-0.5 font-semibold text-ink">Grade 8, Electronic Keyboard · Trinity College London</p>
+            <p className="mt-0.5 text-sm text-muted">The top grade. Below is a playable arranger keyboard with recorded grand piano samples.</p>
+          </div>
         </div>
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-controls="piano-instrument"
-          onClick={() => pianoStore.set(!open)}
-          className="pa-handle"
-        >
+        <button type="button" aria-expanded={open} aria-controls="piano-instrument" onClick={() => pianoStore.set(!open)} className="pa-handle">
           {open ? 'Close the lid' : 'Lift the lid ✦'}
         </button>
       </div>
@@ -156,7 +183,7 @@ export default function PianoRoom() {
               <span className="pa-grille" aria-hidden="true" />
               <span className="pa-plate">
                 <span className="pa-plate-name">Adithya</span>
-                <span className="pa-plate-model">Arranger · 61 keys</span>
+                <span className="pa-plate-model">Professional Arranger · 61 keys</span>
               </span>
               <span className="pa-grille" aria-hidden="true" />
             </div>
@@ -169,44 +196,83 @@ export default function PianoRoom() {
                     <PanelButton key={style.name} label={style.name} active={arranger.styleIndex === index} onClick={() => arranger.selectStyle(index)} />
                   ))}
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-2">
-                  <PanelButton label={arranger.running ? 'Stop' : 'Start'} tone="wine" active={arranger.running} onClick={() => arranger.toggleStyle()} />
+                <span className="pa-label mt-3">Variation</span>
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 2, 3, 4].map((variation) => (
+                    <PanelButton key={variation} label={`Var ${variation}`} active={arranger.variation === variation} onClick={() => arranger.setVariation(variation)} />
+                  ))}
+                </div>
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  <PanelButton label="Intro" tone="wine" active={arranger.intro} onClick={() => { arranger.startStyle(true); say('Intro: one bar count-in'); }} />
+                  <PanelButton label={arranger.running && !arranger.recital ? 'Stop' : 'Start'} tone="wine" active={arranger.running && !arranger.recital} onClick={() => arranger.toggleStyle()} />
                   <PanelButton label="Fill" tone="wine" onClick={() => { arranger.fill(); say('Fill on the next bar'); }} />
                   <PanelButton label="Ending" tone="wine" onClick={() => { arranger.ending(); say('Ending on the next bar'); }} />
                 </div>
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="pa-label m-0">Tempo</span>
-                  <PanelButton label="−" onClick={() => arranger.changeTempo(-4)} />
-                  <PanelButton label="+" onClick={() => arranger.changeTempo(4)} />
-                </div>
               </div>
 
-              <div className={`pa-screen ${beat ? 'pa-screen-beat' : ''}`}>
-                <div className="pa-screen-bar">
-                  <span>{arranger.demo ? 'DEMO' : 'STYLE PLAY'}</span>
-                  <span>♩={arranger.tempo}</span>
-                  <span>M{String(arranger.measure).padStart(3, '0')}:{arranger.beat || '-'}</span>
+              <div>
+                <div className={`pa-screen ${beat ? 'pa-screen-beat' : ''}`}>
+                  <div className="pa-screen-bar">
+                    <span>{arranger.recital ? 'RECITAL' : 'STYLE PLAY'}</span>
+                    <span>♩={arranger.tempo}</span>
+                    <span>M{String(arranger.measure).padStart(3, '0')}:{arranger.beat || '-'}</span>
+                  </div>
+                  <div className="pa-screen-line">
+                    <span className="pa-tag">UP1</span>
+                    <span className="pa-big">{sound.name}</span>
+                    <span>P{soundNumber}</span>
+                  </div>
+                  <div className="pa-screen-line">
+                    <span className="pa-tag">STY</span>
+                    <span className="flex-1">{arranger.style.name} · Var {arranger.variation}</span>
+                    <span className={arranger.running ? 'pa-blink' : undefined}>{arranger.running ? '▶ PLAY' : '■ STOP'}</span>
+                  </div>
+                  <div className="pa-screen-grid">
+                    <span>CHORD <b>{arranger.running && !arranger.recital ? arranger.chordName : '--'}</b></span>
+                    <span>TRANS <b>{signed(arranger.transpose)}</b></span>
+                    <span>OCT <b>{signed(arranger.octave)}</b></span>
+                    <span>PEDAL <b>{arranger.pedal ? 'ON' : 'OFF'}</b></span>
+                  </div>
+                  <div className="pa-meter" aria-hidden="true">
+                    <span ref={meter} />
+                  </div>
+                  <p className="pa-message" aria-live="polite">
+                    {arranger.loading || message}
+                    <span className="pa-cursor">▌</span>
+                  </p>
                 </div>
-                <div className="pa-screen-line">
-                  <span className="pa-tag">UP1</span>
-                  <span className="pa-big">{sound.name}</span>
-                  <span>P{soundNumber}</span>
+                <div className="mt-3 flex items-center justify-center gap-4">
+                  <PanelButton label="Tempo −" onClick={() => arranger.changeTempo(-2)} />
+                  <div
+                    className="pa-dial"
+                    role="slider"
+                    tabIndex={0}
+                    aria-label="Tempo dial"
+                    aria-valuemin={40}
+                    aria-valuemax={240}
+                    aria-valuenow={arranger.tempo}
+                    style={{ transform: `rotate(${(arranger.tempo - 40) * 1.5}deg)` }}
+                    onPointerDown={(event) => {
+                      event.currentTarget.setPointerCapture(event.pointerId);
+                      dial.current = { y: event.clientY, tempo: arranger.tempo };
+                    }}
+                    onPointerMove={(event) => {
+                      if (!dial.current) return;
+                      arranger.changeTempo(dial.current.tempo + (dial.current.y - event.clientY) / 2 - arranger.tempo);
+                    }}
+                    onPointerUp={() => {
+                      dial.current = null;
+                    }}
+                    onWheel={(event) => arranger.changeTempo(event.deltaY < 0 ? 1 : -1)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'ArrowUp' || event.key === 'ArrowRight') arranger.changeTempo(1);
+                      if (event.key === 'ArrowDown' || event.key === 'ArrowLeft') arranger.changeTempo(-1);
+                    }}
+                  >
+                    <span className="pa-dial-mark" />
+                  </div>
+                  <PanelButton label="Tempo +" onClick={() => arranger.changeTempo(2)} />
                 </div>
-                <div className="pa-screen-line">
-                  <span className="pa-tag">STY</span>
-                  <span className="flex-1">{arranger.style.name}</span>
-                  <span className={arranger.running ? 'pa-blink' : undefined}>{arranger.running ? '▶ PLAY' : '■ STOP'}</span>
-                </div>
-                <div className="pa-screen-grid">
-                  <span>CHORD <b>{arranger.running ? arranger.chordName : '--'}</b></span>
-                  <span>TRANS <b>{signed(arranger.transpose)}</b></span>
-                  <span>OCT <b>{signed(arranger.octave)}</b></span>
-                  <span>REV <b>{arranger.reverb ? 'ON' : 'OFF'}</b></span>
-                </div>
-                <div className="pa-meter" aria-hidden="true">
-                  <span ref={meter} />
-                </div>
-                <p className="pa-message" aria-live="polite">{message}<span className="pa-cursor">▌</span></p>
               </div>
 
               <div className="pa-group">
@@ -216,25 +282,71 @@ export default function PianoRoom() {
                     <PanelButton key={category} label={category} active={sound.category === category} onClick={() => arranger.selectCategory(category)} />
                   ))}
                 </div>
-                <div className="mt-3 grid grid-cols-4 gap-2">
+                <span className="pa-label mt-3">Transpose · Octave</span>
+                <div className="grid grid-cols-4 gap-2">
                   <PanelButton label="Trans −" tone="brass" onClick={() => arranger.changeTranspose(-1)} />
                   <PanelButton label="Trans +" tone="brass" onClick={() => arranger.changeTranspose(1)} />
                   <PanelButton label="Oct −" tone="brass" onClick={() => arranger.changeOctave(-1)} />
                   <PanelButton label="Oct +" tone="brass" onClick={() => arranger.changeOctave(1)} />
                 </div>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <PanelButton label="Metro" active={arranger.metronome} onClick={() => arranger.toggleMetronome()} />
+                  <PanelButton label="Reverb" active={arranger.reverb} onClick={() => arranger.toggleReverb()} />
+                  <PanelButton
+                    label="Recital"
+                    tone="wine"
+                    active={arranger.recital}
+                    onClick={() => {
+                      if (arranger.recital) arranger.stopStyle();
+                      else {
+                        arranger.playRecital();
+                        say('Bach, Prelude in C major, BWV 846');
+                      }
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
             <div className="pa-panel-row">
+              <div className="flex items-center gap-3">
+                <div
+                  className="pa-stick"
+                  role="slider"
+                  aria-label="Pitch bend"
+                  aria-valuemin={-2}
+                  aria-valuemax={2}
+                  aria-valuenow={Math.round(stick * 20) / 10}
+                  onPointerDown={(event) => {
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                    moveStick(event);
+                  }}
+                  onPointerMove={moveStick}
+                  onPointerUp={() => {
+                    setStick(0);
+                    arranger.setBend(0);
+                  }}
+                >
+                  <span style={{ transform: `translateX(${stick * 20}px)` }} />
+                </div>
+                <span className="pa-label m-0">Bend</span>
+                <button
+                  type="button"
+                  aria-pressed={arranger.pedal}
+                  className={`pa-pedal ${arranger.pedal ? 'pa-pedal-down' : ''}`}
+                  onPointerDown={() => arranger.setPedal(!arranger.pedal)}
+                  onClick={(event) => {
+                    if (event.detail === 0) arranger.setPedal(!arranger.pedal);
+                  }}
+                >
+                  Sustain
+                </button>
+              </div>
               <label className="pa-volume">
                 <span className="pa-label m-0">Master volume</span>
                 <input type="range" min={0} max={1} step={0.01} value={arranger.volume} onChange={(event) => arranger.setVolume(Number(event.target.value))} />
               </label>
-              <div className="flex flex-wrap gap-2">
-                <PanelButton label="Metro" active={arranger.metronome} onClick={() => arranger.toggleMetronome()} />
-                <PanelButton label="Reverb" active={arranger.reverb} onClick={() => arranger.toggleReverb()} />
-                <PanelButton label="Demo" tone="wine" active={arranger.demo} onClick={() => { arranger.playDemo(); say('Demo: Ode to Joy, Beethoven'); }} />
-              </div>
+              <PanelButton label="PC keys" active={showLetters} onClick={() => setShowLetters((value) => !value)} />
             </div>
 
             <div className="pa-felt" aria-hidden="true" />
@@ -244,7 +356,7 @@ export default function PianoRoom() {
                   const black = isBlack(key);
                   const whiteIndex = whiteKeys.filter((white) => white < key).length;
                   const style = black
-                    ? { left: `${whiteIndex * whiteWidth - whiteWidth * 0.3}%`, width: `${whiteWidth * 0.6}%`, animationDelay: `${0.5 + whiteIndex * 0.012}s` }
+                    ? { left: `${whiteIndex * whiteWidth - whiteWidth * 0.29}%`, width: `${whiteWidth * 0.58}%`, animationDelay: `${0.5 + whiteIndex * 0.012}s` }
                     : { left: `${whiteIndex * whiteWidth}%`, width: `${whiteWidth}%`, animationDelay: `${0.45 + whiteIndex * 0.012}s` };
                   return (
                     <button
@@ -256,11 +368,11 @@ export default function PianoRoom() {
                       onPointerDown={(event) => {
                         event.preventDefault();
                         pointerDown.current = true;
-                        arranger.noteOn(key);
+                        arranger.noteOn(key, velocityOf(event));
                       }}
                       onPointerUp={() => arranger.noteOff(key)}
                       onPointerEnter={(event) => {
-                        if (pointerDown.current && event.pointerType === 'mouse') arranger.noteOn(key);
+                        if (pointerDown.current && event.pointerType === 'mouse') arranger.noteOn(key, velocityOf(event));
                       }}
                       onPointerLeave={() => {
                         if (pressed.has(key)) arranger.noteOff(key);
@@ -271,10 +383,7 @@ export default function PianoRoom() {
                         setTimeout(() => arranger.noteOff(key), 400);
                       }}
                     >
-                      {!black && (key === 60 || letterFor[key]) && (
-                        <span className="pa-key-label">{key === 60 && <span className="block text-[0.5rem] opacity-70">C4</span>}{letterFor[key]}</span>
-                      )}
-                      {black && letterFor[key] && <span className="pa-key-label pa-key-label-dark">{letterFor[key]}</span>}
+                      {showLetters && letterFor[key] && <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`}>{letterFor[key]}</span>}
                     </button>
                   );
                 })}
@@ -290,8 +399,12 @@ export default function PianoRoom() {
             </div>
           </div>
           <p className="mt-3 text-sm text-muted">
-            Click or tap the keys, or type <kbd>A</kbd> to <kbd>;</kbd> (black keys on <kbd>W E T Y U O P</kbd>, octave on <kbd>Z</kbd> <kbd>X</kbd>).
-            With a style running, keys left of middle C play the chord. Press a sound button again for its variations. Inspired by the Korg Pa300; every sound is synthesised in your browser.
+            Touch-sensitive: strike nearer the front of a key to play louder. Hold <kbd>Space</kbd> or press Sustain for the pedal; drag the joystick to bend.
+            On a computer keyboard, <kbd>A</kbd> to <kbd>;</kbd> play from middle C (black keys on <kbd>W E T Y U O P</kbd>, octave on <kbd>Z</kbd> <kbd>X</kbd>).
+            With a style running, keys left of middle C play the chord.
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            Modelled on the Korg Pa300 panel. Piano: Salamander Grand Piano, a Yamaha C5 recorded by Alexander Holm (CC BY 3.0). Other sounds: FluidR3 GM soundfont (CC BY 3.0). Drums are synthesised.
           </p>
         </div>
       )}
