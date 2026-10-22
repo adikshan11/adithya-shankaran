@@ -384,6 +384,11 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         const stage = root.closest<HTMLElement>('.pa-overlay');
         if (!keys || !keys.offsetParent) return;
         const top = keys.getBoundingClientRect().top + (stage?.scrollTop ?? 0);
+        const first = root.querySelector<HTMLElement>('.pa-phone-btn');
+        if (first && stage) {
+          const box = first.getBoundingClientRect();
+          stage.style.setProperty('--close-top', `${Math.max(4, Math.round(box.top + box.height / 2 - 16 + stage.scrollTop))}px`);
+        }
         const homeBar = stage ? parseFloat(getComputedStyle(stage).paddingBottom) || 0 : 0; // iPhone home indicator inset
         root.style.setProperty('--keys-h', `${Math.max(KEYS_MIN - 55, Math.floor(window.innerHeight - top - 4 - homeBar))}px`);
       } else if (window.matchMedia('(max-width: 760px) and (orientation: portrait)').matches) {
@@ -393,8 +398,9 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         const stage = root.closest<HTMLElement>('.pa-overlay');
         if (!keys) return;
         const top = keys.getBoundingClientRect().top + (stage?.scrollTop ?? 0);
-        // The keys run to the bottom edge: the browser's glass toolbar floats over them, as over a native app.
-        root.style.setProperty('--keys-h', `${Math.max(220, Math.floor(window.innerHeight - top))}px`);
+        // The keys stop just above the browser's toolbar (keys under it cannot be tapped); the instrument's casing
+        // continues below them to the bottom edge, so the glass toolbar floats over the piano, not a bare band.
+        root.style.setProperty('--keys-h', `${Math.max(220, Math.floor(window.innerHeight - top - 30))}px`);
       } else {
         root.style.removeProperty('--fit');
         root.style.removeProperty('--keys-h');
@@ -709,6 +715,18 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   return (
     <div role="region" aria-label="Piano" className="pa-instrument">
       <div className="pa-body">
+        {(drawer || showSheet) && (
+          <button
+            type="button"
+            className="pa-view-close"
+            aria-label={drawer ? 'Close the panel' : 'Close the sheet music'}
+            onClick={() => (drawer ? setDrawer(false) : setShowSheet(false))}
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M4 4 L12 12 M12 4 L4 12" />
+            </svg>
+          </button>
+        )}
         <div className="pa-top">
           <div className="pa-brand">
             <span className="pa-brand-name">ADITHYA</span>

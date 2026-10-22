@@ -121,6 +121,13 @@ export default function PianoScreen({ arranger, page, category, open, message, b
                 <span style={{ width: `${arranger.songLength ? (100 * arranger.songElapsed) / arranger.songLength : 0}%` }} />
               </div>
             )}
+            {/* Phones: the arranger's Intro, Fill, Ending and Start on the screen itself (a laptop has the panel). */}
+            <div className="pa-arr-row" role="group" aria-label="Style controls">
+              <button type="button" className={`pa-arr ${arranger.intro ? 'pa-arr-on' : ''}`} onClick={() => arranger.startStyle(true)}>Intro</button>
+              <button type="button" className="pa-arr" onClick={() => arranger.fill()}>Fill</button>
+              <button type="button" className="pa-arr" onClick={() => arranger.ending()}>Ending</button>
+              <button type="button" className={`pa-arr pa-arr-go ${arranger.running ? 'pa-arr-on' : ''}`} onClick={() => arranger.toggleStyle()}>{arranger.running ? '■ Stop' : '▶ Start'}</button>
+            </div>
             <div className="pa-cells">
               <button type="button" className="pa-cell" aria-label={`Variation ${arranger.variation}, tap for the next`} onClick={() => arranger.setVariation((arranger.variation % 4) + 1)}>
                 Var<b>{arranger.variation}</b>
