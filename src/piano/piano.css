@@ -577,7 +577,10 @@
   .pa-stand-screen .pa-coach-figure { width: 42px; height: 49px; }
   .pa-stand-screen .pa-coach-bubble { font-size: 0.72rem; padding: 5px 9px; }
   /* Recordings page */
-  .pa-grid-takes { display: flex; flex-direction: column; gap: 6px; }
+  /* Two takes in view (each 46 px, 6 px apart); the third onward scroll, one take at a time. */
+  .pa-grid-takes { display: flex; flex-direction: column; gap: 6px; max-height: calc(2 * 46px + 6px) !important; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scroll-snap-type: y mandatory; }
+  .pa-grid-takes > * { scroll-snap-align: start; }
+  .pa-grid-takes > * { flex: none; } /* rows keep their height and the list scrolls, instead of squeezing */
   .pa-take { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, auto); align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px; background: rgb(255 255 255 / 0.06); }
   .pa-take-on { box-shadow: inset 0 0 0 1.5px #59d0ff; }
   .pa-take-name { display: flex; flex-direction: column; min-width: 0; overflow: hidden; font-size: 0.8rem; font-weight: 700; color: #eef4ff; white-space: nowrap; text-overflow: ellipsis; }
@@ -1127,7 +1130,7 @@
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) { row-gap: 2px; }
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-group .pa-label { display: none; } /* no group titles: the buttons say what they do */
     /* Same height and text as the toolbar buttons they replace, so nothing changes size when Panel opens. */
-    .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-row .pa-btn { height: 40px; min-height: 0; padding: 0 4px; font-size: 0.78rem; }
+    .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-row .pa-btn { height: 40px; min-height: 0; padding: 6px 4px 0; align-items: center; font-size: 0.78rem; } /* label centred under the LED */
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-row .pa-btn .pa-led { top: 3px; }
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-phonebar > .pa-phone-panel { height: 40px; margin-bottom: 0; align-self: center; }
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-group { align-self: center !important; }
@@ -1173,7 +1176,7 @@
     .pa-body { background: transparent; }
     .pa-minimap { display: block !important; }
     .pa-instrument:is([data-island="left"], [data-island="right"]) .pa-left {
-      display: flex !important; position: fixed; z-index: 7; bottom: calc(6px + env(safe-area-inset-bottom));
+      display: flex !important; position: fixed; z-index: 7; bottom: max(4px, calc(env(safe-area-inset-bottom) - 16px));
       flex-direction: column; gap: 6px; width: 54px; padding: 4px 0; background: none; box-shadow: none;
     }
     .pa-instrument[data-island="left"] .pa-left { left: max(2px, calc(env(safe-area-inset-left) - 56px)); }
