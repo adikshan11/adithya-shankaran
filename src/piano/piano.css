@@ -460,6 +460,10 @@
   .pa-touch:hover { background: rgb(89 208 255 / 0.12); }
   .pa-screen-bar .pa-touch { padding: 0 4px; font: inherit; color: inherit; letter-spacing: inherit; }
   button.pa-row { width: 100%; padding: 3px 4px; text-align: left; color: inherit; }
+  .pa-row-split { gap: 6px; }
+  .pa-row-split .pa-row-main { flex: 1; min-width: 0; margin-top: 0; }
+  .pa-row-action { flex: none; padding: 2px 8px; border-radius: 5px; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.04em; color: #34e06a; background: rgb(52 224 106 / 0.1); box-shadow: inset 0 0 0 1px rgb(52 224 106 / 0.45); }
+  .pa-row-action-on { color: #ff8a80; background: rgb(255 92 80 / 0.12); box-shadow: inset 0 0 0 1px rgb(255 92 80 / 0.5); }
   .pa-chip-song { background: #b9f5c8; }
   .pa-main { display: grid; grid-template-columns: 1fr 6rem; gap: 8px; min-height: 9.5rem; }
   .pa-main-left { min-width: 0; }
@@ -565,28 +569,38 @@
   .pa-ctl-group .pa-label { margin-bottom: 4px; }
   .pa-ctl-row { display: flex; gap: 6px; }
   /* Learn coach */
-  .pa-coach { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; }
-  .pa-coach-face { flex: none; width: 54px; height: 54px; animation: pa-coach-pop 0.35s cubic-bezier(0.3, 1.6, 0.5, 1); }
-  .pa-coach-bubble { position: relative; flex: 1; min-width: 0; margin: 0; padding: 7px 12px; border-radius: 12px; font-size: 0.82rem; font-weight: 600; line-height: 1.35; color: #20232a; background: #fff; box-shadow: 0 1px 0 rgb(0 0 0 / 0.08), inset 0 0 0 1px #e1e4ea; }
-  .pa-coach-bubble::before { content: ""; position: absolute; left: -6px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: #fff; transform: rotate(45deg); box-shadow: -1px 1px 0 #e1e4ea; }
+  .pa-coach { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; }
+  .pa-coach-figure { flex: none; width: 92px; height: 103px; overflow: visible; filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.22)); }
+  @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) { .pa-coach-figure { width: 62px; height: 70px; } }
+  .pa-coach-bubble { position: relative; flex: 1; min-width: 0; margin: 0; padding: 9px 14px; border-radius: 14px; font-size: 0.86rem; font-weight: 600; line-height: 1.4; color: #20232a; background: #fff; box-shadow: 0 2px 0 rgb(0 0 0 / 0.08), inset 0 0 0 1.5px #e1e4ea; }
+  .pa-coach-bubble::before { content: ""; position: absolute; left: -7px; top: 50%; width: 14px; height: 14px; margin-top: -7px; background: inherit; transform: rotate(45deg); box-shadow: -1.5px 1.5px 0 #e1e4ea; }
   .pa-coach-upset .pa-coach-bubble { background: #fff4e5; }
-  .pa-coach-upset .pa-coach-bubble::before { background: #fff4e5; }
   .pa-coach-angry .pa-coach-bubble { background: #ffe9e7; }
-  .pa-coach-angry .pa-coach-bubble::before { background: #ffe9e7; }
-  .pa-coach-angry .pa-coach-face { animation: pa-coach-shake 0.4s ease-in-out; }
-  .co-body { fill: #ffcf4a; stroke: #c9931a; stroke-width: 1.5; }
-  .pa-coach-upset .co-body { fill: #ffbe5c; }
-  .pa-coach-angry .co-body { fill: #ff8a6b; stroke: #c4482b; }
-  .pa-coach-astonished .co-body { fill: #ffe066; }
-  .co-cap { fill: #f6f7f9; stroke: #20232a; stroke-width: 1.4; }
-  .co-cap-key { fill: #20232a; }
-  .co-cheek { fill: #ff8fa3; opacity: 0.55; }
-  .co-eye { fill: #20232a; }
-  .co-glint { fill: #fff; }
-  .co-line { fill: none; stroke: #20232a; stroke-width: 2.2; stroke-linecap: round; }
-  .co-mouth { fill: #7a2232; stroke: #20232a; stroke-width: 1.6; stroke-linejoin: round; }
-  @keyframes pa-coach-pop { from { transform: scale(0.8); } to { transform: none; } }
-  @keyframes pa-coach-shake { 0%, 100% { transform: none; } 25% { transform: translateX(-3px) rotate(-6deg); } 75% { transform: translateX(3px) rotate(6deg); } }
+  .pa-coach-happy .pa-coach-bubble { background: #ecfbf1; }
+  .co-shadow { fill: rgb(0 0 0 / 0.18); }
+  .co-paw { fill: none; stroke: #f39a3d; stroke-width: 7; stroke-linecap: round; }
+  .co-whisker { fill: none; stroke: #8a5a3c; stroke-width: 1; stroke-linecap: round; opacity: 0.7; }
+  .co-ear { transition: transform 0.3s ease-out; }
+  .co-cheek { fill: #ff7f7f; opacity: 0.45; }
+  .co-stroke { fill: none; stroke: #3a2418; stroke-linecap: round; stroke-linejoin: round; }
+  .co-mouth { fill: #7a2232; stroke: #2b1a0e; stroke-width: 1.8; stroke-linejoin: round; }
+  .co-flush { fill: #ff3b30; opacity: 0; transition: opacity 0.2s; }
+  .pa-coach-angry .co-flush { opacity: 0.3; }
+  /* The pendulum keeps the practice tempo (one swing per beat); it stands still in surprise and droops when upset. */
+  .co-pendulum { transform-box: view-box; transform-origin: 60px 112px; animation: co-swing var(--beat, 0.6s) ease-in-out infinite alternate; }
+  .pa-coach-astonished .co-pendulum { animation: none; transform: none; }
+  .pa-coach-upset .co-pendulum { animation: none; transform: rotate(-40deg); transition: transform 0.4s ease-out; }
+  .pa-coach-angry .co-pendulum { animation-duration: 0.12s; }
+  .co-act { transform-box: view-box; transform-origin: 60px 126px; }
+  .pa-coach-happy .co-act { animation: co-jump 0.45s cubic-bezier(0.3, 1.5, 0.5, 1); }
+  .pa-coach-astonished .co-act { animation: co-leap 0.6s cubic-bezier(0.3, 1.6, 0.5, 1); }
+  .pa-coach-upset .co-act { animation: co-slump 0.5s ease-out forwards; }
+  .pa-coach-angry .co-act { animation: co-stamp 0.45s ease-in-out 2; }
+  @keyframes co-swing { from { transform: rotate(-20deg); } to { transform: rotate(20deg); } }
+  @keyframes co-jump { 0% { transform: scale(1.05, 0.92); } 45% { transform: translateY(-10px) scale(0.97, 1.05); } 100% { transform: none; } }
+  @keyframes co-leap { 0% { transform: scale(1.1, 0.88); } 40% { transform: translateY(-14px) scale(0.95, 1.08) rotate(-4deg); } 70% { transform: translateY(-3px) rotate(3deg); } 100% { transform: none; } }
+  @keyframes co-slump { to { transform: translateY(3px) scale(1.03, 0.95); } }
+  @keyframes co-stamp { 0%, 100% { transform: none; } 25% { transform: translateX(-3px) rotate(-5deg); } 75% { transform: translateX(3px) rotate(5deg); } }
   /* Learn: the chord to play now, behind its noteheads */
   .st-target { fill: rgb(46 204 113 / 0.28); stroke: #1e9e57; stroke-width: 1.2; }
   .st-hollow { fill: #fbfaf6; stroke: #1d1c1a; }

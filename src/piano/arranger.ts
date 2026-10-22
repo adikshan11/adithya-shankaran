@@ -306,7 +306,7 @@ function loudnessGain(buffer: AudioBuffer) {
 
 // Sheet music for a song: semiquaver positions from the score file (or from the beat length for the raga pieces),
 // shifted so a pickup bar lines up: the offset that puts the most bass notes on downbeats wins.
-function scoreFor(notes: Note[], meter: { beats: number; unit: number }, beatSeconds?: number) {
+function scoreFor(notes: Note[], meter: { beats: number; unit: number }, beatSeconds?: number, shift16?: number) {
   const bar = barLength(meter);
   const sixteenth = (beatSeconds ?? 0.5) / 4;
   const first = notes[0]?.time ?? 0;
@@ -316,9 +316,9 @@ function scoreFor(notes: Note[], meter: { beats: number; unit: number }, beatSec
     midi: note.midi,
   }));
   notes.forEach((note, index) => (note.start16 = timed[index].start));
-  let offset = 0;
-  let best = -1;
-  for (let shift = 0; shift < bar; shift++) {
+  let offset = shift16 ?? 0;
+  let best = shift16 === undefined ? -1 : Infinity; // a piece that states its pickup skips the search
+  for (let shift = 0; shift < bar && best !== Infinity; shift++) {
     const hits = timed.filter((note) => note.midi < 60 && (note.start + shift) % bar === 0).length;
     if (hits > best) [best, offset] = [hits, shift];
   }
@@ -332,6 +332,8 @@ type SongNote = Note & { glide?: number };
 export type Hand = 'right' | 'left' | 'both';
 export type Mood = 'idle' | 'happy' | 'astonished' | 'upset' | 'angry';
 // A note name for the coach, with a real sharp sign and the octave: C♯4.
+// Written note values by length in semiquavers.
+const NOTE_VALUES: Record<number, string> = { 4: 'crotchet', 6: 'dotted crotchet', 8: 'minim', 12: 'dotted minim', 16: 'semibreve' };
 const spoken = (midi: number) => `${NOTE_NAMES[midi % 12].replace('#', '♯')}${Math.floor(midi / 12) - 1}`;
 
 export class Arranger {
@@ -398,7 +400,28 @@ export class Arranger {
   private songTimer: ReturnType<typeof setInterval> | null = null;
   private songNotes: SongNote[] = [];
   // Learn mode (like MuseScore's wait-for-input practice): the score waits on each chord until its notes are played.
-  learn: { song: Song; hand: Hand; steps: { start16: number; notes: number[] }[]; at: number; remaining: Set<number>; misses: number; streak: number; wrongRun: number } | null = null;
+  learn: {
+    song: Song;
+    hand: Hand;
+    steps: { start16: number; notes: number[]; lengths: Map<number, number> }[];
+    at: number;
+    remaining: Set<number>;
+    misses: number;
+    streak: number;
+    wrongRun: number;
+    // Rhythm: practice speed (share of the piece's tempo), seconds per semiquaver at that speed, the time signature,
+    // when the last chord was completed, and how long each gap took compared with the score (1 = in time).
+    speed: number;
+    per16: number;
+    meterLabel: string;
+    lastAt: number;
+    ratios: number[];
+    // Note lengths: when each accepted key went down and the length it should be held for (semiquavers, plus the
+    // gap to the next chord); a tip shown is kept on screen for a moment before plain praise replaces it.
+    held: Map<number, { at: number; length16: number; gap16: number }>;
+    holdUntil: number;
+    tipAt: number;
+  } | null = null;
   // What the coach says and how it looks after each note in Learn mode.
   coach: { mood: Mood; text: string; tick: number } = { mood: 'idle', text: '', tick: 0 };
   private songAt = 0;
@@ -688,6 +711,7 @@ export class Arranger {
   noteOff(key: number) {
     this.onNote(key, false);
     this.onPlayed({ type: 'off', note: key + this.transpose + this.octave * 12 });
+    this.learnRelease(key + this.transpose + this.octave * 12);
     this.left.delete(key);
     this.down.delete(key);
     if (this.pedal) return;
@@ -919,13 +943,13 @@ export class Arranger {
     const [score] = await Promise.all([
       song.file
         ? fetch(song.file).then((response) => response.arrayBuffer()).then(parseScore)
-        : Promise.resolve({ notes: song.notes?.() ?? [], meter: { beats: 4, unit: 4 } }),
+        : Promise.resolve({ notes: song.notes?.() ?? [], meter: song.meter ?? { beats: 4, unit: 4 } }),
       this.load(item.bank),
       song.drone !== undefined ? this.load('sitar') : Promise.resolve(),
     ]);
     if (this.song !== song || !this.ctx) return;
     const notes = score.notes;
-    this.songScore = scoreFor(notes, score.meter, song.beat);
+    this.songScore = scoreFor(notes, score.meter, song.beat, song.shift16);
     this.songNotes = notes;
     this.songLength = notes.reduce((end, note) => Math.max(end, note.time + note.duration), 0);
     this.songAt = 0;
@@ -936,7 +960,7 @@ export class Arranger {
   }
 
   // Learn: load a song's score without playing it, then wait for each chord (one hand or both) in turn.
-  async startLearn(song: Song, hand: Hand) {
+  async startLearn(song: Song, hand: Hand, speed = 0.5) {
     if (!this.init()) return;
     if (this.running) this.stopStyle();
     this.stopSong();
@@ -945,18 +969,29 @@ export class Arranger {
     this.onChange();
     const score = song.file
       ? await fetch(song.file).then((response) => response.arrayBuffer()).then(parseScore)
-      : { notes: song.notes?.() ?? [], meter: { beats: 4, unit: 4 } };
+      : { notes: song.notes?.() ?? [], meter: song.meter ?? { beats: 4, unit: 4 } };
     if (this.song !== song) return;
-    this.songScore = scoreFor(score.notes, score.meter, song.beat);
-    const chosen = score.notes.filter((note) => hand === 'both' || (hand === 'right' ? note.midi >= 60 : note.midi < 60));
-    const byStart = new Map<number, Set<number>>();
-    for (const note of chosen) {
-      const start = (note.start16 ?? 0) + this.songScore.offset;
-      byStart.set(start, (byStart.get(start) ?? new Set()).add(note.midi));
-    }
-    const steps = [...byStart.entries()].sort((a, b) => a[0] - b[0]).map(([start16, notes]) => ({ start16, notes: [...notes] }));
-    this.learn = { song, hand, steps, at: 0, remaining: new Set(steps[0]?.notes), misses: 0, streak: 0, wrongRun: 0 };
-    this.say('idle', `Let's learn ${song.title}. Play the green key${steps[0]?.notes.length > 1 ? 's' : ''}: ${(steps[0]?.notes ?? []).map(spoken).join(' + ')}.`);
+    this.songScore = scoreFor(score.notes, score.meter, song.beat, song.shift16);
+    // Steps: the chords in order, each with its written note lengths (semiquavers) from the score.
+    const chosen = this.songScore.notes.filter((note) => hand === 'both' || (hand === 'right' ? note.midi >= 60 : note.midi < 60));
+    const byStart = new Map<number, Map<number, number>>();
+    for (const note of chosen) byStart.set(note.start, (byStart.get(note.start) ?? new Map()).set(note.midi, note.length));
+    const steps = [...byStart.entries()].sort((a, b) => a[0] - b[0]).map(([start16, lengths]) => ({ start16, notes: [...lengths.keys()], lengths }));
+    // The piece's own pace, from the score: seconds per semiquaver between its first and last notes.
+    const timed = score.notes.filter((note) => note.start16 !== undefined);
+    const first = timed[0];
+    const last = timed[timed.length - 1];
+    const songPer16 = first && last && last.start16! > first.start16! ? (last.time - first.time) / (last.start16! - first.start16!) : 0.125;
+    const meter = score.meter;
+    const meterLabel = `${meter.beats}/${meter.unit}`;
+    const pieceTempo = Math.round(60 / (songPer16 * 4));
+    // Practice at the chosen speed: the tempo and time signature follow, so Metro clicks along with the piece.
+    this.tempo = Math.min(240, Math.max(40, Math.round(pieceTempo * speed)));
+    const meterIndex = meters.findIndex((item) => item.label === meterLabel);
+    if (meterIndex >= 0) this.setMeter(meterIndex);
+    this.learn = { song, hand, steps, at: 0, remaining: new Set(steps[0]?.notes), misses: 0, streak: 0, wrongRun: 0, speed, per16: songPer16 / speed, meterLabel, lastAt: 0, ratios: [], held: new Map(), holdUntil: 0, tipAt: -10 };
+    const count = meter.unit === 8 ? `${meter.beats} quavers` : `${meter.beats} crotchet beats`;
+    this.say('idle', `${song.title} is in ${meterLabel}: count ${count} a bar. We start at ${Math.round(speed * 100)}% speed (♩ = ${this.tempo}); press Metro for a click. First: ${(steps[0]?.notes ?? []).map(spoken).join(' + ')}.`);
     this.onChange();
   }
 
@@ -974,6 +1009,50 @@ export class Arranger {
 
   private say(mood: Mood, text: string) {
     this.coach = { mood, text, tick: this.coach.tick + 1 };
+  }
+
+  // A teaching tip stays up for 3 seconds (and at most one every 3 chords), so it can be read.
+  private tip(mood: Mood, text: string) {
+    if (!this.learn) return;
+    this.learn.holdUntil = performance.now() + 3000;
+    this.learn.tipAt = this.learn.at;
+    this.say(mood, text);
+  }
+
+  // The coming chords are semiquavers or faster at this speed, for at least three in a row (once per 16 chords).
+  private fastRunAhead() {
+    const learn = this.learn;
+    if (!learn || learn.at - learn.tipAt < 16) return false;
+    const steps = learn.steps.slice(learn.at, learn.at + 4);
+    return steps.length === 4 && steps.slice(1).every((step, index) => step.start16 - steps[index].start16 <= 1) && learn.per16 < 0.2;
+  }
+
+  // Note lengths, judged when a key comes up: a long note let go too soon, a short (staccato) note held on, or a
+  // legato line broken by lifting before the next note.
+  private learnRelease(pitch: number) {
+    const learn = this.learn;
+    const hold = learn?.held.get(pitch);
+    if (!learn || !hold) return;
+    learn.held.delete(pitch);
+    if (learn.at - learn.tipAt < 3 || learn.at >= learn.steps.length) return;
+    const held = (performance.now() - hold.at) / 1000;
+    const written = hold.length16 * learn.per16;
+    const gap = hold.gap16 * learn.per16;
+    const waitingForNext = learn.remaining.size === (learn.steps[learn.at]?.notes.length ?? 0);
+    if (hold.length16 >= 4 && held < written * 0.45) {
+      this.tip('idle', `${spoken(pitch)} is a ${NOTE_VALUES[hold.length16] ?? `${hold.length16 / 4}-beat note`}: hold it for ${this.countOf(hold.length16)}.`);
+    } else if (hold.gap16 >= 2 && hold.length16 <= hold.gap16 * 0.5 && held > Math.max(gap * 0.9, written * 2.5)) {
+      this.tip('idle', `${spoken(pitch)} is short and detached (staccato): lift the key quickly.`);
+    } else if (hold.gap16 >= 2 && hold.length16 >= hold.gap16 * 0.9 && held < written * 0.5 && waitingForNext) {
+      this.tip('idle', `Legato here: keep ${spoken(pitch)} down until you play the next note, so the line sings.`);
+    }
+    this.onChange();
+  }
+
+  private countOf(length16: number) {
+    const eighths = this.learn?.meterLabel.endsWith('/8');
+    const count = eighths ? length16 / 2 : length16 / 4;
+    return `${count} ${eighths ? 'quaver' : 'beat'}${count === 1 ? '' : 's'}`;
   }
 
   private learnHit(pitch: number) {
@@ -999,17 +1078,57 @@ export class Arranger {
       return;
     }
     learn.wrongRun = 0;
+    const step = learn.steps[learn.at];
+    const nextStart = learn.steps[learn.at + 1]?.start16;
+    const length16 = step.lengths.get(pitch) ?? 2;
+    learn.held.set(pitch, { at: performance.now(), length16, gap16: nextStart === undefined ? length16 : nextStart - step.start16 });
     if (learn.remaining.size) {
       this.say('happy', `Good! Now also ${[...learn.remaining].map(spoken).join(' + ')}.`);
     } else {
+      // Rhythm: how long this chord took after the last one, against what the score asks at the practice speed.
+      const now = performance.now();
+      if (learn.lastAt && learn.at > 0) {
+        const expected = (learn.steps[learn.at].start16 - learn.steps[learn.at - 1].start16) * learn.per16;
+        if (expected >= 0.06) learn.ratios.push((now - learn.lastAt) / 1000 / expected);
+        if (learn.ratios.length > 8) learn.ratios.shift();
+      }
+      learn.lastAt = now;
       learn.at++;
       learn.streak++;
       learn.remaining = new Set(learn.steps[learn.at]?.notes);
-      if (learn.at >= learn.steps.length) this.say('astonished', `Wow, you finished ${learn.song.title} with ${learn.misses} wrong ${learn.misses === 1 ? 'note' : 'notes'}!`);
-      else if (learn.streak % 10 === 0) this.say('astonished', `${learn.streak} right in a row! Keep going.`);
-      else this.say('happy', ['Nice!', 'Yes!', 'Good!', 'Lovely.', 'That’s it!'][learn.at % 5] + ` Next: ${[...learn.remaining].map(spoken).join(' + ')}.`);
+      const next = ` Next: ${[...learn.remaining].map(spoken).join(' + ')}.`;
+      const pace = this.pace();
+      if (learn.at >= learn.steps.length) {
+        const steady = pace === 'steady';
+        const nextSpeed = learn.speed < 0.75 ? 75 : learn.speed < 1 ? 100 : 0;
+        this.say('astonished', `You finished ${learn.song.title} with ${learn.misses} wrong ${learn.misses === 1 ? 'note' : 'notes'}${steady ? ' and a steady rhythm' : ''}!${steady && nextSpeed && learn.misses <= learn.steps.length / 10 ? ` Ready for ${nextSpeed}% speed.` : learn.misses > learn.steps.length / 5 ? ' Play it once more at this speed.' : ''}`);
+      } else if (learn.at % 8 === 0 && pace === 'rushing') {
+        this.tip('upset', `You're rushing. In ${learn.meterLabel}, count ${this.countWords()} and give each note its full value.${next}`);
+      } else if (learn.at % 8 === 0 && pace === 'dragging') {
+        this.tip('idle', learn.speed <= 0.5 ? `Take your time while you learn the notes; then try to keep an even pulse (Metro helps).${next}` : `A little slow for ${Math.round(learn.speed * 100)}% speed. Keep the pulse even, or drop to a slower speed.${next}`);
+      } else if (learn.at % 8 === 0 && pace === 'steady') {
+        this.tip(learn.speed >= 1 ? 'astonished' : 'happy', `Steady rhythm in ${learn.meterLabel}${learn.speed >= 1 ? ' at full speed!' : '!'}${next}`);
+      } else if (learn.streak % 10 === 0) this.say('astonished', `${learn.streak} right in a row! Keep going.${next}`);
+      else if (this.fastRunAhead()) this.tip('idle', `Fast notes ahead: keep them light and even, fingers close to the keys.${next}`);
+      else if (performance.now() >= learn.holdUntil) this.say('happy', ['Nice!', 'Yes!', 'Good!', 'Lovely.', 'That’s it!'][learn.at % 5] + next);
     }
     this.onChange();
+  }
+
+  // The player's pace over the last few chords: the middle (median) of their timing ratios, so one pause to read a
+  // note does not count as slow playing.
+  private pace(): 'steady' | 'rushing' | 'dragging' | 'unknown' {
+    const ratios = [...(this.learn?.ratios ?? [])].sort((a, b) => a - b);
+    if (ratios.length < 5) return 'unknown';
+    const middle = ratios[Math.floor(ratios.length / 2)];
+    if (middle < 0.7) return 'rushing';
+    if (middle > (this.learn && this.learn.speed <= 0.5 ? 2.2 : 1.5)) return 'dragging';
+    return middle >= 0.8 && middle <= 1.3 ? 'steady' : 'unknown';
+  }
+
+  private countWords() {
+    const beats = Number(this.learn?.meterLabel.split('/')[0] ?? 4);
+    return Array.from({ length: beats }, (_, index) => index + 1).join('-');
   }
 
   // Where the song is now, in semiquavers, for the sheet-music cursor.

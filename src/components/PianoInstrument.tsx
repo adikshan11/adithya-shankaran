@@ -291,6 +291,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const [showSheet, setShowSheet] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [hand, setHand] = useState<Hand>('right');
+  const [speed, setSpeed] = useState(0.5);
   const recorder = useRef(new TakeRecorder());
   const [recording, setRecording] = useState(false);
   const [takes, setTakes] = useState<Take[]>([]);
@@ -598,14 +599,14 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
 
   // Learn: choose a piece and a hand; the keys to press glow green and the music waits until they are played.
   const learn = arranger.learn;
-  const startLearn = (songId: string, chosen = hand) => {
+  const startLearn = (songId: string, chosen = hand, pace = speed) => {
     const song = songs.find((item) => item.id === songId);
     if (!song) return;
     say(`Loading ${song.title}…`);
-    void arranger.startLearn(song, chosen).then(() => {
+    void arranger.startLearn(song, chosen, pace).then(() => {
       setShowSheet(true);
       open('main');
-      say(`Learn: ${song.title}, ${chosen === 'both' ? 'both hands' : `${chosen} hand`}. Play the green keys; the music waits for you.`);
+      say(`Learn: ${song.title}, ${chosen === 'both' ? 'both hands' : `${chosen} hand`}, ${Math.round(pace * 100)}% speed. Play the green keys; the music waits for you.`);
     });
   };
   const targetList = [...arranger.learnTargets].map((pitch) => pitch - arranger.transpose - arranger.octave * 12).sort((a, b) => a - b);
@@ -726,6 +727,11 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                 if (arranger.learn) startLearn(arranger.learn.song.id, next);
               }}
               onLearn={(songId) => startLearn(songId)}
+              speed={speed}
+              onSpeed={(next) => {
+                setSpeed(next);
+                if (arranger.learn) startLearn(arranger.learn.song.id, hand, next);
+              }}
               takes={<TakesList takes={takes} ctx={() => arranger.ctx} onChange={() => void listTakes().then(setTakes)} say={say} />}
             />
             <div className="pa-dial-row mt-3 flex items-center justify-center gap-4">
@@ -886,7 +892,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             <div className="pa-sheet-inner">
               {showSheet && (
                 <div className="pa-stand" aria-label="Music stand">
-                  {learn && <Coach mood={arranger.coach.mood} text={arranger.coach.text} tick={arranger.coach.tick} />}
+                  {learn && <Coach mood={arranger.coach.mood} text={arranger.coach.text} tick={arranger.coach.tick} tempo={arranger.tempo} />}
                   <Staff
                     notes={standNotes}
                     meter={standMeter}

@@ -22,6 +22,8 @@ type Props = {
   hand?: Hand;
   onHand?: (hand: Hand) => void;
   onLearn?: (songId: string) => void;
+  speed?: number;
+  onSpeed?: (speed: number) => void;
 };
 
 const signed = (value: number) => (value > 0 ? `+${value}` : `${value}`);
@@ -40,7 +42,7 @@ function SelectPage({ head, onExit, children, className = '' }: { head: ReactNod
   );
 }
 
-export default function PianoScreen({ arranger, page, category, open, message, beat, meterRef, takes, recording, hand = 'right', onHand, onLearn }: Props) {
+export default function PianoScreen({ arranger, page, category, open, message, beat, meterRef, takes, recording, hand = 'right', onHand, onLearn, speed = 0.5, onSpeed }: Props) {
   const learn = arranger.learn;
   const sound = arranger.sound;
   const style = arranger.style;
@@ -66,7 +68,7 @@ export default function PianoScreen({ arranger, page, category, open, message, b
         <button type="button" className="pa-touch" onClick={exit}>{song ? 'SONG PLAY' : 'STYLE PLAY'}</button>
         <button type="button" className="pa-touch" onClick={() => open('metro')}>♩ {arranger.tempo} · {meter}</button>
         {learn ? (
-          <button type="button" className="pa-touch pa-learn-flag" onClick={() => open('learn')}>LEARN {Math.min(learn.at + 1, learn.steps.length)}/{learn.steps.length}</button>
+          <button type="button" className="pa-touch pa-learn-flag" onClick={() => open('learn')}>LEARN {Math.min(learn.at + 1, learn.steps.length)}/{learn.steps.length} · {Math.round(learn.speed * 100)}%</button>
         ) : recording ? (
           <button type="button" className="pa-touch pa-rec-flag" onClick={() => open('rec')}>● REC</button>
         ) : (
@@ -82,16 +84,27 @@ export default function PianoScreen({ arranger, page, category, open, message, b
               <span className="pa-big">{sound.name}</span>
               <span className="pa-dim">{sound.category}</span>
             </button>
-            <button type="button" className="pa-row pa-touch" onClick={() => open('style', style.category)}>
-              <span className="pa-chip pa-chip-alt">STYLE</span>
-              <span className="flex-1 truncate">{style.name}</span>
-              <span className={arranger.running ? 'pa-play' : 'pa-dim'}>{arranger.running ? '▶ PLAY' : '■ STOP'}</span>
-            </button>
-            <button type="button" className="pa-row pa-touch" onClick={() => open('song')}>
-              <span className="pa-chip pa-chip-song">SONG</span>
-              <span className="flex-1 truncate">{song ? song.title : 'Tap to choose a song'}</span>
-              {song && <span className="pa-play">▶</span>}
-            </button>
+            {/* Name opens its page; the button on the right is the action (Start or Stop), not a status. */}
+            <div className="pa-row pa-row-split">
+              <button type="button" className="pa-row pa-touch pa-row-main" onClick={() => open('style', style.category)}>
+                <span className="pa-chip pa-chip-alt">STYLE</span>
+                <span className="flex-1 truncate">{style.name}</span>
+              </button>
+              <button type="button" className={`pa-row-action ${arranger.running ? 'pa-row-action-on' : ''}`} onClick={() => arranger.toggleStyle()}>
+                {arranger.running ? '■ Stop' : '▶ Start'}
+              </button>
+            </div>
+            <div className="pa-row pa-row-split">
+              <button type="button" className="pa-row pa-touch pa-row-main" onClick={() => open('song')}>
+                <span className="pa-chip pa-chip-song">SONG</span>
+                <span className="flex-1 truncate">{song ? song.title : 'Tap to choose a song'}</span>
+              </button>
+              {song && (
+                <button type="button" className="pa-row-action pa-row-action-on" onClick={() => (arranger.learn ? arranger.stopLearn() : arranger.stopSong())}>
+                  {arranger.learn ? '■ End' : '■ Stop'}
+                </button>
+              )}
+            </div>
             {song && (
               <div className="pa-progress">
                 <span style={{ width: `${arranger.songLength ? (100 * arranger.songElapsed) / arranger.songLength : 0}%` }} />
@@ -219,13 +232,18 @@ export default function PianoScreen({ arranger, page, category, open, message, b
                   {name === 'both' ? 'Both hands' : name === 'right' ? 'Right hand' : 'Left hand'}
                 </button>
               ))}
+              {[0.5, 0.75, 1].map((value) => (
+                <button key={value} type="button" role="tab" aria-selected={value === speed} className={`pa-tab ${value === speed ? 'pa-tab-on' : ''}`} onClick={() => onSpeed?.(value)} title={value === 0.5 ? 'Beginner speed' : value === 1 ? 'The piece at its own tempo' : 'Practice speed'}>
+                  {value * 100}%
+                </button>
+              ))}
             </div>
           }
           onExit={exit}
         >
-          {songs.filter((item) => item.file).map((item) => (
+          {[...songs.filter((item) => item.easy), ...songs.filter((item) => item.file)].map((item) => (
             <button key={item.id} type="button" className={`pa-item ${learn?.song.id === item.id ? 'pa-item-on' : ''}`} onClick={() => onLearn?.(item.id)}>
-              <span className="pa-item-number">{learn?.song.id === item.id ? 'Learning' : 'Learn'} · {item.composer}</span>
+              <span className="pa-item-number">{learn?.song.id === item.id ? 'Learning' : item.easy ? 'Easy' : 'Learn'} · {item.composer}</span>
               {item.title}
             </button>
           ))}

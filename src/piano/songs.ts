@@ -12,7 +12,39 @@ export type Song = {
   notes?: () => Note[];
   drone?: number;
   beat?: number; // seconds per beat, for the sheet music of generated pieces
+  meter?: { beats: number; unit: number }; // time signature of a generated piece (4/4 if not given)
+  shift16?: number; // semiquavers that put the first note in its place in the bar (a pickup), for generated pieces
+  easy?: boolean; // a beginner's piece: listed first in Learn
 };
+
+// A tune from [MIDI note, beats] pairs, one crotchet beat lasting `beat` seconds.
+function tune(beat: number, notes: [number, number][], startAt = 0.6) {
+  let time = startAt;
+  return notes.map(([midi, beats]) => {
+    const note = { time, duration: beats * beat * 0.95, midi, velocity: 0.7 };
+    time += beats * beat;
+    return note;
+  });
+}
+const [C4, D4, E4, F4, G4, A4, B4, C5, D5, E5, F5, G5] = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79];
+// Twinkle, Twinkle, Little Star (traditional, the French tune "Ah! vous dirai-je, maman"), in C, 4/4.
+const twinkle = () =>
+  tune(0.6, [
+    [C4, 1], [C4, 1], [G4, 1], [G4, 1], [A4, 1], [A4, 1], [G4, 2],
+    [F4, 1], [F4, 1], [E4, 1], [E4, 1], [D4, 1], [D4, 1], [C4, 2],
+    [G4, 1], [G4, 1], [F4, 1], [F4, 1], [E4, 1], [E4, 1], [D4, 2],
+    [G4, 1], [G4, 1], [F4, 1], [F4, 1], [E4, 1], [E4, 1], [D4, 2],
+    [C4, 1], [C4, 1], [G4, 1], [G4, 1], [A4, 1], [A4, 1], [G4, 2],
+    [F4, 1], [F4, 1], [E4, 1], [E4, 1], [D4, 1], [D4, 1], [C4, 2],
+  ]);
+// Happy Birthday to You (Mildred and Patty Hill's tune, public domain), in C, 3/4, starting on a one-beat pickup.
+const birthday = () =>
+  tune(0.55, [
+    [G4, 0.75], [G4, 0.25], [A4, 1], [G4, 1], [C5, 1], [B4, 2],
+    [G4, 0.75], [G4, 0.25], [A4, 1], [G4, 1], [D5, 1], [C5, 2],
+    [G4, 0.75], [G4, 0.25], [G5, 1], [E5, 1], [C5, 1], [B4, 1], [A4, 1],
+    [F5, 0.75], [F5, 0.25], [E5, 1], [C5, 1], [D5, 1], [C5, 3],
+  ]);
 
 // Builds notes from [swara, beats] phrases. Swaras are semitones above Sa; a trailing glide bends into the note (meend or gamaka).
 type Phrase = [number, number, number?][];
@@ -68,6 +100,8 @@ const hamsadhwani = () => {
 };
 
 export const songs: Song[] = [
+  { id: 'twinkle', title: 'Twinkle, Twinkle, Little Star', composer: 'Traditional', detail: 'A first piece: one hand, five notes', sound: 'Grand Piano', notes: twinkle, beat: 0.6, easy: true },
+  { id: 'birthday', title: 'Happy Birthday to You', composer: 'Mildred & Patty Hill', detail: 'In 3/4, with a pickup and a dotted rhythm', sound: 'Grand Piano', notes: birthday, beat: 0.55, meter: { beats: 3, unit: 4 }, shift16: 8, easy: true },
   { id: 'bach', title: 'Prelude in C major, BWV 846', composer: 'J. S. Bach', detail: 'The Well-Tempered Clavier, Book I', sound: 'Grand Piano', file: '/songs/wtk1-prelude1.mid' },
   { id: 'elise', title: 'Für Elise, WoO 59', composer: 'L. van Beethoven', detail: 'Bagatelle in A minor', sound: 'Grand Piano', file: '/songs/fur_Elise_WoO59.mid' },
   { id: 'turca', title: 'Rondo alla Turca, K. 331', composer: 'W. A. Mozart', detail: 'Piano Sonata No. 11, third movement', sound: 'Grand Piano', file: '/songs/KV331_3_RondoAllaTurca.mid' },
