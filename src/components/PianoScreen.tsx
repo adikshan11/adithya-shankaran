@@ -74,7 +74,11 @@ export default function PianoScreen({ arranger, page, category, open, message, b
   return (
     <div className={`pa-screen ${booting ? 'pa-screen-booting' : ''} ${beat ? 'pa-screen-beat' : ''}`}>
       <div className="pa-screen-bar">
-        <button type="button" className="pa-touch" onClick={exit}>{song ? 'SONG' : 'STYLE'}<span className="pa-long"> PLAY</span></button>
+        {/* Style Play / Song Play switch, as on the Pa300: from the main page it opens the Song Book; from any page it
+            comes back to the main page. */}
+        <button type="button" className="pa-touch pa-mode" aria-label={page === 'main' ? 'Song Play: open the Song Book' : 'Back to the main page'} onClick={() => open(page === 'main' ? 'song' : 'main')}>
+          {song || page === 'song' ? 'SONG' : 'STYLE'}<span className="pa-long"> PLAY</span> <span aria-hidden="true" className="pa-mode-mark">⇄</span>
+        </button>
         <button type="button" className="pa-touch" onClick={() => open('metro')}>♩ {arranger.tempo} · {meter}</button>
         {/* Score: the music on the display itself, as the Pa300's Score page shows it. */}
         <button type="button" className={`pa-touch pa-score-btn ${page === 'score' ? 'pa-score-btn-on' : ''}`} aria-pressed={page === 'score'} onClick={() => open(page === 'score' ? 'main' : 'score')} aria-label="Score">♪<span className="pa-long"> SCORE</span></button>
