@@ -1,6 +1,6 @@
 import { memo, useEffect, useReducer, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { Arranger, HIGH, LOW, PC_BASE_MAX, PC_BASE_MIN, PC_KEYS, PC_KEY_OFFSET, categories, isBlack, keyName, styleCategories, styleMeter } from '../piano/arranger';
+import { Arranger, HIGH, LOW, PC_BASE_MAX, PC_BASE_MIN, PC_KEYS, PC_KEY_OFFSET, SPLIT, categories, isBlack, keyName, styleCategories, styleMeter } from '../piano/arranger';
 import { barLength, meterNamed } from '../piano/notation';
 import type { ScoreNote } from '../piano/notation';
 import PianoScreen from './PianoScreen';
@@ -39,10 +39,10 @@ function velocityOf(event: ReactPointerEvent<HTMLElement>) {
   return Math.min(1, Math.max(0.25, 0.3 + depth * 0.75));
 }
 
-type KeysProps = { arranger: Arranger; pressed: Set<number>; showLetters: boolean; pcBase: number; pointerDown: { current: boolean } };
+type KeysProps = { arranger: Arranger; pressed: Set<number>; showLetters: boolean; pcBase: number; pointerDown: { current: boolean }; splitShown: boolean };
 
 // The 61 keys, drawn only when a key goes up or down, the letters are toggled, or the computer-key range moves.
-const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointerDown }: KeysProps) {
+const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointerDown, splitShown }: KeysProps) {
   const labelFor = new Map<number, string>();
   for (const [, offset, label] of PC_KEYS) labelFor.set(pcBase + offset, label);
   const windowStart = whiteKeys.filter((white) => white < pcBase).length * whiteWidth;
@@ -50,6 +50,11 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
   return (
     <div className="pa-keys" onPointerLeave={() => { pointerDown.current = false; }}>
       <span className="pa-pc-window" aria-hidden="true" style={{ left: `${windowStart}%`, width: `${windowEnd - windowStart}%` }} />
+      {splitShown && (
+        <span className="pa-split" aria-hidden="true" style={{ width: `${whiteKeys.filter((white) => white < SPLIT).length * whiteWidth}%` }}>
+          <span className="pa-split-tag">Chord · Lower</span>
+        </span>
+      )}
       {keys.map((key) => {
         const black = isBlack(key);
         const whiteIndex = whiteKeys.filter((white) => white < key).length;
@@ -424,6 +429,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             </label>
           </div>
           <div className="flex flex-wrap gap-1.5">
+            <PanelButton label="Split" active={arranger.split} onClick={() => { arranger.toggleSplit(); say(arranger.split ? 'Split: left of middle C plays chords and strings' : 'Full keyboard: chords from three or more notes'); }} />
             <PanelButton label="Song" active={Boolean(arranger.song)} onClick={() => open('song')} />
             <PanelButton label="Metro" active={arranger.metronome} onClick={() => { arranger.toggleMetronome(); open('metro'); }} />
             <PanelButton label="Reverb" active={arranger.reverb} onClick={() => arranger.toggleReverb()} />
@@ -496,7 +502,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             </button>
           </div>
           <div className="pa-keybed" ref={scroller}>
-            <Keys arranger={arranger} pressed={pressed} showLetters={showLetters} pcBase={pcBase} pointerDown={pointerDown} />
+            <Keys arranger={arranger} pressed={pressed} showLetters={showLetters} pcBase={pcBase} pointerDown={pointerDown} splitShown={arranger.running && arranger.split} />
           </div>
         </div>
       </div>
@@ -516,7 +522,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         </div>
         <div>
           <dt>Accompaniment and sheet music</dt>
-          <dd>Pick a style and press Start; below middle C your left hand sets the chord. The music stand writes what you play, or shows a song's score as it plays.</dd>
+          <dd>Pick a style and press Start. With Split on, keys left of middle C set the chord and play strings; with it off, the whole keyboard plays your sound. The music stand writes what you play, or shows a song's score.</dd>
         </div>
       </dl>
       <p className="pa-credits">

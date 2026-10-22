@@ -320,6 +320,10 @@ export class Arranger {
   volume = 0.8;
   reverb = true;
   metronome = false;
+  // Split on: with a style running, keys below middle C set the chord and play the Lower sound (as a Pa300's
+  // Lower part). Split off: the whole keyboard plays the Upper sound and chords come from three or more held notes.
+  split = true;
+  lowerSound = 'String Ensemble';
   meterIndex = 2;
   liveChord = '';
   modulation = 0;
@@ -615,17 +619,24 @@ export class Arranger {
   noteOn(key: number, velocity = 0.8) {
     if (!this.init() || !this.ctx) return;
     const time = this.ctx.currentTime;
-    if (this.running && key < SPLIT) {
+    const pitch = key + this.transpose + this.octave * 12;
+    if (this.running && this.split && key < SPLIT) {
       this.left.add(key);
       this.chord = detectChord([...this.left]) ?? this.chord;
+      this.held.get(key)?.voice.stop(time);
+      this.held.set(key, this.play(pitch, soundNamed(this.lowerSound), time, this.bus, velocity * 0.75));
       this.onNote(key, true);
       this.onChange();
       return;
     }
     this.held.get(key)?.voice.stop(time);
     this.down.add(key);
-    this.held.set(key, this.play(key + this.transpose + this.octave * 12, this.sound, time, this.bus, velocity));
+    this.held.set(key, this.play(pitch, this.sound, time, this.bus, velocity));
     this.onNote(key, true);
+    if (this.running && !this.split && this.down.size >= 3) {
+      this.chord = detectChord([...this.down]) ?? this.chord;
+      this.onChange();
+    }
     if (this.down.size >= 2) {
       const chord = detectChord([...this.down].map((held) => held + this.transpose));
       const name = chord ? NOTE_NAMES[chord.root] + chord.type : '';
@@ -638,7 +649,7 @@ export class Arranger {
 
   noteOff(key: number) {
     this.onNote(key, false);
-    if (this.left.delete(key)) return;
+    this.left.delete(key);
     this.down.delete(key);
     if (this.pedal) return;
     const playing = this.held.get(key);
@@ -745,6 +756,12 @@ export class Arranger {
     this.onChange();
   }
 
+  toggleSplit() {
+    this.releaseAll();
+    this.split = !this.split;
+    this.onChange();
+  }
+
   setBalance(value: number) {
     this.balance = value;
     if (this.ctx) {
@@ -815,6 +832,7 @@ export class Arranger {
 
   startStyle(withIntro = false) {
     if (!this.init()) return;
+    void this.load(soundNamed(this.lowerSound).bank);
     this.stopSong();
     this.stopMetro();
     void this.load(BASS.bank);

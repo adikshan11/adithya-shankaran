@@ -197,7 +197,44 @@ engine.stopStyle();
 await quiet();
 check('Balance', 'accompaniment follows the balance slider', middle > 0.01 && none < middle / 4, `centre ${middle.toFixed(3)}, keyboard only ${none.toFixed(3)}`);
 
-// 11. Starting a style stops a playing song, and starting a song stops a style.
+// 11. Playing over a running style: the right hand sounds, the left hand sets the chord and plays the Lower sound,
+// and with Split off the whole keyboard plays the Upper sound.
+engine.selectSound(0);
+engine.selectStyle(0);
+await engine.load('strings');
+engine.startStyle();
+engine.setBalance(0); // silence the backing so only what is played is measured
+await quiet();
+engine.noteOn(72, 0.9);
+const right = await loudness(600);
+engine.noteOff(72);
+await quiet();
+engine.noteOn(45, 0.8);
+engine.noteOn(48, 0.8);
+engine.noteOn(52, 0.8);
+const left = await loudness(800);
+const leftChord = engine.chordName;
+for (const key of [45, 48, 52]) engine.noteOff(key);
+await quiet();
+check('Over a style', 'right hand sounds', right > 0.01, right.toFixed(3));
+check('Over a style', 'left hand plays the Lower sound and sets the chord', left > 0.01 && leftChord === 'Am', `level ${left.toFixed(3)}, chord ${leftChord}`);
+engine.toggleSplit();
+engine.noteOn(48, 0.8);
+const fullLow = await loudness(600);
+const chordAfterOne = engine.chordName;
+engine.noteOn(53, 0.8);
+engine.noteOn(57, 0.8);
+await wait(100);
+const fullChord = engine.chordName;
+for (const key of [48, 53, 57]) engine.noteOff(key);
+check('Over a style', 'split off: a low key plays the upper sound, one note keeps the chord', fullLow > 0.01 && chordAfterOne === 'Am', `level ${fullLow.toFixed(3)}, chord ${chordAfterOne}`);
+check('Over a style', 'split off: three held notes set the chord', fullChord === 'F', `chord ${fullChord}`);
+engine.toggleSplit();
+engine.setBalance(0.5);
+engine.stopStyle();
+await quiet();
+
+// 12. Starting a style stops a playing song, and starting a song stops a style.
 await engine.playSong(songs[0]);
 engine.startStyle();
 check('Switching', 'style stops the song', engine.song === null && engine.running, '');
