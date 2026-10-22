@@ -307,6 +307,8 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   // keys take the whole screen, and brings it all back on the next tap.
   const [keysOnly, setKeysOnly] = useState(false);
   useEffect(() => {
+    const stage = document.querySelector<HTMLElement>('.pa-overlay');
+    if (stage) stage.scrollTop = 0; // start at the top: the strip and slider in view
     const frame = requestAnimationFrame(() => refit.current());
     return () => cancelAnimationFrame(frame);
   }, [keysOnly]);
@@ -835,6 +837,11 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const startLearn = (songId: string, chosen = hand, pace = speed) => {
     const song = songs.find((item) => item.id === songId);
     if (!song) return;
+    // Bonus speeds (150%, 200%) open for a piece once it is mastered: every note right at 100% with this hand.
+    if (pace > 1 && (bestStars()[`${song.id}:${chosen}`] ?? 0) < 4) {
+      say(`Master ${song.short ?? song.title} at 100% first (every note right); then ${Math.round(pace * 100)}% opens as a bonus.`);
+      return;
+    }
     say(`Loading ${song.title}…`);
     void arranger.startLearn(song, chosen, pace).then(() => {
       setDrawer(false); // one view at a time: the sheet music replaces the Panel

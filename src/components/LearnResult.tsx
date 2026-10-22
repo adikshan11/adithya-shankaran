@@ -34,11 +34,16 @@ export default function LearnResult({ result, title, speed, onAgain, onSpeed, on
   const { grade, stars, accuracy, misses, notes, seconds, steady } = result;
   // The last stage: every note right at full speed. Nothing faster to unlock, so it says the piece is mastered.
   const mastered = grade === 'perfect' && speed >= 1;
+  // Past mastery: bonus speeds of 150% and 200%, for fun, after the piece is right at its own tempo.
+  const bonus = speed > 1;
   const faster = speed < 0.75 ? 0.75 : speed < 1 ? 1 : 0;
+  const bonusNext = grade === 'perfect' ? (speed < 1.5 ? 1.5 : speed < 2 ? 2 : 0) : 0;
   const slower = speed > 0.75 ? 0.75 : speed > 0.5 ? 0.5 : 0;
   const note = {
-    perfect: mastered
-      ? `You have mastered ${title}: every note right at full speed${steady ? ', in a steady rhythm' : ''}.`
+    perfect: bonus
+      ? `${title} at ${Math.round(speed * 100)}% of its own tempo, without a wrong note.${speed < 2 ? ' 200% is next, if you dare.' : ' That is double speed: top of the bonus ladder.'}`
+      : mastered
+      ? `You have mastered ${title}: every note right at full speed${steady ? ', in a steady rhythm' : ''}. Want to experiment at high speed? 150% and 200% are now open.`
       : `Every note of ${title} right${steady ? ', in a steady rhythm' : ''}. That is concert standard.`,
     great: `Only ${misses} slip${misses === 1 ? '' : 's'} in ${notes} notes${steady ? ', and a steady pulse' : ''}.`,
     good: `${misses} slips in ${notes} notes. Play the bars where you slipped slowly a few times, then go again.`,
@@ -65,7 +70,7 @@ export default function LearnResult({ result, title, speed, onAgain, onSpeed, on
       )}
       <div className={`pa-result pa-result-${grade}`} role="dialog" aria-label="Result">
         <div className="pa-result-card">
-          <p className="pa-result-title">{mastered ? 'Mastered!' : TITLES[grade]}</p>
+          <p className="pa-result-title">{bonus && grade === 'perfect' ? `Bonus ${Math.round(speed * 100)}% cleared!` : mastered ? 'Mastered!' : TITLES[grade]}</p>
           <div className="pa-result-stars" aria-label={`${stars} of 3 stars`}>
             {[0, 1, 2].map((index) => <span key={index} className={index < stars ? 'on' : 'off'}>★</span>)}
           </div>
@@ -76,7 +81,8 @@ export default function LearnResult({ result, title, speed, onAgain, onSpeed, on
             <span><b>{Math.round(speed * 100)}%</b>speed</span>
           </div>
           <p className="pa-result-note">{note}</p>
-          {mastered && <span className="pa-result-reward pa-result-mastered">♛ Song mastered: a crown beside it in the Learn list</span>}
+          {mastered && !bonus && <span className="pa-result-reward pa-result-mastered">♛ Song mastered: a crown beside it in the Learn list</span>}
+          {mastered && bonus && <span className="pa-result-reward pa-result-mastered">⚡ Bonus speed cleared</span>}
           {grade === 'perfect' && !mastered && <span className="pa-result-reward">Reward: a gold star badge and the next speed unlocked</span>}
           {grade === 'great' && <span className="pa-result-reward">Reward: a fish treat for the cat</span>}
           {grade === 'poor' && <span className="pa-result-shame">No treat this time. Replay slower to earn it back.</span>}
@@ -87,6 +93,7 @@ export default function LearnResult({ result, title, speed, onAgain, onSpeed, on
               <button type="button" onClick={onAgain}>Play again</button>
             )}
             {(grade === 'perfect' || grade === 'great') && faster > 0 && <button type="button" onClick={() => onSpeed(faster)}>Try {faster * 100}%</button>}
+            {bonusNext > 0 && <button type="button" className="bonus" onClick={() => onSpeed(bonusNext)}>⚡ Bonus: try {bonusNext * 100}%</button>}
             <button type="button" className="quiet" onClick={onDone}>Done</button>
           </div>
         </div>

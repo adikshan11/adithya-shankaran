@@ -1138,7 +1138,7 @@ export class Arranger {
         learn.result = { grade, stars, accuracy, misses: learn.misses, notes: learn.steps.length, seconds: (performance.now() - learn.startedAt) / 1000, steady, bar };
         const slips = `${learn.misses} wrong ${learn.misses === 1 ? 'note' : 'notes'}`;
         const said: Record<Grade, [Mood, string]> = {
-          perfect: ['astonished', learn.speed >= 1 ? `MASTERED! ${learn.song.title} at full speed with not one wrong note.` : `PERFECT! Not a single wrong note in ${learn.song.title}. Three gold stars!`],
+          perfect: ['astonished', learn.speed > 1 ? `BONUS CLEARED! ${learn.song.title} at ${Math.round(learn.speed * 100)}% with not one wrong note.` : learn.speed >= 1 ? `MASTERED! ${learn.song.title} at full speed with not one wrong note.` : `PERFECT! Not a single wrong note in ${learn.song.title}. Three gold stars!`],
           great: ['happy', `Excellent! Only ${slips}. Three stars, you earned a treat!`],
           good: ['happy', `Well played, ${slips}. Two stars. Smooth out the slips and go for three.`],
           practice: ['upset', `${slips}. One star. Practise the tricky bars slowly, then play it through again.`],

@@ -94,6 +94,8 @@ export default function PianoScreen({ arranger, page, category, open, message, b
     </div>
   );
 
+  const anyMastered = Object.entries(stars).some(([key, value]) => key.endsWith(`:${hand}`) && value >= 4);
+
   return (
     <div ref={screenRef} className={`pa-screen ${booting ? 'pa-screen-booting' : ''} ${beat ? 'pa-screen-beat' : ''}`}>
       <div className="pa-screen-bar">
@@ -106,7 +108,7 @@ export default function PianoScreen({ arranger, page, category, open, message, b
         {/* Score: the music on the display itself, as the Pa300's Score page shows it. */}
         <button type="button" className={`pa-touch pa-score-btn ${page === 'score' ? 'pa-score-btn-on' : ''}`} aria-pressed={page === 'score'} onClick={() => open(page === 'score' ? 'main' : 'score')} aria-label="Score">♪<span className="pa-long"> SCORE</span></button>
         {learn ? (
-          <button type="button" className="pa-touch pa-learn-flag" onClick={() => open('learn')}><span className="pa-long">LEARN </span>{Math.min(learn.at + 1, learn.steps.length)}/{learn.steps.length}<span className="pa-long"> · {Math.round(learn.speed * 100)}%</span></button>
+          <button type="button" className="pa-touch pa-learn-flag" onClick={() => open('learn')}><span className="pa-long">LEARN </span>{Math.min(learn.at + 1, learn.steps.length)}/{learn.steps.length} · {Math.round(learn.speed * 100)}%</button>
         ) : page === 'score' && onClear ? (
           <button type="button" className="pa-touch pa-bar-clear" onClick={onClear}>CLEAR</button>
         ) : recording ? (
@@ -279,9 +281,10 @@ export default function PianoScreen({ arranger, page, category, open, message, b
                   {name === 'both' ? 'Both hands' : name === 'right' ? 'Right hand' : 'Left hand'}
                 </button>
               ))}
-              {[0.5, 0.75, 1].map((value) => (
-                <button key={value} type="button" role="tab" aria-selected={value === speed} className={`pa-tab ${value === speed ? 'pa-tab-on' : ''}`} onClick={() => onSpeed?.(value)} title={value === 0.5 ? 'Beginner speed' : value === 1 ? 'The piece at its own tempo' : 'Practice speed'}>
-                  {value * 100}%
+              {/* 150% and 200%: bonus speeds, shown once a piece is mastered (every note right at 100%) with this hand. */}
+              {[0.5, 0.75, 1, ...(anyMastered ? [1.5, 2] : [])].map((value) => (
+                <button key={value} type="button" role="tab" aria-selected={value === speed} className={`pa-tab ${value === speed ? 'pa-tab-on' : ''} ${value > 1 ? 'pa-tab-bonus' : ''}`} onClick={() => onSpeed?.(value)} title={value === 0.5 ? 'Beginner speed' : value === 1 ? 'The piece at its own tempo' : value > 1 ? 'Bonus speed, for pieces you have mastered' : 'Practice speed'}>
+                  {value > 1 ? '⚡' : ''}{value * 100}%
                 </button>
               ))}
             </div>
@@ -289,8 +292,8 @@ export default function PianoScreen({ arranger, page, category, open, message, b
           onExit={exit}
         >
           {[...songs.filter((item) => item.easy), ...songs.filter((item) => item.file)].map((item) => (
-            <button key={item.id} type="button" className={`pa-item ${learn?.song.id === item.id ? 'pa-item-on' : ''}`} onClick={() => onLearn?.(item.id)}>
-              <span className="pa-item-number">{learn?.song.id === item.id ? 'Learning' : item.easy ? 'Easy' : 'Learn'} · {item.composer}</span>
+            <button key={item.id} type="button" className={`pa-item ${learn?.song.id === item.id ? 'pa-item-on' : ''} ${speed > 1 && (stars[`${item.id}:${hand}`] ?? 0) < 4 ? 'pa-item-locked' : ''}`} onClick={() => onLearn?.(item.id)}>
+              <span className="pa-item-number">{learn?.song.id === item.id ? 'Learning' : speed > 1 && (stars[`${item.id}:${hand}`] ?? 0) < 4 ? 'Master it first' : item.easy ? 'Easy' : 'Learn'} · {item.composer}</span>
               <span className="pa-t-full">{item.title}</span><span className="pa-t-short">{item.short ?? item.title}</span>
               {(stars[`${item.id}:${hand}`] ?? 0) > 0 && (
                 <span className="pa-item-stars" aria-label={stars[`${item.id}:${hand}`] > 3 ? 'mastered' : `best ${stars[`${item.id}:${hand}`]} stars`}>

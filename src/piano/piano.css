@@ -1385,7 +1385,10 @@
     border-top: 1px solid rgb(255 255 255 / 0.1); border-radius: 0 0 6px 6px; box-shadow: 0 6px 10px rgb(0 0 0 / 0.45);
   }
   .pa-overlay .pa-body:has(.pa-keyrow) { padding-bottom: 22px; }
-  .pa-overlay:has(.pa-keys-only) .pa-body { min-height: calc(100lvh - env(safe-area-inset-top)); }
+  /* Keys only never scrolls: no extra height (100lvh is taller than the screen while Safari's bars show, which let
+     iOS scroll the strip away); the casing colour under the toolbar comes from the background instead. */
+  .pa-overlay:has(.pa-keys-only) { overflow: hidden; overscroll-behavior: none; background: #1d1e22; }
+  .pa-overlay:has(.pa-keys-only) .pa-body { min-height: 0; padding-bottom: 22px; }
 }
 
 /* Key felt: the strip of red cloth along the back of the keys where they slide under the fallboard, as on a real
@@ -1415,3 +1418,14 @@
     linear-gradient(180deg, rgb(255 255 255 / 0.06), transparent 30%);
 }
 .pa-key-down::after, .pa-key-target::after { opacity: 0; }
+
+/* Bonus speeds: a lightning tab, a locked look for pieces not yet mastered, and a gold bonus button. */
+.pa-tab-bonus { color: #ffd76a; }
+.pa-tab-bonus.pa-tab-on { color: #2a1a00; background: linear-gradient(180deg, #ffe08a, #f5b800); }
+.pa-item-locked { opacity: 0.5; }
+.pa-result-actions button.bonus { color: #2a1a00; background: linear-gradient(180deg, #ffe08a, #f5b800); }
+/* The display's top bar keeps every label on one line; on a phone during Learn the long words drop out. */
+.pa-screen-bar > * { white-space: nowrap; }
+@media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
+  .pa-screen-bar:has(.pa-learn-flag) .pa-long { display: none; }
+}
