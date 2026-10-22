@@ -1066,7 +1066,7 @@
     /* No panel box around the screen on a phone, Panel open or closed (that box is the laptop panel's). */
     .pa-drawer .pa-panel { padding: 0; border: 0; background: none; box-shadow: none; }
     .pa-drawer-open { animation: pa-drawer-in 0.25s ease-out; }
-    .pa-keys { height: var(--keys-h, 44dvh); min-height: 220px; }
+    .pa-keys { height: var(--keys-h, 44dvh); min-height: 150px; }
     .pa-rotate-hint { display: block; grid-column: 1 / -1; text-align: center; font-size: 0.72rem; color: #9ea2ab; }
   }
   /* Landscape phone, the way phone piano apps do it: the keys run edge to edge and fill the screen under one slim
@@ -1428,4 +1428,19 @@
 .pa-screen-bar > * { white-space: nowrap; }
 @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
   .pa-screen-bar:has(.pa-learn-flag) .pa-long { display: none; }
+}
+
+/* Portrait phone: the name plate stays, on one compact line, and Close sits at its right end (no separate row above
+   the piano), so the keys keep the height. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .pa-overlay .pa-top { align-items: center; min-height: 34px; padding: 0 96px 8px 2px; }
+  .pa-overlay .pa-brand { flex-direction: row; align-items: baseline; gap: 10px; white-space: nowrap; }
+  .pa-overlay .pa-brand-name { font-size: 1.05rem; letter-spacing: 0.32em; }
+  .pa-overlay .pa-brand-model { margin: 0; font-size: 0.5rem; letter-spacing: 0.22em; }
+  .pa-overlay .pa-overlay-close { position: absolute; top: calc(var(--brand-top, 14px)); right: 20px; margin: 0; padding: 5px 12px; z-index: 90; }
+}
+
+/* Touch phones have no computer keyboard, so PC keys (letters on the keys for typing) is left out of their Panel. */
+@media (pointer: coarse) and (max-width: 760px), (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  .pa-btn-pckeys { display: none !important; }
 }

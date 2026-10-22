@@ -504,7 +504,11 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         document.body.append(probe);
         const small = probe.getBoundingClientRect().height || window.innerHeight;
         probe.remove();
-        root.style.setProperty('--keys-h', `${Math.max(220, Math.floor(Math.min(window.innerHeight - 30, small - 8) - top))}px`);
+        // iOS 26 Safari: the toolbar floats over the page and even 100svh is the whole screen, so leave room for the
+        // toolbar itself (131 pt on an iPhone 15/16 in portrait, measured from a screenshot, 23 Oct 2026).
+        const floatingBar = /iPhone/.test(navigator.userAgent) && small >= window.screen.height - 4;
+        const below = floatingBar ? 132 : 8;
+        root.style.setProperty('--keys-h', `${Math.max(150, Math.floor(Math.min(window.innerHeight - 30, small - below) - top))}px`);
       } else {
         root.style.removeProperty('--fit');
         root.style.removeProperty('--keys-h');
@@ -514,10 +518,16 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     refit.current = fit;
     const settle = setTimeout(fit, 400); // again once fonts and the stage have settled
     window.addEventListener('resize', fit);
+    // Again whenever a part above the keys changes size (a message wraps, a page or the Panel opens), so the keys
+    // always end where they should instead of where they were first measured.
+    const above = typeof ResizeObserver === 'function' ? new ResizeObserver(() => fit()) : null;
+    const host = scroller.current?.closest<HTMLElement>('.pa-instrument');
+    for (const part of host?.querySelectorAll('.pa-top, .pa-drawer, .pa-phonebar') ?? []) above?.observe(part);
     return () => {
       clearTimeout(fallback);
       clearTimeout(centre);
       clearTimeout(settle);
+      above?.disconnect();
       window.removeEventListener('resize', fit);
       if (idle.current) clearTimeout(idle.current);
       arranger.dispose();
