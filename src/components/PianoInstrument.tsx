@@ -413,6 +413,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         const island = turn === 90 ? 'left' : turn === -90 || turn === 270 ? 'right' : 'both';
         root.style.setProperty('--island-l', island === 'right' ? '0px' : 'env(safe-area-inset-left)');
         root.style.setProperty('--island-r', island === 'left' ? '0px' : 'env(safe-area-inset-right)');
+        root.dataset.island = island;
         // Nothing is scaled down: the panel opens as its own full-size view (keys step aside), and the sheet music
         // sits at full size above the keys, which take the height that is left.
         root.style.removeProperty('--fit');
@@ -471,7 +472,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       cancelAnimationFrame(first);
       clearTimeout(after);
     };
-  }, [showSheet, drawer]);
+  }, [showSheet, drawer, page]);
 
   // Computer keyboard: two rows from C (see PC_KEYS), arrows move them an octave, Shift plays louder, Space sustains.
   useEffect(() => {
@@ -667,13 +668,66 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     if (close) close.setAttribute('aria-label', drawer || showSheet ? 'Back to the screen' : 'Close the curtain');
   }, [drawer, showSheet]);
 
-  // Phones: any completed tap, click or key press unlocks the audio if the browser still holds it back.
+  // Phones: any touch, tap, click or key press unlocks the audio if the browser still holds it back, and coming back
+  // to the page (after another app, a call or the lock screen) wakes it again.
   useEffect(() => {
     const wake = () => arranger.unlockAudio();
-    const events = ['touchend', 'click', 'keydown'] as const;
+    const events = ['touchstart', 'touchend', 'pointerdown', 'click', 'keydown'] as const;
     for (const name of events) window.addEventListener(name, wake, { capture: true, passive: true });
+    const back = () => {
+      if (document.visibilityState === 'visible') arranger.unlockAudio();
+    };
+    document.addEventListener('visibilitychange', back);
+    window.addEventListener('pageshow', back);
     return () => {
       for (const name of events) window.removeEventListener(name, wake, { capture: true });
+      document.removeEventListener('visibilitychange', back);
+      window.removeEventListener('pageshow', back);
+    };
+  }, [arranger]);
+
+  // Two fingers on the keys slide the keyboard (one finger plays): the second finger lets go of the first finger's
+  // note, and both then drag the keyboard sideways.
+  useEffect(() => {
+    const bed = scroller.current;
+    if (!bed) return;
+    const touches = new Map<number, number>();
+    let sliding = false;
+    let lastX = 0;
+    const average = () => [...touches.values()].reduce((sum, x) => sum + x, 0) / Math.max(1, touches.size);
+    const down = (event: PointerEvent) => {
+      if (event.pointerType !== 'touch') return;
+      touches.set(event.pointerId, event.clientX);
+      if (touches.size >= 2) {
+        if (!sliding) arranger.releaseAll();
+        sliding = true;
+        lastX = average();
+        event.stopPropagation(); // the second finger does not play a note
+      }
+    };
+    const move = (event: PointerEvent) => {
+      if (!touches.has(event.pointerId)) return;
+      touches.set(event.pointerId, event.clientX);
+      if (!sliding) return;
+      const x = average();
+      bed.scrollLeft -= x - lastX;
+      lastX = x;
+      event.stopPropagation();
+    };
+    const up = (event: PointerEvent) => {
+      touches.delete(event.pointerId);
+      if (touches.size < 2) lastX = average();
+      if (!touches.size) sliding = false;
+    };
+    bed.addEventListener('pointerdown', down, true);
+    bed.addEventListener('pointermove', move, true);
+    window.addEventListener('pointerup', up, true);
+    window.addEventListener('pointercancel', up, true);
+    return () => {
+      bed.removeEventListener('pointerdown', down, true);
+      bed.removeEventListener('pointermove', move, true);
+      window.removeEventListener('pointerup', up, true);
+      window.removeEventListener('pointercancel', up, true);
     };
   }, [arranger]);
 
@@ -835,6 +889,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                 meter.current = element;
               }}
               recording={recording}
+              onClear={songScore ? undefined : clearTake}
               score={<div ref={measureScore} className="pa-stand pa-stand-screen" aria-label="Score">{scoreView}</div>}
               hand={hand}
               onHand={(next) => {

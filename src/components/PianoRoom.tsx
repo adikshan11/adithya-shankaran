@@ -59,7 +59,7 @@ export default function PianoRoom() {
     // Tint the browser's bars to the stage while it is open, and put the page's colour back after.
     const tint = document.querySelector('meta[name="theme-color"]');
     const pageTint = tint?.getAttribute('content');
-    tint?.setAttribute('content', '#08090b');
+    tint?.setAttribute('content', '#26282d');
     closer.current?.focus({ preventScroll: true });
     const escape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') pianoStore.set(false);

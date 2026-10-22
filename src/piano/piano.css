@@ -397,11 +397,11 @@
     z-index: 6;
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 46px;
-    margin-top: -23px;
-    border-radius: 8px;
-    font-size: 1.4rem;
+    width: 32px;
+    height: 32px;
+    margin-top: -16px;
+    border-radius: 50%;
+    font-size: 1.05rem;
     line-height: 1;
     color: #fff;
     background: rgb(20 22 26 / 0.72);
@@ -459,6 +459,8 @@
   .pa-stand:has(> .pa-stand-clear) > .pa-coach { flex: none; }
   .pa-stand-clear { order: 3; flex: none; align-self: center; z-index: 2; padding: 2px 10px; border-radius: 999px; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #3a2a12; background: #f3e6c4; box-shadow: inset 0 0 0 1px #c9a86a; }
   .pa-stand-clear:active { transform: translateY(1px); }
+  .pa-stand-screen .pa-stand-clear { display: none !important; } /* on the screen, Clear is in the top bar */
+  .pa-bar-clear { padding: 0 6px; border-radius: 4px; font-weight: 800; color: #3a2a12; background: #f3e6c4; }
   .pa-sheet-bar ~ .pa-sheet-body .pa-stand-clear { display: none; } /* the laptop's sheet bar has its own Clear */
   @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
     .pa-sheet-bar ~ .pa-sheet-body .pa-stand-clear { display: block; }
@@ -1110,7 +1112,7 @@
     /* Each group: label above, buttons at the bottom of its row, so rows line up across both sides. */
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-group { align-self: end !important; }
     /* The screen grows to fit its Var/Trans/Oct/Pedal line while Panel is open (the keys take the rest). */
-    .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-screen { height: auto; }
+    .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-screen:has(.pa-main) { height: auto; } /* other pages keep the fixed height and scroll */
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-main-left > .pa-row-split:first-of-type .pa-row-action { display: inline-flex; }
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-row { gap: 5px; }
     .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-row .pa-btn { min-width: 0; flex: 1; }
@@ -1121,6 +1123,21 @@
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-screen .pa-cell { display: flex; flex-direction: row; align-items: baseline; justify-content: center; gap: 5px; padding: 3px 0; line-height: 1.1; }
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-screen .pa-cell > * { margin: 0; font-size: 0.72rem; }
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-screen :is(.pa-arr-row, .pa-main-left > .pa-row-split:nth-of-type(2)) { display: none; }
+    /* Compact Panel controls on a phone held sideways: smaller buttons, tighter labels and rows. */
+    .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) { row-gap: 2px; }
+    .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-group .pa-label { display: none; } /* no group titles: the buttons say what they do */
+    /* Same height and text as the toolbar buttons they replace, so nothing changes size when Panel opens. */
+    .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-row .pa-btn { height: 40px; min-height: 0; padding: 0 4px; font-size: 0.78rem; }
+    .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-row .pa-btn .pa-led { top: 3px; }
+    .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-phonebar > .pa-phone-panel { height: 40px; margin-bottom: 0; align-self: center; }
+    .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-ctl-group { align-self: center !important; }
+    /* List pages on the screen (sounds, styles, songs, Learn): compact items so more fit. */
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid .pa-item { padding: 4px 8px; font-size: 0.74rem; line-height: 1.25; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid .pa-item-number { font-size: 0.6rem; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-page-head { margin-bottom: 4px; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-tab { padding: 2px 8px; font-size: 0.68rem; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid-tune { gap: 4px; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid-tune .pa-item { flex-direction: row; align-items: center; justify-content: center; gap: 6px; min-height: 0; height: 30px; padding: 0 6px; }
     /* The compact display */
     .pa-body:not(:has(.pa-sheet-open)) .pa-screen :is(.pa-cells, .pa-message, .pa-meter, .pa-progress) { display: none; }
     .pa-body:not(:has(.pa-sheet-open)) .pa-main { min-height: 0; grid-template-columns: minmax(0, 1fr) 5rem; padding-bottom: 6px; }
@@ -1148,6 +1165,23 @@
     .pa-phone-panel { color: #2a1a00; background: linear-gradient(180deg, #ffd27a, #f0a42c); }
     .pa-phone-panel[aria-expanded="true"] { color: #071a33; background: linear-gradient(180deg, #8fe0ff, #46b8ea); }
     .pa-phonebar > .pa-phone-panel { order: 10; }
+  }
+  /* Landscape phone: the piano's body colour runs edge to edge, top and bottom (no black bands), and the joystick
+     and Sustain sit in the Dynamic Island's strip, at the bottom below the island, so the keys keep their width. */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .pa-overlay { background: linear-gradient(180deg, #2a2c31, #17181b 45%, #0c0d0f); }
+    .pa-body { background: transparent; }
+    .pa-minimap { display: block !important; }
+    .pa-instrument:is([data-island="left"], [data-island="right"]) .pa-left {
+      display: flex !important; position: fixed; z-index: 7; bottom: calc(6px + env(safe-area-inset-bottom));
+      flex-direction: column; gap: 6px; width: 54px; padding: 4px 0; background: none; box-shadow: none;
+    }
+    .pa-instrument[data-island="left"] .pa-left { left: max(2px, calc(env(safe-area-inset-left) - 56px)); }
+    .pa-instrument[data-island="right"] .pa-left { right: max(2px, calc(env(safe-area-inset-right) - 56px)); }
+    .pa-instrument:is([data-island="left"], [data-island="right"]) .pa-keyrow { grid-template-columns: 1fr !important; }
+    .pa-instrument:is([data-island="left"], [data-island="right"]) .pa-joy { width: 50px; height: 50px; }
+    .pa-instrument:is([data-island="left"], [data-island="right"]) .pa-left .pa-pedal { width: 54px; font-size: 0.55rem; padding: 0.35rem 0; }
+    .pa-instrument:is([data-island="left"], [data-island="right"]) .pa-left-label { display: none; }
   }
   @keyframes pa-drawer-in { from { transform: translateY(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
 

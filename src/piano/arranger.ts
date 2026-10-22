@@ -474,7 +474,8 @@ export class Arranger {
 
   init() {
     if (this.ctx) {
-      if (this.ctx.state === 'suspended') void this.ctx.resume();
+      // Safari reports 'suspended' or 'interrupted' (a call, another app, the screen locking): resume either way.
+      if (this.ctx.state !== 'running' && this.ctx.state !== 'closed') void this.ctx.resume().catch(() => undefined);
       return true;
     }
     if (typeof window === 'undefined') return false;

@@ -20,6 +20,7 @@ type Props = {
   meterRef: (element: HTMLSpanElement | null) => void;
   takes?: ReactNode;
   score?: ReactNode;
+  onClear?: () => void;
   recording?: boolean;
   hand?: Hand;
   onHand?: (hand: Hand) => void;
@@ -44,7 +45,7 @@ function SelectPage({ head, onExit, children, className = '' }: { head: ReactNod
   );
 }
 
-export default function PianoScreen({ arranger, page, category, open, message, beat, meterRef, takes, score, recording, hand = 'right', onHand, onLearn, speed = 0.5, onSpeed }: Props) {
+export default function PianoScreen({ arranger, page, category, open, message, beat, meterRef, takes, score, onClear, recording, hand = 'right', onHand, onLearn, speed = 0.5, onSpeed }: Props) {
   const learn = arranger.learn;
   // The power-on flicker plays once, when the piano opens. (A CSS animation restarts whenever a hidden element is
   // shown again, so on a phone it replayed each time the sheet music gave the screen back.)
@@ -84,6 +85,8 @@ export default function PianoScreen({ arranger, page, category, open, message, b
         <button type="button" className={`pa-touch pa-score-btn ${page === 'score' ? 'pa-score-btn-on' : ''}`} aria-pressed={page === 'score'} onClick={() => open(page === 'score' ? 'main' : 'score')} aria-label="Score">♪<span className="pa-long"> SCORE</span></button>
         {learn ? (
           <button type="button" className="pa-touch pa-learn-flag" onClick={() => open('learn')}><span className="pa-long">LEARN </span>{Math.min(learn.at + 1, learn.steps.length)}/{learn.steps.length}<span className="pa-long"> · {Math.round(learn.speed * 100)}%</span></button>
+        ) : page === 'score' && onClear ? (
+          <button type="button" className="pa-touch pa-bar-clear" onClick={onClear}>CLEAR</button>
         ) : recording ? (
           <button type="button" className="pa-touch pa-rec-flag" onClick={() => open('rec')}>● REC</button>
         ) : (
