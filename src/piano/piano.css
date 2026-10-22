@@ -305,6 +305,7 @@
   .pa-fader-label { font-size: 0.58rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #9ea2ab; }
   .pa-fader-scale { display: flex; justify-content: space-between; font-size: 0.5rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6f737b; }
   .pa-fader input { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; margin: 0; background: transparent; cursor: pointer; }
+  .pa-fader input:focus, .pa-fader input:focus-visible { outline: none; } /* no blue ring around the fader once touched */
   .pa-fader input::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: #050506; box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.9), 0 1px 0 rgb(255 255 255 / 0.08); }
   .pa-fader input::-moz-range-track { height: 6px; border-radius: 3px; background: #050506; box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.9), 0 1px 0 rgb(255 255 255 / 0.08); }
   .pa-fader input::-webkit-slider-thumb {

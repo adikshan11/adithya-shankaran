@@ -46,7 +46,7 @@ type KeysProps = { arranger: Arranger; pressed: Set<number>; showLetters: boolea
 const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointerDown, splitShown }: KeysProps) {
   const labelFor = new Map<number, string>();
   for (const [, offset, label] of PC_KEYS) labelFor.set(pcBase + offset, labelFor.has(pcBase + offset) ? `${labelFor.get(pcBase + offset)} ${label}` : label);
-  const windowStart = whiteKeys.filter((white) => white < pcBase).length * whiteWidth;
+  const windowStart = whiteKeys.filter((white) => white < Math.max(LOW, pcBase - 1)).length * whiteWidth; // from A's B
   const windowEnd = whiteKeys.filter((white) => white <= Math.min(HIGH, pcBase + 31)).length * whiteWidth;
   return (
     <div className="pa-keys" onPointerLeave={() => { pointerDown.current = false; }}>
@@ -98,7 +98,7 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
 // A drawn computer keyboard: which key plays which note. Black-key rows sit between the white keys, as on a piano.
 const MAP_ROWS: { white: [string, string][]; black: (string | null)[] }[] = [
   { white: [['Q', 'C'], ['W', 'D'], ['E', 'E'], ['R', 'F'], ['T', 'G'], ['Y', 'A'], ['U', 'B'], ['I', 'C'], ['O', 'D'], ['P', 'E'], ['[', 'F'], [']', 'G']], black: ['3', '4', null, '5', '6', '7', null, '9', '0', null, '='] },
-  { white: [['Z', 'C'], ['X', 'D'], ['C', 'E'], ['V', 'F'], ['B', 'G'], ['N', 'A'], ['M', 'B'], [',', 'C'], ['.', 'D'], ['/', 'E']], black: ['S', 'D', null, 'G', 'H', 'J', null, 'L'] },
+  { white: [['A', 'B'], ['Z', 'C'], ['X', 'D'], ['C', 'E'], ['V/F', 'F'], ['B', 'G'], ['N', 'A'], ['M', 'B'], [',', 'C'], ['.', 'D'], ['/', 'E']], black: [null, 'S', 'D', null, 'G', 'H', 'J', null, 'L'] },
 ];
 
 function KeyMap() {
@@ -386,7 +386,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       event.preventDefault();
       if (event.repeat || typed.current.has(event.code)) return;
       const key = base.current + offset;
-      if (key > HIGH) return;
+      if (key > HIGH || key < LOW) return;
       typed.current.set(event.code, key);
       arranger.noteOn(key, event.shiftKey ? 1 : 0.75);
     };

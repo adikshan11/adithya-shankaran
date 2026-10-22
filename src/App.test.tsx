@@ -99,9 +99,10 @@ describe('portfolio', () => {
     expect(notes.at(-1)!.time).toBeGreaterThan(60);
   });
 
-  it('maps two rows of computer keys to 32 consecutive notes', () => {
+  it('maps two rows of computer keys to 33 consecutive notes', () => {
     const offsets = new Set(PC_KEYS.map(([, offset]) => offset));
-    expect([...offsets].sort((a, b) => a - b)).toEqual(Array.from({ length: 32 }, (_, index) => index));
+    // A is the B below the base C, then 32 notes up from it
+    expect([...offsets].sort((a, b) => a - b)).toEqual(Array.from({ length: 33 }, (_, index) => index - 1));
     expect(new Set(PC_KEYS.map(([code]) => code)).size).toBe(PC_KEYS.length);
     // , . / continue the bottom row on the same notes as Q W E
     const offsetOf = (code: string) => PC_KEYS.find(([key]) => key === code)?.[1];
@@ -109,6 +110,7 @@ describe('portfolio', () => {
     // 3 and 4 are the black keys over Q W E, and L plays the same C# as 3
     expect([offsetOf('Digit3'), offsetOf('Digit4'), offsetOf('KeyL')]).toEqual([13, 15, 13]);
     expect(offsetOf('Digit2')).toBeUndefined();
+    expect([offsetOf('KeyA'), offsetOf('KeyF')]).toEqual([-1, offsetOf('KeyV')]);
   });
 
   it('recognises chords from the left hand', () => {
