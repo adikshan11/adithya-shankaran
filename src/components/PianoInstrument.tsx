@@ -196,8 +196,8 @@ function KeyMap() {
 }
 
 // Time-signature picker: a themed popover with simple metres (crotchet beats) and quaver metres in two rows.
-// floating: on the phone's music stand the list opens in the middle of the screen, above everything (the stand is
-// too short to hold it and the keys would cover it).
+// floating: the list opens in the middle of the screen, above everything (on the phone's music stand it is too short
+// to hold it and the keys would cover it). Phones always use it.
 function MeterPicker({ value, disabled, onPick, floating = false }: { value: string; disabled: boolean; onPick: (label: string) => void; floating?: boolean }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -265,7 +265,8 @@ function MeterPicker({ value, disabled, onPick, floating = false }: { value: str
         {value}
         <span aria-hidden="true">▾</span>
       </button>
-      {list && (floating ? createPortal(<div className="pa-meter-float">{list}</div>, document.body) : list)}
+      {/* Phones always float it: above the sheet bar it would open off the top of the screen. */}
+      {list && (floating || window.matchMedia('(max-width: 760px), (max-height: 500px) and (orientation: landscape)').matches ? createPortal(<div className="pa-meter-float">{list}</div>, document.body) : list)}
     </div>
   );
 }
