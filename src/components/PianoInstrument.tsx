@@ -115,6 +115,7 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
             key={key}
             type="button"
             aria-label={`Play ${keyName(key)}`}
+            data-key={key}
             style={position}
             className={`pa-key ${black ? 'pa-key-black' : 'pa-key-white'} ${pressed.has(key) ? 'pa-key-down' : ''} ${targets.has(key) ? 'pa-key-target' : ''}`}
             onPointerDown={(event) => {
@@ -427,7 +428,9 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           stage.style.setProperty('--close-top', `${Math.max(4, Math.round(box.top + box.height / 2 - 16 + stage.scrollTop))}px`);
         }
         const homeBar = stage ? parseFloat(getComputedStyle(stage).paddingBottom) || 0 : 0; // iPhone home indicator inset
-        root.style.setProperty('--keys-h', `${Math.max(KEYS_MIN - 55, Math.floor(window.innerHeight - top - 4 - homeBar))}px`);
+        // Landscape: the keys run to the bottom edge (the note names sit above the home bar, in CSS).
+        void homeBar;
+        root.style.setProperty('--keys-h', `${Math.max(KEYS_MIN - 55, Math.floor(window.innerHeight - top - 2))}px`);
       } else if (window.matchMedia('(max-width: 760px) and (orientation: portrait)').matches) {
         // Portrait phone: the keys take the rest of the screen below the touch screen and quick bar.
         root.style.removeProperty('--fit');
@@ -437,7 +440,14 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         const top = keys.getBoundingClientRect().top + (stage?.scrollTop ?? 0);
         // The keys stop just above the browser's toolbar (keys under it cannot be tapped); the instrument's casing
         // continues below them to the bottom edge, so the glass toolbar floats over the piano, not a bare band.
-        root.style.setProperty('--keys-h', `${Math.max(220, Math.floor(window.innerHeight - top - 30))}px`);
+        // Portrait: stop above the browser's floating toolbar. 100svh is the height with the browser's bars showing,
+        // which window.innerHeight does not give on iPhone (it includes the area under the toolbar).
+        const probe = document.createElement('div');
+        probe.style.cssText = 'position:fixed;top:0;height:100svh;width:0;visibility:hidden';
+        document.body.append(probe);
+        const small = probe.getBoundingClientRect().height || window.innerHeight;
+        probe.remove();
+        root.style.setProperty('--keys-h', `${Math.max(220, Math.floor(Math.min(window.innerHeight - 30, small - 8) - top))}px`);
       } else {
         root.style.removeProperty('--fit');
         root.style.removeProperty('--keys-h');
@@ -686,37 +696,59 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     };
   }, [arranger]);
 
-  // Two fingers on the keys slide the keyboard (one finger plays): the second finger lets go of the first finger's
-  // note, and both then drag the keyboard sideways.
+  // Touch on the keys. Each finger is followed across the keys: sliding onto a new key plays it and lets the last
+  // one go (glissandos and slid trills; a browser keeps a touch on the key it started on, so this is done here).
+  // Two fingers that move sideways together slide the keyboard instead; fingers held still play chords.
   useEffect(() => {
     const bed = scroller.current;
     if (!bed) return;
-    const touches = new Map<number, number>();
+    const touches = new Map<number, { x: number; key: number | null; first: number | null }>();
     let sliding = false;
+    let startX = 0;
     let lastX = 0;
-    const average = () => [...touches.values()].reduce((sum, x) => sum + x, 0) / Math.max(1, touches.size);
+    const average = () => [...touches.values()].reduce((sum, touch) => sum + touch.x, 0) / Math.max(1, touches.size);
+    const keyAt = (x: number, y: number) => {
+      const element = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-key]');
+      return element ? Number(element.dataset.key) : null;
+    };
     const down = (event: PointerEvent) => {
       if (event.pointerType !== 'touch') return;
-      touches.set(event.pointerId, event.clientX);
-      if (touches.size >= 2) {
-        if (!sliding) arranger.releaseAll();
-        sliding = true;
-        lastX = average();
-        event.stopPropagation(); // the second finger does not play a note
-      }
+      const key = keyAt(event.clientX, event.clientY);
+      touches.set(event.pointerId, { x: event.clientX, key, first: key });
+      startX = lastX = average();
     };
     const move = (event: PointerEvent) => {
-      if (!touches.has(event.pointerId)) return;
-      touches.set(event.pointerId, event.clientX);
-      if (!sliding) return;
-      const x = average();
-      bed.scrollLeft -= x - lastX;
-      lastX = x;
-      event.stopPropagation();
+      const touch = touches.get(event.pointerId);
+      if (!touch) return;
+      touch.x = event.clientX;
+      if (touches.size >= 2) {
+        const x = average();
+        if (!sliding && Math.abs(x - startX) > 24) {
+          sliding = true;
+          arranger.releaseAll();
+          for (const other of touches.values()) other.key = null;
+          lastX = x;
+        }
+        if (sliding) {
+          bed.scrollLeft -= x - lastX;
+          lastX = x;
+          event.stopPropagation();
+          return;
+        }
+      }
+      const key = keyAt(event.clientX, event.clientY);
+      if (key === null || key === touch.key) return;
+      if (touch.key !== null && ![...touches.values()].some((other) => other !== touch && other.key === touch.key)) arranger.noteOff(touch.key);
+      touch.key = key;
+      arranger.noteOn(key, 0.7);
     };
     const up = (event: PointerEvent) => {
+      const touch = touches.get(event.pointerId);
+      if (!touch) return;
       touches.delete(event.pointerId);
-      if (touches.size < 2) lastX = average();
+      // The key under the finger now (if the finger slid off the first key, the first key's own handler releases only that one).
+      if (touch.key !== null && touch.key !== touch.first && ![...touches.values()].some((other) => other.key === touch.key)) arranger.noteOff(touch.key);
+      startX = lastX = average();
       if (!touches.size) sliding = false;
     };
     bed.addEventListener('pointerdown', down, true);
