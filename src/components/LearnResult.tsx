@@ -32,10 +32,14 @@ export default function LearnResult({ result, title, speed, onAgain, onSpeed, on
   onDone: () => void;
 }) {
   const { grade, stars, accuracy, misses, notes, seconds, steady } = result;
+  // The last stage: every note right at full speed. Nothing faster to unlock, so it says the piece is mastered.
+  const mastered = grade === 'perfect' && speed >= 1;
   const faster = speed < 0.75 ? 0.75 : speed < 1 ? 1 : 0;
   const slower = speed > 0.75 ? 0.75 : speed > 0.5 ? 0.5 : 0;
   const note = {
-    perfect: `Every note of ${title} right${steady ? ', in a steady rhythm' : ''}. That is concert standard.`,
+    perfect: mastered
+      ? `You have mastered ${title}: every note right at full speed${steady ? ', in a steady rhythm' : ''}.`
+      : `Every note of ${title} right${steady ? ', in a steady rhythm' : ''}. That is concert standard.`,
     great: `Only ${misses} slip${misses === 1 ? '' : 's'} in ${notes} notes${steady ? ', and a steady pulse' : ''}.`,
     good: `${misses} slips in ${notes} notes. Play the bars where you slipped slowly a few times, then go again.`,
     practice: `${misses} wrong notes. Try one hand at a time, at a slower speed, and watch the green keys.`,
@@ -61,7 +65,7 @@ export default function LearnResult({ result, title, speed, onAgain, onSpeed, on
       )}
       <div className={`pa-result pa-result-${grade}`} role="dialog" aria-label="Result">
         <div className="pa-result-card">
-          <p className="pa-result-title">{TITLES[grade]}</p>
+          <p className="pa-result-title">{mastered ? 'Mastered!' : TITLES[grade]}</p>
           <div className="pa-result-stars" aria-label={`${stars} of 3 stars`}>
             {[0, 1, 2].map((index) => <span key={index} className={index < stars ? 'on' : 'off'}>★</span>)}
           </div>
@@ -72,7 +76,8 @@ export default function LearnResult({ result, title, speed, onAgain, onSpeed, on
             <span><b>{Math.round(speed * 100)}%</b>speed</span>
           </div>
           <p className="pa-result-note">{note}</p>
-          {grade === 'perfect' && <span className="pa-result-reward">Reward: a gold star badge and the next speed unlocked</span>}
+          {mastered && <span className="pa-result-reward pa-result-mastered">♛ Song mastered: a crown beside it in the Learn list</span>}
+          {grade === 'perfect' && !mastered && <span className="pa-result-reward">Reward: a gold star badge and the next speed unlocked</span>}
           {grade === 'great' && <span className="pa-result-reward">Reward: a fish treat for the cat</span>}
           {grade === 'poor' && <span className="pa-result-shame">No treat this time. Replay slower to earn it back.</span>}
           <div className="pa-result-actions">

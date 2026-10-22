@@ -1333,8 +1333,11 @@
   .pa-overlay .pa-body .pa-drawer-open .pa-faders { flex-direction: row !important; gap: 14px; }
   .pa-overlay .pa-body .pa-drawer-open .pa-fader { flex: 1; min-width: 0; grid-template-columns: 1fr; gap: 2px; }
   .pa-overlay .pa-body .pa-drawer-open .pa-fader-label { white-space: nowrap; }
-  .pa-overlay .pa-body .pa-drawer-open .pa-ctl-groups { gap: 8px 10px; }
-  .pa-overlay .pa-body .pa-drawer-open .pa-ctl-row { gap: 4px; }
+  /* One row, edge to edge: the groups dissolve into one flex row and each button grows with its label's width. */
+  .pa-overlay .pa-body .pa-drawer-open .pa-controls { width: 100%; align-self: stretch; }
+  .pa-overlay .pa-body .pa-drawer-open .pa-ctl-groups { display: flex; flex-wrap: nowrap; gap: 5px; width: 100%; }
+  .pa-overlay .pa-body .pa-drawer-open :is(.pa-ctl-group, .pa-ctl-row) { display: contents; }
+  .pa-overlay .pa-body .pa-drawer-open .pa-ctl-groups .pa-btn { flex: 1 1 auto; min-width: 0; padding-left: 2px; padding-right: 2px; }
   .pa-overlay .pa-body .pa-drawer-open .pa-ctl-group > .pa-label { display: none; } /* the buttons name themselves; as in landscape */
 }
 
@@ -1351,12 +1354,36 @@
   .pa-fold svg { width: 16px; height: 10px; fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
   .pa-fold:active { transform: scale(0.94); }
   /* Keys only: nothing above the keys, not even the corner close (the fold button is the way back). */
-  .pa-keys-only .pa-body > :not(.pa-keyrow), .pa-keys-only ~ * , .pa-keys-only :is(.pa-howto, .pa-credits) { display: none !important; }
+  .pa-keys-only .pa-body > :not(.pa-keyrow, .pa-mapbar), .pa-keys-only :is(.pa-howto, .pa-credits) { display: none !important; }
+  .pa-keys-only .pa-mapbar { display: flex !important; }
   .pa-overlay:has(.pa-keys-only) .pa-overlay-close { display: none !important; }
   .pa-keys-only .pa-body { display: block !important; }
-  .pa-keys-only .pa-fold { position: absolute; left: 50%; top: 0; z-index: 8; width: 44px; height: 20px; transform: translate(-50%, 0); border-radius: 0 0 12px 12px; }
-  .pa-keys-only .pa-fold:active { transform: translate(-50%, 0) scale(0.94); }
 }
+/* Portrait keys only: the keys run edge to edge (no casing border, rounded top or side gaps), under the strip. */
 @media (max-width: 760px) and (orientation: portrait) {
-  .pa-overlay:has(.pa-keys-only) { padding-top: env(safe-area-inset-top); }
+  .pa-overlay:has(.pa-keys-only) { padding: env(safe-area-inset-top) 0 0; }
+  .pa-overlay:has(.pa-keys-only) :is(.pa-overlay-frame, .pa-stage, .pa-instrument) { margin: 0; padding: 0; max-width: none; border: 0; border-radius: 0; box-shadow: none; }
+  .pa-keys-only .pa-body { padding: 0; border: 0; border-radius: 0; box-shadow: none; min-height: 0; background: #1d1e22; }
+  .pa-keys-only .pa-mapbar { margin: 6px 10px; }
+}
+
+.pa-result-mastered { color: #4a2a00; background: linear-gradient(180deg, #ffe08a, #f5b800); box-shadow: 0 0 14px rgb(245 184 0 / 0.55); }
+
+/* Narrow phones (iPhone SE, mini): the quick bar keeps each label on one line. */
+@media (max-width: 380px) and (orientation: portrait) {
+  .pa-phone-btn { white-space: nowrap; font-size: 0.74rem; }
+}
+
+/* Portrait: a front rail (the key slip) under the keys, and the casing on down to the bottom of the screen, under
+   Safari's glass toolbar (100lvh is the full height with the bars hidden), so the instrument never just stops. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .pa-overlay .pa-body { min-height: calc(100lvh - 60px); }
+  .pa-overlay .pa-keyrow { position: relative; }
+  .pa-overlay .pa-keyrow::after {
+    content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 16px; pointer-events: none;
+    background: linear-gradient(180deg, #3a3c42 0, #24262b 30%, #141518 100%);
+    border-top: 1px solid rgb(255 255 255 / 0.1); border-radius: 0 0 6px 6px; box-shadow: 0 6px 10px rgb(0 0 0 / 0.45);
+  }
+  .pa-overlay .pa-body:has(.pa-keyrow) { padding-bottom: 22px; }
+  .pa-overlay:has(.pa-keys-only) .pa-body { min-height: calc(100lvh - env(safe-area-inset-top)); }
 }

@@ -848,7 +848,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const targets = useMemo(() => new Set(targetKey ? targetKey.split(',').map(Number) : []), [targetKey]);
   const finished = Boolean(learn && learn.at >= learn.steps.length);
   useEffect(() => {
-    if (finished && learn?.result) saveStars(`${learn.song.id}:${learn.hand}`, learn.result.stars);
+    if (finished && learn?.result) saveStars(`${learn.song.id}:${learn.hand}`, learn.result.grade === 'perfect' && learn.speed >= 1 ? 4 : learn.result.stars); // 4: mastered
   }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
   // Keep the next keys in view on a narrow screen.
   useEffect(() => {
@@ -917,7 +917,8 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     take.current = { origin: 0, last: 0, notes: [] };
     refresh();
   };
-  // Keys only: in the strip row (its own slot) while the controls show; at the top edge of the keys while hidden.
+  // Keys only: in the strip row (its own slot), which stays in both views so the Keys slider is always at hand.
+  // The arrow shows where the keys go: up (grow to fill the screen), then down (the controls come back over them).
   const foldButton = (
     <button
       type="button"
@@ -927,7 +928,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       title={keysOnly ? 'Show the controls' : 'Keys only'}
       onClick={() => setKeysOnly((value) => !value)}
     >
-      <svg viewBox="0 0 20 12" aria-hidden="true"><path d={keysOnly ? 'M3 10 L10 3 L17 10' : 'M3 2 L10 9 L17 2'} /></svg>
+      <svg viewBox="0 0 20 12" aria-hidden="true"><path d={keysOnly ? 'M3 2 L10 9 L17 2' : 'M3 10 L10 3 L17 10'} /></svg>
     </button>
   );
 
@@ -1314,7 +1315,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
 
         <div className="pa-felt" aria-hidden="true" />
         <div className="pa-mapbar">
-          {!keysOnly && foldButton}
+          {foldButton}
           <div className={`pa-minimap ${edges.left || edges.right ? '' : 'pa-minimap-hidden'}`} onPointerDown={(event) => { capture(event); minimapTo(event); }} onPointerMove={(event) => { if (event.buttons) minimapTo(event); }} aria-hidden="true">
             <span ref={minimapWindow} className="pa-minimap-window" />
           </div>
@@ -1333,7 +1334,6 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           </label>
         </div>
         <div className="pa-keyrow">
-          {keysOnly && foldButton}
           <div className="pa-left">
             <div
               ref={joyBox}

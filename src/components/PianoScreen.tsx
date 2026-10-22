@@ -292,7 +292,11 @@ export default function PianoScreen({ arranger, page, category, open, message, b
             <button key={item.id} type="button" className={`pa-item ${learn?.song.id === item.id ? 'pa-item-on' : ''}`} onClick={() => onLearn?.(item.id)}>
               <span className="pa-item-number">{learn?.song.id === item.id ? 'Learning' : item.easy ? 'Easy' : 'Learn'} · {item.composer}</span>
               <span className="pa-t-full">{item.title}</span><span className="pa-t-short">{item.short ?? item.title}</span>
-              {(stars[`${item.id}:${hand}`] ?? 0) > 0 && <span className="pa-item-stars" aria-label={`best ${stars[`${item.id}:${hand}`]} stars`}>{'★'.repeat(stars[`${item.id}:${hand}`])}</span>}
+              {(stars[`${item.id}:${hand}`] ?? 0) > 0 && (
+                <span className="pa-item-stars" aria-label={stars[`${item.id}:${hand}`] > 3 ? 'mastered' : `best ${stars[`${item.id}:${hand}`]} stars`}>
+                  {stars[`${item.id}:${hand}`] > 3 ? '♛' : '★'.repeat(stars[`${item.id}:${hand}`])}
+                </span>
+              )}
             </button>
           ))}
         </SelectPage>
