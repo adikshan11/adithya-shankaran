@@ -20,8 +20,21 @@ export const keyName = (midi: number) => {
 };
 const mtof = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
-// Computer keys from middle C up: the home row is white keys, the row above is black keys.
-export const KEYMAP: Record<string, number> = { a: 0, w: 1, s: 2, e: 3, d: 4, f: 5, t: 6, g: 7, y: 8, h: 9, u: 10, j: 11, k: 12, o: 13, l: 14, p: 15, ';': 16 };
+// Computer keyboard, two rows as on desktop music apps, by physical key position (event.code) so any layout works:
+// the bottom row Z X C V B N M , . / plays white keys from the base note (sharps on S D G H J L ;), and the top row
+// Q W E R T Y U I O P [ ] plays white keys from one octave higher (sharps on 2 3 5 6 7 9 0 =). [code, offset, label]
+export const PC_KEYS: [string, number, string][] = [
+  ['KeyZ', 0, 'Z'], ['KeyS', 1, 'S'], ['KeyX', 2, 'X'], ['KeyD', 3, 'D'], ['KeyC', 4, 'C'], ['KeyV', 5, 'V'], ['KeyG', 6, 'G'],
+  ['KeyB', 7, 'B'], ['KeyH', 8, 'H'], ['KeyN', 9, 'N'], ['KeyJ', 10, 'J'], ['KeyM', 11, 'M'], ['Comma', 12, ','], ['KeyL', 13, 'L'],
+  ['Period', 14, '.'], ['Semicolon', 15, ';'], ['Slash', 16, '/'],
+  ['KeyQ', 12, 'Q'], ['Digit2', 13, '2'], ['KeyW', 14, 'W'], ['Digit3', 15, '3'], ['KeyE', 16, 'E'], ['KeyR', 17, 'R'], ['Digit5', 18, '5'],
+  ['KeyT', 19, 'T'], ['Digit6', 20, '6'], ['KeyY', 21, 'Y'], ['Digit7', 22, '7'], ['KeyU', 23, 'U'], ['KeyI', 24, 'I'], ['Digit9', 25, '9'],
+  ['KeyO', 26, 'O'], ['Digit0', 27, '0'], ['KeyP', 28, 'P'], ['BracketLeft', 29, '['], ['Equal', 30, '='], ['BracketRight', 31, ']'],
+];
+export const PC_KEY_OFFSET = Object.fromEntries(PC_KEYS.map(([code, offset]) => [code, offset]));
+// The arrow keys move the base note an octave at a time, from C2 (the lowest key) to C5; keys that would land above C7 stay silent.
+export const PC_BASE_MIN = 36;
+export const PC_BASE_MAX = 72;
 
 // Sample banks: every minor third, as recorded.
 type Bank = { path: string; files: [string, number][]; loop: boolean; release: number; level: number };

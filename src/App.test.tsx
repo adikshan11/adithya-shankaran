@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import App from './App';
 import { readFileSync } from 'node:fs';
-import { detectChord } from './piano/arranger';
+import { PC_KEYS, detectChord } from './piano/arranger';
 import { parseMidi } from './piano/midi';
 
 describe('portfolio', () => {
@@ -42,6 +42,12 @@ describe('portfolio', () => {
     expect(notes[1].time).toBeGreaterThan(0.1);
     expect(notes[0].duration).toBeGreaterThan(0.1);
     expect(notes.at(-1)!.time).toBeGreaterThan(60);
+  });
+
+  it('maps two rows of computer keys to 32 consecutive notes', () => {
+    const offsets = new Set(PC_KEYS.map(([, offset]) => offset));
+    expect([...offsets].sort((a, b) => a - b)).toEqual(Array.from({ length: 32 }, (_, index) => index));
+    expect(new Set(PC_KEYS.map(([code]) => code)).size).toBe(PC_KEYS.length);
   });
 
   it('recognises chords from the left hand', () => {

@@ -272,6 +272,8 @@
   }
   .pa-key-white.pa-key-down { background: linear-gradient(180deg, #cfd2d8, #edf2f9 15%, #e6ebf3); box-shadow: inset 0 -1px 0 #c0c4cb, inset 0 5px 9px rgb(42 98 201 / 0.18); transform: translateY(2px); }
   .pa-key-black.pa-key-down { background: linear-gradient(180deg, #000, #16171a 85%); box-shadow: inset 0 -2px 0 #000, 0 0 10px rgb(89 208 255 / 0.45); transform: translateY(2px); }
+  /* The stretch of keys the computer keyboard reaches right now: a thin bar along the felt. */
+  .pa-pc-window { position: absolute; top: 0; z-index: 3; height: 3px; border-radius: 2px; background: #59d0ff; box-shadow: 0 0 8px rgb(89 208 255 / 0.8); transition: left 0.25s ease, width 0.25s ease; pointer-events: none; }
   .pa-key-label { margin-bottom: 8px; font-size: 0.56rem; font-weight: 700; color: #7b7f88; pointer-events: none; }
   .pa-key-label-dark { color: #9ea2ab; }
 

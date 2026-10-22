@@ -1,13 +1,13 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { Arranger, HIGH, KEYMAP, LOW, categories, isBlack, keyName, styleCategories } from '../piano/arranger';
+import { Arranger, HIGH, LOW, PC_BASE_MAX, PC_BASE_MIN, PC_KEYS, PC_KEY_OFFSET, categories, isBlack, keyName, styleCategories } from '../piano/arranger';
 import { songs } from '../piano/songs';
 
 const keys = Array.from({ length: HIGH - LOW + 1 }, (_, index) => LOW + index);
 const whiteKeys = keys.filter((key) => !isBlack(key));
 const whiteWidth = 100 / whiteKeys.length;
-const letterFor = Object.fromEntries(Object.entries(KEYMAP).map(([letter, offset]) => [60 + offset, letter.toUpperCase()]));
 const signed = (value: number) => (value > 0 ? `+${value}` : `${value}`);
+const noteLabel = (midi: number) => `${['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'][midi % 12]}${Math.floor(midi / 12) - 1}`;
 const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
 function PanelButton({ label, onClick, active, tone = 'grey', className = '' }: { label: string; onClick: () => void; active?: boolean; tone?: 'grey' | 'red' | 'green'; className?: string }) {
@@ -36,6 +36,9 @@ export default function PianoInstrument() {
   const [beat, setBeat] = useState(false);
   const [showLetters, setShowLetters] = useState(false);
   const [stick, setStick] = useState(0);
+  const [pcBase, setPcBase] = useState(48);
+  const base = useRef(48);
+  const typed = useRef(new Map<string, number>());
   const meter = useRef<HTMLSpanElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const pointerDown = useRef(false);
@@ -78,8 +81,8 @@ export default function PianoInstrument() {
   // Computer keyboard: A to ; for white keys from middle C, W E T Y U O P for black keys, Z and X for octave, Space for sustain.
   useEffect(() => {
     const ignore = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      return event.metaKey || event.ctrlKey || event.altKey || target?.closest('input, textarea, select, [contenteditable="true"]');
+      const target = event.target instanceof Element ? event.target : null;
+      return event.metaKey || event.ctrlKey || event.altKey || Boolean(target?.closest('input, textarea, select, [contenteditable="true"]'));
     };
     const down = (event: KeyboardEvent) => {
       if (ignore(event)) return;
@@ -88,24 +91,39 @@ export default function PianoInstrument() {
         arranger.setPedal(true);
         return;
       }
-      if (event.repeat) return;
-      const key = event.key.toLowerCase();
-      if (key === 'z' || key === 'x') {
-        arranger.changeOctave(key === 'z' ? -1 : 1);
+      if (event.code === 'ArrowLeft' || event.code === 'ArrowRight') {
+        event.preventDefault();
+        if (event.repeat) return;
+        const next = Math.min(PC_BASE_MAX, Math.max(PC_BASE_MIN, base.current + (event.code === 'ArrowLeft' ? -12 : 12)));
+        base.current = next;
+        setPcBase(next);
+        setMessage(`Computer keys: ${noteLabel(next)} to ${noteLabel(Math.min(HIGH, next + 31))}`);
         return;
       }
-      const offset = KEYMAP[key];
+      const offset = PC_KEY_OFFSET[event.code];
       if (offset === undefined) return;
       event.preventDefault();
-      arranger.noteOn(60 + offset, 0.75);
+      if (event.repeat || typed.current.has(event.code)) return;
+      const key = base.current + offset;
+      if (key > HIGH) return;
+      typed.current.set(event.code, key);
+      arranger.noteOn(key, event.shiftKey ? 1 : 0.75);
     };
     const up = (event: KeyboardEvent) => {
       if (event.code === 'Space') {
         arranger.setPedal(false);
         return;
       }
-      const offset = KEYMAP[event.key.toLowerCase()];
-      if (offset !== undefined) arranger.noteOff(60 + offset);
+      const key = typed.current.get(event.code);
+      if (key === undefined) return;
+      typed.current.delete(event.code);
+      arranger.noteOff(key);
+    };
+    // A key held while the window loses focus would never get its keyup, so let everything go.
+    const blur = () => {
+      for (const key of typed.current.values()) arranger.noteOff(key);
+      typed.current.clear();
+      arranger.setPedal(false);
     };
     const release = () => {
       pointerDown.current = false;
@@ -113,7 +131,9 @@ export default function PianoInstrument() {
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
     window.addEventListener('pointerup', release);
+    window.addEventListener('blur', blur);
     return () => {
+      window.removeEventListener('blur', blur);
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
       window.removeEventListener('pointerup', release);
@@ -133,6 +153,11 @@ export default function PianoInstrument() {
   }, [arranger]);
 
   const say = (text: string) => setMessage(text);
+  const labelFor = new Map<number, string>();
+  for (const [, offset, label] of PC_KEYS) if (!labelFor.has(pcBase + offset)) labelFor.set(pcBase + offset, label);
+  else labelFor.set(pcBase + offset, `${labelFor.get(pcBase + offset)} ${label}`);
+  const windowStart = whiteKeys.filter((white) => white < pcBase).length * whiteWidth;
+  const windowEnd = whiteKeys.filter((white) => white <= Math.min(HIGH, pcBase + 31)).length * whiteWidth;
   const sound = arranger.sound;
   const style = arranger.style;
   const song = arranger.song;
@@ -308,6 +333,7 @@ export default function PianoInstrument() {
         <div className="pa-felt" aria-hidden="true" />
         <div className="pa-keybed" ref={scroller}>
           <div className="pa-keys" onPointerLeave={() => { pointerDown.current = false; }}>
+            <span className="pa-pc-window" aria-hidden="true" style={{ left: `${windowStart}%`, width: `${windowEnd - windowStart}%` }} />
             {keys.map((key) => {
               const black = isBlack(key);
               const whiteIndex = whiteKeys.filter((white) => white < key).length;
@@ -339,7 +365,7 @@ export default function PianoInstrument() {
                     setTimeout(() => arranger.noteOff(key), 400);
                   }}
                 >
-                  {showLetters && letterFor[key] && <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`}>{letterFor[key]}</span>}
+                  {showLetters && labelFor.has(key) && <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`}>{labelFor.get(key)}</span>}
                 </button>
               );
             })}
@@ -383,7 +409,7 @@ export default function PianoInstrument() {
         </div>
         <div>
           <dt>Computer keys</dt>
-          <dd><kbd>A</kbd> to <kbd>;</kbd> from middle C, <kbd>W E T Y U O P</kbd> for sharps, <kbd>Z</kbd> and <kbd>X</kbd> for octave.</dd>
+          <dd>Bottom row <kbd>Z</kbd> to <kbd>/</kbd> and top row <kbd>Q</kbd> to <kbd>]</kbd>, sharps on the rows above them: two and a half octaves at once. <kbd>←</kbd> <kbd>→</kbd> slide them an octave; hold <kbd>Shift</kbd> to play louder.</dd>
         </div>
         <div>
           <dt>Accompaniment</dt>
