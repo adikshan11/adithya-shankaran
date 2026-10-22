@@ -738,6 +738,7 @@
   @media (max-height: 500px) and (orientation: landscape) {
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-faders { grid-column: 8; grid-row: 2; align-self: center; min-width: 0; max-width: 100%; padding-left: 8px; overflow: hidden; gap: 8px; }
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-fader { width: 100%; grid-template-columns: 1fr; gap: 4px; }
+    .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-fader-master { display: none; } /* "Volume": the column is narrow */
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-fader-label { font-size: 0.5rem; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: clip; }
   }
   .pa-marquee { animation: pa-marquee var(--slide, 5s) ease-in-out 0.8s infinite alternate; }

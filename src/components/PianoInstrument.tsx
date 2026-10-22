@@ -1141,7 +1141,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         <div className="pa-controls">
           <div className="pa-faders">
             <label className="pa-fader">
-              <span className="pa-fader-label">Master volume</span>
+              <span className="pa-fader-label"><span className="pa-fader-master">Master </span>volume</span>
               <input type="range" min={0} max={1} step={0.01} value={arranger.volume} onChange={(event) => arranger.setVolume(Number(event.target.value))} />
               <span className="pa-fader-scale" aria-hidden="true"><span>Min</span><span>Max</span></span>
             </label>
