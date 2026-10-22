@@ -1,7 +1,13 @@
-// Reads a Standard MIDI File into timed notes (seconds), following its tempo changes.
-export type Note = { time: number; duration: number; midi: number; velocity: number };
+// Reads a Standard MIDI File into timed notes (seconds, following its tempo changes), with each note's position in
+// semiquavers for the sheet music, and the score's time signature.
+export type Note = { time: number; duration: number; midi: number; velocity: number; start16?: number; length16?: number };
+export type Score = { notes: Note[]; meter: { beats: number; unit: number } };
 
 export function parseMidi(buffer: ArrayBuffer): Note[] {
+  return parseScore(buffer).notes;
+}
+
+export function parseScore(buffer: ArrayBuffer): Score {
   const data = new DataView(buffer);
   let at = 0;
   const text = (length: number) => String.fromCharCode(...new Uint8Array(buffer, (at += length) - length, length));
@@ -26,6 +32,7 @@ export function parseMidi(buffer: ArrayBuffer): Note[] {
   at = headerEnd;
 
   const tempos: { tick: number; perQuarter: number }[] = [{ tick: 0, perQuarter: 500000 }];
+  let meter = { beats: 4, unit: 4 };
   const events: { tick: number; midi: number; velocity: number }[] = [];
   for (let track = 0; track < tracks && at < buffer.byteLength; track++) {
     const id = text(4);
@@ -50,6 +57,7 @@ export function parseMidi(buffer: ArrayBuffer): Note[] {
         const meta = byte();
         const length = varLength();
         if (meta === 0x51) tempos.push({ tick, perQuarter: (data.getUint8(at) << 16) | (data.getUint8(at + 1) << 8) | data.getUint8(at + 2) });
+        if (meta === 0x58 && tick === 0) meter = { beats: data.getUint8(at), unit: 2 ** data.getUint8(at + 1) };
         at += length;
       } else if (status === 0xf0 || status === 0xf7) at += varLength();
       else break;
@@ -81,8 +89,16 @@ export function parseMidi(buffer: ArrayBuffer): Note[] {
       const start = stack.shift();
       if (!start) continue;
       const time = seconds(start.tick);
-      notes.push({ time, duration: Math.max(0.05, seconds(event.tick) - time), midi: event.midi, velocity: start.velocity / 127 });
+      const sixteenth = division / 4;
+      notes.push({
+        time,
+        duration: Math.max(0.05, seconds(event.tick) - time),
+        midi: event.midi,
+        velocity: start.velocity / 127,
+        start16: Math.round(start.tick / sixteenth),
+        length16: Math.max(1, Math.round((event.tick - start.tick) / sixteenth)),
+      });
     }
   }
-  return notes.sort((a, b) => a.time - b.time);
+  return { notes: notes.sort((a, b) => a.time - b.time), meter };
 }

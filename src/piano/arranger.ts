@@ -2,8 +2,10 @@
 // Tones are recorded samples: the Salamander Grand Piano (a Yamaha C5, Alexander Holm, CC BY 3.0) and the
 // FluidR3 GM soundfont (CC BY 3.0), served from /samples and loaded only when the piano opens or a sound is picked,
 // middle octaves first. Drums, tabla, and any note played before its samples arrive are synthesised with the Web Audio API.
-import { parseMidi } from './midi';
+import { parseScore } from './midi';
 import type { Note } from './midi';
+import { barLength, meters } from './notation';
+import type { ScoreNote, TimeSignature } from './notation';
 import type { Song } from './songs';
 
 export const LOW = 36; // C2
@@ -160,6 +162,9 @@ const quarters = [0, 4, 8, 12];
 const sixteenths = Array.from({ length: 16 }, (_, step) => step);
 const four = { steps: 16, beatSteps: 4 };
 
+// The time signature a style is written in, for the screen and the sheet music.
+export const styleMeter = (style: { steps: number; beatSteps: number }) => (style.steps === 12 ? (style.beatSteps === 4 ? '3/4' : '6/8') : '4/4');
+
 export const styleCategories = ['Pop', 'Ballad', 'Rock', 'Dance', 'Jazz', 'Latin', 'World', 'Indian'];
 
 export const styles: Style[] = [
@@ -260,17 +265,45 @@ function voicing(chord: Chord) {
   });
 }
 
-// Every sample set was recorded at its own level, so each bank is scaled to the same loudness: the RMS of the first
-// 1.5 seconds of its middle sample (the first one loaded) is brought to a common target. The target keeps the grand
-// piano where it was (its middle C measures 0.039) and lifts quieter sets, such as honky-tonk at 0.011, to match.
-const TARGET_RMS = 0.045;
+// Every sample set was recorded at its own level, so each bank is scaled to the same loudness. Loudness is the
+// loudest 400 ms of its middle sample (sliding in 100 ms steps over the first 2 s, both channels), like the momentary
+// loudness of broadcast meters (EBU R128): a piano is judged by its strike, an organ by its steady tone. A 1.5 s
+// average of the left channel (the first version) judged the stereo grand by its decay and left organs at a third.
+const TARGET_LOUDNESS = 0.1;
 function loudnessGain(buffer: AudioBuffer) {
-  const data = buffer.getChannelData(0);
-  const length = Math.min(data.length, Math.floor(buffer.sampleRate * 1.5));
-  let sum = 0;
-  for (let i = 0; i < length; i++) sum += data[i] * data[i];
-  const rms = Math.sqrt(sum / Math.max(1, length));
-  return rms > 0 ? Math.min(8, Math.max(0.2, TARGET_RMS / rms)) : 1;
+  const rate = buffer.sampleRate;
+  const channels = Array.from({ length: buffer.numberOfChannels }, (_, index) => buffer.getChannelData(index));
+  const window = Math.floor(rate * 0.4);
+  const limit = Math.min(channels[0].length, Math.floor(rate * 2));
+  let loudest = 0;
+  for (let from = 0; from + window <= limit; from += Math.floor(rate * 0.1)) {
+    let sum = 0;
+    for (const data of channels) for (let i = from; i < from + window; i++) sum += data[i] * data[i];
+    loudest = Math.max(loudest, Math.sqrt(sum / (window * channels.length)));
+  }
+  return loudest > 0 ? Math.min(8, Math.max(0.2, TARGET_LOUDNESS / loudest)) : 1;
+}
+
+// Sheet music for a song: semiquaver positions from the score file (or from the beat length for the raga pieces),
+// shifted so a pickup bar lines up: the offset that puts the most bass notes on downbeats wins.
+function scoreFor(notes: Note[], meter: { beats: number; unit: number }, beatSeconds?: number) {
+  const bar = barLength(meter);
+  const sixteenth = (beatSeconds ?? 0.5) / 4;
+  const first = notes[0]?.time ?? 0;
+  const timed = notes.map((note) => ({
+    start: note.start16 ?? Math.round((note.time - first) / sixteenth),
+    length: note.length16 ?? Math.max(1, Math.round(note.duration / sixteenth)),
+    midi: note.midi,
+  }));
+  notes.forEach((note, index) => (note.start16 = timed[index].start));
+  let offset = 0;
+  let best = -1;
+  for (let shift = 0; shift < bar; shift++) {
+    const hits = timed.filter((note) => note.midi < 60 && (note.start + shift) % bar === 0).length;
+    if (hits > best) [best, offset] = [hits, shift];
+  }
+  const shifted = timed.map((note) => ({ ...note, start: note.start + offset }));
+  return { notes: shifted, meter, offset, length16: shifted.reduce((end, note) => Math.max(end, note.start + note.length), 0) };
 }
 
 type Voice = { stop: (time: number) => void };
@@ -287,6 +320,9 @@ export class Arranger {
   volume = 0.8;
   reverb = true;
   metronome = false;
+  meterIndex = 2;
+  liveChord = '';
+  modulation = 0;
   pedal = false;
   bend = 0;
   variation = 2;
@@ -297,6 +333,7 @@ export class Arranger {
   loading = '';
   chord: Chord = { root: 0, type: '' };
   song: Song | null = null;
+  songScore: { notes: ScoreNote[]; meter: TimeSignature; length16: number; offset: number } | null = null;
   songLength = 0;
   songElapsed = 0;
   onChange: () => void = () => {};
@@ -329,7 +366,24 @@ export class Arranger {
   private songAt = 0;
   private songStart = 0;
   private songVoices: Voice[] = [];
+  private droneVoices: Voice[] = [];
+  private sounding = new Set<number>();
+
+  // During a song the chord display follows the harmony of the notes sounding now.
+  private songChord() {
+    if (this.sounding.size < 3) return;
+    const chord = detectChord([...this.sounding]);
+    const name = chord ? NOTE_NAMES[chord.root] + chord.type : '';
+    if (name && name !== this.liveChord) {
+      this.liveChord = name;
+      this.onChange();
+    }
+  }
   private meterData = new Float32Array(512);
+  private modDepth: GainNode | null = null;
+  private metroTimer: ReturnType<typeof setInterval> | null = null;
+  private metroNext = 0;
+  private metroCount = 0;
 
   get sound() {
     return sounds[this.soundIndex];
@@ -341,6 +395,15 @@ export class Arranger {
 
   get chordName() {
     return NOTE_NAMES[this.chord.root] + this.chord.type;
+  }
+
+  get meter() {
+    return meters[this.meterIndex];
+  }
+
+  // Chord shown on the screen: the left hand while a style runs, otherwise whatever is held.
+  get displayChord() {
+    return this.running ? this.chordName : this.liveChord;
   }
 
   get beatsPerBar() {
@@ -382,6 +445,14 @@ export class Arranger {
     this.drums.gain.value = 0.6;
     this.drums.connect(this.master);
 
+    // Modulation (joystick up): one shared vibrato, wired into every note's detune.
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 5.6;
+    this.modDepth = ctx.createGain();
+    this.modDepth.gain.value = 0;
+    lfo.connect(this.modDepth);
+    lfo.start();
+
     this.noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
     const data = this.noise.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
@@ -390,6 +461,7 @@ export class Arranger {
 
   dispose() {
     this.stopClock();
+    this.stopMetro();
     this.stopSong();
     void this.ctx?.close();
     this.ctx = null;
@@ -479,6 +551,7 @@ export class Arranger {
     amp.gain.setValueAtTime(0, time);
     amp.gain.linearRampToValueAtTime(level, time + 0.004);
     source.connect(tone).connect(shelf).connect(amp).connect(output);
+    this.modDepth?.connect(source.detune);
     source.start(time);
     this.live.add(source);
     source.onended = () => this.live.delete(source);
@@ -526,6 +599,14 @@ export class Arranger {
     this.down.add(key);
     this.held.set(key, this.play(key + this.transpose + this.octave * 12, this.sound, time, this.bus, velocity));
     this.onNote(key, true);
+    if (this.down.size >= 2) {
+      const chord = detectChord([...this.down].map((held) => held + this.transpose));
+      const name = chord ? NOTE_NAMES[chord.root] + chord.type : '';
+      if (name !== this.liveChord) {
+        this.liveChord = name;
+        this.onChange();
+      }
+    }
   }
 
   noteOff(key: number) {
@@ -549,6 +630,11 @@ export class Arranger {
       }
     }
     this.onChange();
+  }
+
+  setModulation(amount: number) {
+    this.modulation = amount;
+    if (this.ctx && this.modDepth) this.modDepth.gain.setTargetAtTime(amount * 40, this.ctx.currentTime, 0.05);
   }
 
   setBend(semitones: number) {
@@ -579,6 +665,12 @@ export class Arranger {
     const options = sounds.map((item, index) => [item, index] as const).filter(([item]) => item.category === category);
     const position = options.findIndex(([, index]) => index === this.soundIndex);
     this.soundIndex = options[(position + 1) % options.length][1];
+    void this.load(this.sound.bank);
+    this.onChange();
+  }
+
+  selectSound(index: number) {
+    this.soundIndex = index;
     void this.load(this.sound.bank);
     this.onChange();
   }
@@ -634,9 +726,50 @@ export class Arranger {
 
   toggleMetronome() {
     this.metronome = !this.metronome;
-    if (this.metronome && this.init()) this.startClock(!this.running);
-    if (!this.metronome && !this.running) this.stopClock();
+    if (this.metronome && !this.running) this.startMetro();
+    if (!this.metronome) this.stopMetro();
     this.onChange();
+  }
+
+  setMeter(index: number) {
+    this.meterIndex = index;
+    if (this.metronome && !this.running) this.startMetro();
+    this.onChange();
+  }
+
+  // Metronome on its own (no style running), in any time signature. Compound and odd metres accent each group:
+  // 6/8 as 3+3, 7/8 as 2+2+3, 5/4 as 3+2. With /8 metres the click is on every quaver.
+  private startMetro() {
+    if (!this.init() || !this.ctx) return;
+    this.stopMetro();
+    this.metroCount = 0;
+    this.measure = 0;
+    this.metroNext = this.ctx.currentTime + 0.1;
+    this.metroTimer = setInterval(() => this.metroTick(), 25);
+  }
+
+  private stopMetro() {
+    if (this.metroTimer) clearInterval(this.metroTimer);
+    this.metroTimer = null;
+    if (!this.running) this.measure = this.beat = 0;
+  }
+
+  private metroTick() {
+    if (!this.ctx) return;
+    const meter = this.meter;
+    const interval = (60 / this.tempo) * (meter.unit === 8 ? 0.5 : 1);
+    const groupStarts = meter.groups.reduce<number[]>((starts, size) => [...starts, (starts.at(-1) ?? 0) + size], [0]);
+    while (this.metroNext < this.ctx.currentTime + 0.12) {
+      const beat = this.metroCount % meter.beats;
+      if (beat === 0) this.measure++;
+      this.click(this.metroNext, beat === 0 ? 'bar' : groupStarts.includes(beat) ? 'group' : 'beat');
+      this.later(this.metroNext, () => {
+        this.beat = beat + 1;
+        this.onBeat();
+      });
+      this.metroNext += interval;
+      this.metroCount++;
+    }
   }
 
   toggleStyle() {
@@ -647,6 +780,7 @@ export class Arranger {
   startStyle(withIntro = false) {
     if (!this.init()) return;
     this.stopSong();
+    this.stopMetro();
     void this.load(BASS.bank);
     void this.load(this.style.compSound.bank);
     this.running = true;
@@ -660,8 +794,9 @@ export class Arranger {
     this.running = false;
     this.intro = false;
     this.left.clear();
-    if (!this.metronome) this.stopClock();
+    this.stopClock();
     this.measure = this.beat = 0;
+    if (this.metronome) this.startMetro();
     this.onChange();
   }
 
@@ -684,12 +819,16 @@ export class Arranger {
     this.songLength = 0;
     this.onChange();
     const item = soundNamed(song.sound);
-    const [notes] = await Promise.all([
-      song.file ? fetch(song.file).then((response) => response.arrayBuffer()).then(parseMidi) : Promise.resolve(song.notes?.() ?? []),
+    const [score] = await Promise.all([
+      song.file
+        ? fetch(song.file).then((response) => response.arrayBuffer()).then(parseScore)
+        : Promise.resolve({ notes: song.notes?.() ?? [], meter: { beats: 4, unit: 4 } }),
       this.load(item.bank),
       song.drone !== undefined ? this.load('sitar') : Promise.resolve(),
     ]);
     if (this.song !== song || !this.ctx) return;
+    const notes = score.notes;
+    this.songScore = scoreFor(notes, score.meter, song.beat);
     this.songNotes = notes;
     this.songLength = notes.reduce((end, note) => Math.max(end, note.time + note.duration), 0);
     this.songAt = 0;
@@ -699,11 +838,26 @@ export class Arranger {
     this.onChange();
   }
 
+  // Where the song is now, in semiquavers, for the sheet-music cursor.
+  songPosition16() {
+    if (!this.ctx || !this.songScore || !this.songLength) return 0;
+    const elapsed = Math.max(0, this.ctx.currentTime - this.songStart);
+    const notes = this.songNotes;
+    let index = 0;
+    while (index + 1 < notes.length && notes[index + 1].time <= elapsed) index++;
+    const note = notes[index];
+    const perSixteenth = this.songLength / Math.max(1, this.songScore.length16);
+    return (note?.start16 ?? 0) + this.songScore.offset + Math.max(0, elapsed - (note?.time ?? 0)) / perSixteenth;
+  }
+
   stopSong() {
+    this.songScore = null;
+    this.sounding.clear();
     if (this.songTimer) clearInterval(this.songTimer);
     this.songTimer = null;
-    if (this.ctx) for (const voice of this.songVoices) voice.stop(this.ctx.currentTime);
+    if (this.ctx) for (const voice of [...this.songVoices, ...this.droneVoices]) voice.stop(this.ctx.currentTime);
     this.songVoices = [];
+    this.droneVoices = [];
     if (this.song) {
       this.song = null;
       this.onChange();
@@ -721,8 +875,15 @@ export class Arranger {
       playing.voice.stop(end);
       this.songVoices.push(playing.voice);
       if (this.songVoices.length > 96) this.songVoices.shift();
-      this.later(time, () => this.onNote(note.midi, true));
-      this.later(Math.min(end, time + 0.6), () => this.onNote(note.midi, false));
+      this.later(time, () => {
+        this.onNote(note.midi, true);
+        this.sounding.add(note.midi);
+        this.songChord();
+      });
+      this.later(Math.min(end, time + 0.6), () => {
+        this.onNote(note.midi, false);
+        this.sounding.delete(note.midi);
+      });
     }
     const elapsed = Math.max(0, this.ctx.currentTime - this.songStart);
     if (Math.floor(elapsed) !== Math.floor(this.songElapsed)) {
@@ -739,6 +900,7 @@ export class Arranger {
     for (let time = start, index = 0; time < start + length; time += 0.75, index++) {
       const playing = this.play(cycle[index % 4] - 12, item, time, this.accompaniment, 0.3);
       playing.voice.stop(time + 2.6);
+      this.droneVoices.push(playing.voice);
     }
   }
 
@@ -796,7 +958,7 @@ export class Arranger {
     if (step % style.beatSteps === 0) {
       this.beat = step / style.beatSteps + 1;
       this.later(time, () => this.onBeat());
-      if (this.metronome) this.click(time, step === 0);
+      if (this.metronome) this.click(time, step === 0 ? 'bar' : 'beat');
     }
     if (!this.running) return;
     if (this.intro) {
@@ -915,8 +1077,12 @@ export class Arranger {
     this.noiseBurst(time, 'highpass', 5000, 0.3, 1.6);
   }
 
-  private click(time: number, accent: boolean) {
-    this.tone(time, accent ? 1600 : 1000, accent ? 1600 : 1000, 0.01, 0.3, 0.03);
+  // A woodblock-style click: a tuned knock plus a short noise tick, loudest on the bar, then each group, then beats.
+  private click(time: number, level: 'bar' | 'group' | 'beat') {
+    const pitch = level === 'bar' ? 1760 : level === 'group' ? 1320 : 1050;
+    const peak = level === 'bar' ? 0.95 : level === 'group' ? 0.75 : 0.6;
+    this.tone(time, pitch, pitch * 0.92, 0.04, peak, 0.08, 'triangle');
+    this.noiseBurst(time, 'bandpass', pitch * 2, peak * 0.5, 0.02);
   }
 
   // Tabla bols: the bayan (left drum) is a low boom that glides up; the dayan (right) rings at a tuned pitch.

@@ -1,14 +1,17 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { Arranger, HIGH, LOW, PC_BASE_MAX, PC_BASE_MIN, PC_KEYS, PC_KEY_OFFSET, categories, isBlack, keyName, styleCategories } from '../piano/arranger';
-import { songs } from '../piano/songs';
+import { Arranger, HIGH, LOW, PC_BASE_MAX, PC_BASE_MIN, PC_KEYS, PC_KEY_OFFSET, categories, isBlack, keyName, styleCategories, styleMeter } from '../piano/arranger';
+import { barLength, meterNamed } from '../piano/notation';
+import type { ScoreNote } from '../piano/notation';
+import PianoScreen from './PianoScreen';
+import type { Page } from './PianoScreen';
+import Staff from './Staff';
 
 const keys = Array.from({ length: HIGH - LOW + 1 }, (_, index) => LOW + index);
 const whiteKeys = keys.filter((key) => !isBlack(key));
 const whiteWidth = 100 / whiteKeys.length;
-const signed = (value: number) => (value > 0 ? `+${value}` : `${value}`);
 const noteLabel = (midi: number) => `${['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'][midi % 12]}${Math.floor(midi / 12) - 1}`;
-const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+const IDLE_MS = 7000; // a select page returns to the main page after this long untouched
 
 function PanelButton({ label, onClick, active, tone = 'grey', className = '' }: { label: string; onClick: () => void; active?: boolean; tone?: 'grey' | 'red' | 'green'; className?: string }) {
   return (
@@ -26,6 +29,8 @@ function velocityOf(event: ReactPointerEvent<HTMLElement>) {
   return Math.min(1, Math.max(0.25, 0.3 + depth * 0.75));
 }
 
+type Played = { midi: number; start: number; end?: number };
+
 export default function PianoInstrument() {
   const engine = useRef<Arranger | null>(null);
   engine.current ??= new Arranger();
@@ -35,50 +40,90 @@ export default function PianoInstrument() {
   const [message, setMessage] = useState('');
   const [beat, setBeat] = useState(false);
   const [showLetters, setShowLetters] = useState(false);
-  const [stick, setStick] = useState(0);
+  const [joy, setJoy] = useState({ x: 0, y: 0 });
   const [pcBase, setPcBase] = useState(48);
+  const [page, setPage] = useState<Page>('main');
+  const [category, setCategory] = useState('Piano');
+  const [bars, setBars] = useState(4);
   const base = useRef(48);
   const typed = useRef(new Map<string, number>());
-  const meter = useRef<HTMLSpanElement>(null);
+  const meter = useRef<HTMLSpanElement | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const pointerDown = useRef(false);
   const dial = useRef<{ y: number; tempo: number } | null>(null);
+  const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const take = useRef<{ origin: number; last: number; notes: Played[] }>({ origin: 0, last: 0, notes: [] });
+
+  // Screen pages; a select page closes itself after a while, like the Pa300's auto-exit.
+  const open = (next: Page, nextCategory?: string) => {
+    setPage(next);
+    if (nextCategory) setCategory(nextCategory);
+    if (idle.current) clearTimeout(idle.current);
+    if (next !== 'main') idle.current = setTimeout(() => setPage('main'), IDLE_MS);
+  };
 
   // Wire the engine to the panel, boot the screen, play a chime and centre the keyboard on middle C.
   useEffect(() => {
     arranger.onChange = refresh;
-    arranger.onNote = (key, on) =>
+    arranger.onNote = (key, on) => {
       setPressed((previous) => {
         const next = new Set(previous);
         if (on) next.add(key);
         else next.delete(key);
         return next;
       });
+      // Capture what is played for the music stand (not the song player's notes). A pause of 4 s starts a new take.
+      if (arranger.song) return;
+      const now = performance.now();
+      const current = take.current;
+      if (on) {
+        if (!current.notes.length || now - current.last > 4000) take.current = { origin: now, last: now, notes: [] };
+        take.current.notes.push({ midi: key, start: now });
+        if (take.current.notes.length > 400) take.current.notes.shift();
+        take.current.last = now;
+      } else {
+        const note = [...current.notes].reverse().find((item) => item.midi === key && item.end === undefined);
+        if (note) note.end = now;
+        current.last = now;
+      }
+    };
     arranger.onBeat = () => {
       setBeat(true);
       setTimeout(() => setBeat(false), 90);
       refresh();
     };
     arranger.chime();
-    const greeting = 'Concert Grand ready. Play, or pick a style or a song.';
+    const greeting = 'Concert Grand ready. Tap the screen to choose sounds, styles and songs.';
     let shown = 0;
     const typing = setInterval(() => {
       shown++;
       setMessage(greeting.slice(0, shown));
       if (shown >= greeting.length) clearInterval(typing);
-    }, 35);
+    }, 30);
     const centre = setTimeout(() => {
       const element = scroller.current;
       if (element) element.scrollLeft = (element.scrollWidth - element.clientWidth) / 2;
     }, 50);
+    const fit = () => setBars(window.innerWidth < 700 ? 2 : window.innerWidth < 1000 ? 3 : 4);
+    fit();
+    window.addEventListener('resize', fit);
     return () => {
       clearInterval(typing);
       clearTimeout(centre);
+      window.removeEventListener('resize', fit);
+      if (idle.current) clearTimeout(idle.current);
       arranger.dispose();
     };
   }, [arranger]);
 
-  // Computer keyboard: A to ; for white keys from middle C, W E T Y U O P for black keys, Z and X for octave, Space for sustain.
+  // Redraw the music stand while notes sound or a song plays, so held notes grow and the cursor moves.
+  useEffect(() => {
+    if (!pressed.size && !arranger.song) return;
+    const timer = setInterval(refresh, 120);
+    return () => clearInterval(timer);
+  }, [pressed.size, arranger.song, arranger]);
+
+  // Computer keyboard: two rows from C (see PC_KEYS), arrows move them an octave, Shift plays louder, Space sustains.
   useEffect(() => {
     const ignore = (event: KeyboardEvent) => {
       const target = event.target instanceof Element ? event.target : null;
@@ -154,21 +199,43 @@ export default function PianoInstrument() {
 
   const say = (text: string) => setMessage(text);
   const labelFor = new Map<number, string>();
-  for (const [, offset, label] of PC_KEYS) if (!labelFor.has(pcBase + offset)) labelFor.set(pcBase + offset, label);
-  else labelFor.set(pcBase + offset, `${labelFor.get(pcBase + offset)} ${label}`);
+  for (const [, offset, label] of PC_KEYS) labelFor.set(pcBase + offset, label);
   const windowStart = whiteKeys.filter((white) => white < pcBase).length * whiteWidth;
   const windowEnd = whiteKeys.filter((white) => white <= Math.min(HIGH, pcBase + 31)).length * whiteWidth;
-  const sound = arranger.sound;
-  const style = arranger.style;
-  const song = arranger.song;
 
-  // Pitch-bend joystick: drag sideways for up to two semitones; it springs back on release.
-  const moveStick = (event: ReactPointerEvent<HTMLDivElement>) => {
+  // Music stand: the song's sheet music while a song plays, otherwise what you play, written to the current tempo.
+  const songScore = arranger.songScore;
+  let standNotes: ScoreNote[];
+  let standMeter: { beats: number; unit: number };
+  let cursor: number | undefined;
+  if (songScore) {
+    standNotes = songScore.notes;
+    standMeter = songScore.meter;
+    cursor = arranger.songPosition16();
+  } else {
+    standMeter = meterNamed(arranger.running ? styleMeter(arranger.style) : arranger.meter.label);
+    const sixteenth = 60 / arranger.tempo / 4;
+    const now = performance.now();
+    const { origin, notes } = take.current;
+    standNotes = notes.map((note) => ({
+      midi: note.midi,
+      start: Math.round((note.start - origin) / 1000 / sixteenth),
+      length: Math.max(1, Math.round(((note.end ?? now) - note.start) / 1000 / sixteenth)),
+    }));
+  }
+  const bar = barLength(standMeter);
+  const latest = cursor ?? standNotes.reduce((end, note) => Math.max(end, note.start), 0);
+  const fromBar = Math.max(0, Math.floor(latest / bar) - (cursor !== undefined ? 1 : bars - 1));
+
+  // Joystick, left of the keys as on the Pa300: sideways bends the pitch (up to two semitones), up adds vibrato.
+  const moveJoy = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
     const box = event.currentTarget.getBoundingClientRect();
-    const position = Math.max(-1, Math.min(1, ((event.clientX - box.left) / box.width) * 2 - 1));
-    setStick(position);
-    arranger.setBend(position * 2);
+    const x = Math.max(-1, Math.min(1, ((event.clientX - box.left) / box.width) * 2 - 1));
+    const y = Math.max(0, Math.min(1, 1 - ((event.clientY - box.top) / box.height) * 2));
+    setJoy({ x, y });
+    arranger.setBend(x * 2);
+    arranger.setModulation(y);
   };
 
   return (
@@ -187,8 +254,8 @@ export default function PianoInstrument() {
           <div className="pa-group">
             <span className="pa-label">Style</span>
             <div className="grid grid-cols-4 gap-1.5">
-              {styleCategories.map((category) => (
-                <PanelButton key={category} label={category} active={style.category === category} onClick={() => arranger.selectStyleCategory(category)} />
+              {styleCategories.map((name) => (
+                <PanelButton key={name} label={name} active={arranger.style.category === name} onClick={() => { arranger.selectStyleCategory(name); open('style', name); }} />
               ))}
             </div>
             <span className="pa-label mt-3">Variation</span>
@@ -206,35 +273,17 @@ export default function PianoInstrument() {
           </div>
 
           <div className="pa-centre">
-            <div className={`pa-screen ${beat ? 'pa-screen-beat' : ''}`}>
-              <div className="pa-screen-bar">
-                <span>{song ? 'SONG PLAY' : 'STYLE PLAY'}</span>
-                <span>{song ? clock(arranger.songElapsed) : `♩ ${arranger.tempo}`}</span>
-                <span>{song ? clock(arranger.songLength) : `${arranger.measure}.${arranger.beat || 1}`}</span>
-              </div>
-              {song ? (
-                <div className="pa-screen-body">
-                  <span className="pa-chip">SONG</span>
-                  <p className="pa-big">{song.title}</p>
-                  <p className="pa-sub">{song.composer} · {song.detail}</p>
-                  <div className="pa-progress"><span style={{ width: `${arranger.songLength ? (100 * arranger.songElapsed) / arranger.songLength : 0}%` }} /></div>
-                </div>
-              ) : (
-                <div className="pa-screen-body">
-                  <div className="pa-row"><span className="pa-chip">UPPER</span><span className="pa-big">{sound.name}</span><span className="pa-dim">{sound.category}</span></div>
-                  <div className="pa-row"><span className="pa-chip pa-chip-alt">STYLE</span><span className="flex-1">{style.name}</span><span className={arranger.running ? 'pa-play' : 'pa-dim'}>{arranger.running ? '▶ PLAY' : '■ STOP'}</span></div>
-                  <div className="pa-cells">
-                    <span>Chord<b>{arranger.running ? arranger.chordName : '–'}</b></span>
-                    <span>Var<b>{arranger.variation}</b></span>
-                    <span>Trans<b>{signed(arranger.transpose)}</b></span>
-                    <span>Oct<b>{signed(arranger.octave)}</b></span>
-                    <span>Pedal<b>{arranger.pedal ? 'On' : 'Off'}</b></span>
-                  </div>
-                </div>
-              )}
-              <div className="pa-meter" aria-hidden="true"><span ref={meter} /></div>
-              <p className="pa-message" aria-live="polite">{arranger.loading || message}</p>
-            </div>
+            <PianoScreen
+              arranger={arranger}
+              page={page}
+              category={category}
+              open={open}
+              message={message}
+              beat={beat}
+              meterRef={(element) => {
+                meter.current = element;
+              }}
+            />
             <div className="mt-3 flex items-center justify-center gap-4">
               <PanelButton label="Tempo −" onClick={() => arranger.changeTempo(-2)} />
               <div
@@ -272,8 +321,8 @@ export default function PianoInstrument() {
           <div className="pa-group">
             <span className="pa-label">Sound</span>
             <div className="grid grid-cols-4 gap-1.5">
-              {categories.map((category) => (
-                <PanelButton key={category} label={category} active={sound.category === category} onClick={() => arranger.selectCategory(category)} />
+              {categories.map((name) => (
+                <PanelButton key={name} label={name} active={arranger.sound.category === name} onClick={() => { arranger.selectCategory(name); open('sound', name); }} />
               ))}
             </div>
             <span className="pa-label mt-3">Transpose and octave</span>
@@ -287,26 +336,47 @@ export default function PianoInstrument() {
         </div>
 
         <div className="pa-controls">
-          <div className="flex items-center gap-3">
+          <label className="pa-volume">
+            <span className="pa-label m-0">Master</span>
+            <input type="range" min={0} max={1} step={0.01} value={arranger.volume} onChange={(event) => arranger.setVolume(Number(event.target.value))} />
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            <PanelButton label="Song" active={Boolean(arranger.song)} onClick={() => open('song')} />
+            <PanelButton label="Metro" active={arranger.metronome} onClick={() => { arranger.toggleMetronome(); open('metro'); }} />
+            <PanelButton label="Reverb" active={arranger.reverb} onClick={() => arranger.toggleReverb()} />
+            <PanelButton label="PC keys" active={showLetters} onClick={() => setShowLetters((value) => !value)} />
+          </div>
+        </div>
+
+        <div className="pa-stand" aria-label="Music stand">
+          <Staff notes={standNotes} meter={standMeter} fromBar={fromBar} bars={bars} cursor={cursor} recent={pressed} />
+          <span className="pa-stand-caption">{songScore ? `${arranger.song?.title ?? ''}: sheet music` : 'Your playing, written as you play'}</span>
+        </div>
+
+        <div className="pa-felt" aria-hidden="true" />
+        <div className="pa-keyrow">
+          <div className="pa-left">
             <div
-              className="pa-stick"
+              className="pa-joy"
               role="slider"
-              aria-label="Pitch bend"
+              aria-label="Pitch bend and modulation joystick"
               aria-valuemin={-2}
               aria-valuemax={2}
-              aria-valuenow={Math.round(stick * 20) / 10}
+              aria-valuenow={Math.round(joy.x * 20) / 10}
               onPointerDown={(event) => {
                 event.currentTarget.setPointerCapture(event.pointerId);
-                moveStick(event);
+                moveJoy(event);
               }}
-              onPointerMove={moveStick}
+              onPointerMove={moveJoy}
               onPointerUp={() => {
-                setStick(0);
+                setJoy({ x: 0, y: 0 });
                 arranger.setBend(0);
+                arranger.setModulation(0);
               }}
             >
-              <span style={{ transform: `translateX(${stick * 20}px)` }} />
+              <span style={{ transform: `translate(${joy.x * 18}px, ${-joy.y * 18}px)` }} />
             </div>
+            <span className="pa-left-label">Bend ↔ · Mod ↑</span>
             <button
               type="button"
               aria-pressed={arranger.pedal}
@@ -319,101 +389,65 @@ export default function PianoInstrument() {
               Sustain
             </button>
           </div>
-          <label className="pa-volume">
-            <span className="pa-label m-0">Master</span>
-            <input type="range" min={0} max={1} step={0.01} value={arranger.volume} onChange={(event) => arranger.setVolume(Number(event.target.value))} />
-          </label>
-          <div className="flex gap-1.5">
-            <PanelButton label="Metro" active={arranger.metronome} onClick={() => arranger.toggleMetronome()} />
-            <PanelButton label="Reverb" active={arranger.reverb} onClick={() => arranger.toggleReverb()} />
-            <PanelButton label="PC keys" active={showLetters} onClick={() => setShowLetters((value) => !value)} />
+          <div className="pa-keybed" ref={scroller}>
+            <div className="pa-keys" onPointerLeave={() => { pointerDown.current = false; }}>
+              <span className="pa-pc-window" aria-hidden="true" style={{ left: `${windowStart}%`, width: `${windowEnd - windowStart}%` }} />
+              {keys.map((key) => {
+                const black = isBlack(key);
+                const whiteIndex = whiteKeys.filter((white) => white < key).length;
+                const position = black
+                  ? { left: `${whiteIndex * whiteWidth - whiteWidth * 0.29}%`, width: `${whiteWidth * 0.58}%`, animationDelay: `${1.2 + whiteIndex * 0.012}s` }
+                  : { left: `${whiteIndex * whiteWidth}%`, width: `${whiteWidth}%`, animationDelay: `${1.15 + whiteIndex * 0.012}s` };
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-label={`Play ${keyName(key)}`}
+                    style={position}
+                    className={`pa-key ${black ? 'pa-key-black' : 'pa-key-white'} ${pressed.has(key) ? 'pa-key-down' : ''}`}
+                    onPointerDown={(event) => {
+                      event.preventDefault();
+                      pointerDown.current = true;
+                      arranger.noteOn(key, velocityOf(event));
+                    }}
+                    onPointerUp={() => arranger.noteOff(key)}
+                    onPointerEnter={(event) => {
+                      if (pointerDown.current && event.pointerType === 'mouse') arranger.noteOn(key, velocityOf(event));
+                    }}
+                    onPointerLeave={() => {
+                      if (pressed.has(key)) arranger.noteOff(key);
+                    }}
+                    onClick={(event) => {
+                      if (event.detail !== 0) return;
+                      arranger.noteOn(key);
+                      setTimeout(() => arranger.noteOff(key), 400);
+                    }}
+                  >
+                    {showLetters && labelFor.has(key) && <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`}>{labelFor.get(key)}</span>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-
-        <div className="pa-felt" aria-hidden="true" />
-        <div className="pa-keybed" ref={scroller}>
-          <div className="pa-keys" onPointerLeave={() => { pointerDown.current = false; }}>
-            <span className="pa-pc-window" aria-hidden="true" style={{ left: `${windowStart}%`, width: `${windowEnd - windowStart}%` }} />
-            {keys.map((key) => {
-              const black = isBlack(key);
-              const whiteIndex = whiteKeys.filter((white) => white < key).length;
-              const position = black
-                ? { left: `${whiteIndex * whiteWidth - whiteWidth * 0.29}%`, width: `${whiteWidth * 0.58}%`, animationDelay: `${1.2 + whiteIndex * 0.012}s` }
-                : { left: `${whiteIndex * whiteWidth}%`, width: `${whiteWidth}%`, animationDelay: `${1.15 + whiteIndex * 0.012}s` };
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  aria-label={`Play ${keyName(key)}`}
-                  style={position}
-                  className={`pa-key ${black ? 'pa-key-black' : 'pa-key-white'} ${pressed.has(key) ? 'pa-key-down' : ''}`}
-                  onPointerDown={(event) => {
-                    event.preventDefault();
-                    pointerDown.current = true;
-                    arranger.noteOn(key, velocityOf(event));
-                  }}
-                  onPointerUp={() => arranger.noteOff(key)}
-                  onPointerEnter={(event) => {
-                    if (pointerDown.current && event.pointerType === 'mouse') arranger.noteOn(key, velocityOf(event));
-                  }}
-                  onPointerLeave={() => {
-                    if (pressed.has(key)) arranger.noteOff(key);
-                  }}
-                  onClick={(event) => {
-                    if (event.detail !== 0) return;
-                    arranger.noteOn(key);
-                    setTimeout(() => arranger.noteOff(key), 400);
-                  }}
-                >
-                  {showLetters && labelFor.has(key) && <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`}>{labelFor.get(key)}</span>}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <div className="pa-songbook">
-        <h3 className="pa-songbook-title">Song book</h3>
-        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {songs.map((item) => {
-            const playing = song?.id === item.id;
-            return (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  aria-pressed={playing}
-                  onClick={() => (playing ? arranger.stopSong() : void arranger.playSong(item))}
-                  className={`pa-song ${playing ? 'pa-song-on' : ''}`}
-                >
-                  <span className="pa-song-icon" aria-hidden="true">{playing ? '■' : '▶'}</span>
-                  <span className="min-w-0">
-                    <span className="block truncate font-semibold">{item.title}</span>
-                    <span className="block truncate text-xs opacity-70">{item.composer}</span>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
       </div>
 
       <dl className="pa-guide">
         <div>
           <dt>Play</dt>
-          <dd>Click or tap the keys. Strike lower on a key for a louder, brighter note.</dd>
+          <dd>Click or tap the keys. Strike lower on a key for a louder, brighter note. The screen is touch: tap a sound, style, song or tempo to change it.</dd>
         </div>
         <div>
-          <dt>Pedal and bend</dt>
-          <dd>Hold <kbd>Space</kbd> or press Sustain. Drag the joystick to bend the pitch.</dd>
+          <dt>Joystick and pedal</dt>
+          <dd>Left of the keys: drag sideways to bend, up for vibrato. Hold <kbd>Space</kbd> or press Sustain for the pedal.</dd>
         </div>
         <div>
           <dt>Computer keys</dt>
-          <dd>Bottom row <kbd>Z</kbd> to <kbd>M</kbd> is one octave from C (black keys <kbd>S D</kbd> <kbd>G H J</kbd>). Top row <kbd>Q</kbd> to <kbd>]</kbd> carries on from the next C (black keys <kbd>2 3</kbd> <kbd>5 6 7</kbd> <kbd>9 0</kbd> <kbd>=</kbd>). <kbd>←</kbd> <kbd>→</kbd> move an octave; hold <kbd>Shift</kbd> to play louder.</dd>
+          <dd>Bottom row <kbd>Z</kbd> to <kbd>M</kbd> is one octave from C (black keys <kbd>S D</kbd> <kbd>G H J</kbd>). Top row <kbd>Q</kbd> to <kbd>]</kbd> carries on from the next C (black keys <kbd>2 3</kbd> <kbd>5 6 7</kbd> <kbd>9 0</kbd> <kbd>=</kbd>). <kbd>←</kbd> <kbd>→</kbd> move an octave; <kbd>Shift</kbd> plays louder.</dd>
         </div>
         <div>
-          <dt>Accompaniment</dt>
-          <dd>Pick a style and press Start. Below middle C, your left hand sets the chord.</dd>
+          <dt>Accompaniment and sheet music</dt>
+          <dd>Pick a style and press Start; below middle C your left hand sets the chord. The music stand writes what you play, or shows a song's score as it plays.</dd>
         </div>
       </dl>
       <p className="pa-credits">

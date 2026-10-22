@@ -11,6 +11,7 @@ export type Song = {
   file?: string;
   notes?: () => Note[];
   drone?: number;
+  beat?: number; // seconds per beat, for the sheet music of generated pieces
 };
 
 // Builds notes from [swara, beats] phrases. Swaras are semitones above Sa; a trailing glide bends into the note (meend or gamaka).
@@ -73,6 +74,6 @@ export const songs: Song[] = [
   { id: 'prelude4', title: 'Prelude in E minor, Op. 28 No. 4', composer: 'F. Chopin', detail: '24 Preludes', sound: 'Grand Piano', file: '/songs/Chop-28-4.mid' },
   { id: 'raindrop', title: '“Raindrop” Prelude, Op. 28 No. 15', composer: 'F. Chopin', detail: '24 Preludes', sound: 'Grand Piano', file: '/songs/Chop-28-15.mid' },
   { id: 'minute', title: '“Minute” Waltz, Op. 64 No. 1', composer: 'F. Chopin', detail: 'Waltz in D-flat major', sound: 'Grand Piano', file: '/songs/chopin_valse_op64_no1.mid' },
-  { id: 'yaman', title: 'Raga Yaman', composer: 'Hindustani classical', detail: 'Alaap and taans on sitar, over tanpura', sound: 'Sitar', notes: yaman, drone: 61 },
-  { id: 'hamsadhwani', title: 'Raga Hamsadhwani', composer: 'Carnatic classical', detail: 'Phrases and a tihai on flute (venu), over tanpura', sound: 'Flute', notes: hamsadhwani, drone: 62 },
+  { id: 'yaman', title: 'Raga Yaman', composer: 'Hindustani classical', detail: 'Alaap and taans on sitar, over tanpura', sound: 'Sitar', notes: yaman, drone: 61, beat: 0.55 },
+  { id: 'hamsadhwani', title: 'Raga Hamsadhwani', composer: 'Carnatic classical', detail: 'Phrases and a tihai on flute (venu), over tanpura', sound: 'Flute', notes: hamsadhwani, drone: 62, beat: 0.5 },
 ];
