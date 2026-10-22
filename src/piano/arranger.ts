@@ -351,6 +351,7 @@ export class Arranger {
   private bankLoads = new Map<string, Promise<void>>();
   private loudness = new Map<string, number>();
   private ready = new Set<string>();
+  private loadPausedUntil = 0;
   private songItem: Sound | null = null;
   balance = 0.5;
   private held = new Map<number, Playing>();
@@ -495,6 +496,7 @@ export class Arranger {
     let done = 0;
     const worker = async () => {
       for (let next = queue.shift(); next; next = queue.shift()) {
+        while (performance.now() < this.loadPausedUntil) await new Promise((resolve) => setTimeout(resolve, 100));
         const [file, midi] = next;
         try {
           const response = await fetch(`${bank.path}${file}.mp3`);
@@ -512,12 +514,30 @@ export class Arranger {
       }
     };
     this.loading = 'Loading sounds 0%';
-    const promise = Promise.all(Array.from({ length: 6 }, worker)).then(() => {
+    const promise = Promise.all(Array.from({ length: 4 }, worker)).then(() => {
       this.ready.add(bankId);
     });
     this.bankLoads.set(bankId, promise);
     this.onChange();
     return promise;
+  }
+
+  // Background sample decoding runs on several threads at once; pause it while an animation (the curtain) plays.
+  pauseLoading(ms: number) {
+    this.loadPausedUntil = performance.now() + ms;
+  }
+
+  // Resolves when `count` samples of a bank have decoded (they load nearest middle C first), or the bank is done.
+  loadFirst(bankId: string, count = 8) {
+    const all = this.load(bankId);
+    return new Promise<void>((resolve) => {
+      const check = () => {
+        if (this.ready.has(bankId) || (this.banks.get(bankId)?.size ?? 0) >= count || !this.ctx) resolve();
+        else setTimeout(check, 40);
+      };
+      check();
+      void all.then(() => resolve());
+    });
   }
 
   private sampled(pitch: number, item: Sound, time: number, output: AudioNode, velocity: number, glide = 0): Playing | null {
@@ -555,6 +575,8 @@ export class Arranger {
     const level = (this.loudness.get(item.bank) ?? 1) * (0.18 + 0.82 * velocity * velocity) * 0.6;
     amp.gain.setValueAtTime(0, time);
     amp.gain.linearRampToValueAtTime(level, time + 0.004);
+    // Samples are trimmed (the piano to 8.5 s): a held note fades out before the recording ends, never clicks.
+    if (!source.loop) amp.gain.setTargetAtTime(0, time + Math.max(0.5, buffer.duration / source.playbackRate.value - 0.9), 0.2);
     source.connect(tone).connect(shelf).connect(amp).connect(output);
     this.modDepth?.connect(source.detune);
     source.start(time);

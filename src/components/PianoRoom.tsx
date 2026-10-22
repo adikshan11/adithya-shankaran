@@ -1,12 +1,50 @@
-import { Suspense, lazy, useSyncExternalStore } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useSyncExternalStore } from 'react';
 import { pianoStore } from '../piano/store';
 
-// The instrument is its own download, fetched only when the curtain opens (or warmed on hover), so the page stays light.
+// The instrument is its own download. It is fetched when the browser is idle after the page loads (or on hover),
+// so opening the curtain rarely waits for the network.
 const loadInstrument = () => import('./PianoInstrument');
 const PianoInstrument = lazy(loadInstrument);
 
+// A small grand piano whose lid lifts when the curtain is open and closes when it is shut.
+function PianoIcon({ open }: { open: boolean }) {
+  return (
+    <svg viewBox="0 0 64 48" className={`pa-icon ${open ? 'pa-icon-open' : ''}`} aria-hidden="true">
+      <path className="pa-icon-body" d="M6 30 C6 18 18 14 30 16 C44 18 46 26 58 26 L58 34 L6 34 Z" />
+      <path className="pa-icon-lid" d="M6 29 L44 9" />
+      <line className="pa-icon-prop" x1="30" y1="25" x2="34" y2="16" />
+      <rect className="pa-icon-keys" x="8" y="34" width="48" height="6" rx="1" />
+      {[14, 20, 26, 32, 38, 44, 50].map((x) => (
+        <line key={x} className="pa-icon-key-line" x1={x} y1="34" x2={x} y2="40" />
+      ))}
+      <line className="pa-icon-leg" x1="12" y1="40" x2="12" y2="46" />
+      <line className="pa-icon-leg" x1="52" y1="40" x2="52" y2="46" />
+      <g className="pa-icon-notes">
+        <text x="46" y="12">♪</text>
+        <text x="54" y="18">♫</text>
+      </g>
+    </svg>
+  );
+}
+
 export default function PianoRoom() {
   const open = useSyncExternalStore(pianoStore.subscribe, pianoStore.get, () => false);
+
+  useEffect(() => {
+    const idle = (window as Window & { requestIdleCallback?: (callback: () => void) => number }).requestIdleCallback;
+    const warm = () => void loadInstrument();
+    if (idle) idle(warm);
+    else setTimeout(warm, 2500);
+  }, []);
+
+  // Part the curtain once the page is idle again, so the motion never shares a frame with heavy work. Stable, so the
+  // instrument does not redraw when the curtain opens.
+  const partCurtain = useCallback(() => {
+    const idle = (window as Window & { requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number }).requestIdleCallback;
+    const go = () => document.getElementById('piano-stage')?.querySelectorAll('.pa-curtains, .pa-keys, .pa-screen').forEach((element) => element.classList.add('pa-go'));
+    if (idle) idle(go, { timeout: 400 });
+    else setTimeout(go, 100);
+  }, []);
 
   return (
     <section id="piano" aria-labelledby="piano-heading" className="py-8">
@@ -27,24 +65,31 @@ export default function PianoRoom() {
           type="button"
           aria-expanded={open}
           aria-controls="piano-stage"
+          aria-label={open ? 'Close the curtain' : 'Open the curtain'}
+          title={open ? 'Close the curtain' : 'Open the curtain'}
           onPointerEnter={() => void loadInstrument()}
           onFocus={() => void loadInstrument()}
           onClick={() => pianoStore.set(!open)}
           className="pa-handle"
         >
-          {open ? 'Close the curtain' : 'Open the curtain ✦'}
+          <PianoIcon open={open} />
+          <span className="pa-handle-text" aria-hidden="true">{open ? 'Close' : 'Play'}</span>
         </button>
       </div>
 
       {open && (
         <div id="piano-stage" className="pa-stage mt-5">
-          <Suspense fallback={<div className="pa-stage-wait">Setting the stage…</div>}>
-            <PianoInstrument />
+          <Suspense fallback={<div className="pa-stage-wait" />}>
+            <PianoInstrument onReady={partCurtain} />
           </Suspense>
           <div className="pa-curtains" aria-hidden="true">
             <span className="pa-curtain pa-curtain-left" />
             <span className="pa-curtain pa-curtain-right" />
             <span className="pa-valance" />
+            <span className="pa-tuning">
+              <span className="pa-tuning-dots"><span /><span /><span /></span>
+              Tuning the piano
+            </span>
           </div>
         </div>
       )}

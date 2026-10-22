@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { memo, useEffect, useReducer, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { Arranger, HIGH, LOW, PC_BASE_MAX, PC_BASE_MIN, PC_KEYS, PC_KEY_OFFSET, categories, isBlack, keyName, styleCategories, styleMeter } from '../piano/arranger';
 import { barLength, meterNamed } from '../piano/notation';
@@ -39,9 +39,59 @@ function velocityOf(event: ReactPointerEvent<HTMLElement>) {
   return Math.min(1, Math.max(0.25, 0.3 + depth * 0.75));
 }
 
+type KeysProps = { arranger: Arranger; pressed: Set<number>; showLetters: boolean; pcBase: number; pointerDown: { current: boolean } };
+
+// The 61 keys, drawn only when a key goes up or down, the letters are toggled, or the computer-key range moves.
+const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointerDown }: KeysProps) {
+  const labelFor = new Map<number, string>();
+  for (const [, offset, label] of PC_KEYS) labelFor.set(pcBase + offset, label);
+  const windowStart = whiteKeys.filter((white) => white < pcBase).length * whiteWidth;
+  const windowEnd = whiteKeys.filter((white) => white <= Math.min(HIGH, pcBase + 31)).length * whiteWidth;
+  return (
+    <div className="pa-keys" onPointerLeave={() => { pointerDown.current = false; }}>
+      <span className="pa-pc-window" aria-hidden="true" style={{ left: `${windowStart}%`, width: `${windowEnd - windowStart}%` }} />
+      {keys.map((key) => {
+        const black = isBlack(key);
+        const whiteIndex = whiteKeys.filter((white) => white < key).length;
+        const position = black
+          ? { left: `${whiteIndex * whiteWidth - whiteWidth * 0.29}%`, width: `${whiteWidth * 0.58}%` }
+          : { left: `${whiteIndex * whiteWidth}%`, width: `${whiteWidth}%` };
+        return (
+          <button
+            key={key}
+            type="button"
+            aria-label={`Play ${keyName(key)}`}
+            style={position}
+            className={`pa-key ${black ? 'pa-key-black' : 'pa-key-white'} ${pressed.has(key) ? 'pa-key-down' : ''}`}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              pointerDown.current = true;
+              arranger.noteOn(key, velocityOf(event));
+            }}
+            onPointerUp={() => arranger.noteOff(key)}
+            onPointerEnter={(event) => {
+              if (pointerDown.current && event.pointerType === 'mouse') arranger.noteOn(key, velocityOf(event));
+            }}
+            onPointerLeave={() => {
+              if (pressed.has(key)) arranger.noteOff(key);
+            }}
+            onClick={(event) => {
+              if (event.detail !== 0) return;
+              arranger.noteOn(key);
+              setTimeout(() => arranger.noteOff(key), 400);
+            }}
+          >
+            {showLetters && labelFor.has(key) && <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`}>{labelFor.get(key)}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+});
+
 type Played = { midi: number; start: number; end?: number };
 
-export default function PianoInstrument() {
+function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const engine = useRef<Arranger | null>(null);
   engine.current ??= new Arranger();
   const arranger = engine.current;
@@ -50,7 +100,8 @@ export default function PianoInstrument() {
   const [message, setMessage] = useState('');
   const [beat, setBeat] = useState(false);
   const [showLetters, setShowLetters] = useState(false);
-  const [joy, setJoy] = useState({ x: 0, y: 0 });
+  const stick = useRef<HTMLSpanElement>(null);
+  const joyBox = useRef<HTMLDivElement>(null);
   const [pcBase, setPcBase] = useState(48);
   const [page, setPage] = useState<Page>('main');
   const [category, setCategory] = useState('Piano');
@@ -102,14 +153,19 @@ export default function PianoInstrument() {
       setTimeout(() => setBeat(false), 90);
       refresh();
     };
+    // Tell the stage the instrument is ready once the grand piano's middle notes have loaded (or after 2.5 s at most).
+    let told = false;
+    const ready = () => {
+      if (told) return;
+      told = true;
+      arranger.pauseLoading(2400); // let the curtain part without decoding competing for the CPU
+      onReady?.();
+    };
+    const fallback = setTimeout(ready, 2500);
+    void arranger.loadFirst('salamander').then(ready);
     arranger.chime();
     const greeting = 'Concert Grand ready. Tap the screen to choose sounds, styles and songs.';
-    let shown = 0;
-    const typing = setInterval(() => {
-      shown++;
-      setMessage(greeting.slice(0, shown));
-      if (shown >= greeting.length) clearInterval(typing);
-    }, 30);
+    setMessage(greeting);
     const centre = setTimeout(() => {
       const element = scroller.current;
       if (element) element.scrollLeft = (element.scrollWidth - element.clientWidth) / 2;
@@ -118,7 +174,7 @@ export default function PianoInstrument() {
     fit();
     window.addEventListener('resize', fit);
     return () => {
-      clearInterval(typing);
+      clearTimeout(fallback);
       clearTimeout(centre);
       window.removeEventListener('resize', fit);
       if (idle.current) clearTimeout(idle.current);
@@ -208,10 +264,6 @@ export default function PianoInstrument() {
   }, [arranger]);
 
   const say = (text: string) => setMessage(text);
-  const labelFor = new Map<number, string>();
-  for (const [, offset, label] of PC_KEYS) labelFor.set(pcBase + offset, label);
-  const windowStart = whiteKeys.filter((white) => white < pcBase).length * whiteWidth;
-  const windowEnd = whiteKeys.filter((white) => white <= Math.min(HIGH, pcBase + 31)).length * whiteWidth;
 
   // Music stand: the song's sheet music while a song plays, otherwise what you play, written to the current tempo.
   const songScore = arranger.songScore;
@@ -238,14 +290,27 @@ export default function PianoInstrument() {
   const fromBar = Math.max(0, Math.floor(latest / bar) - (cursor !== undefined ? 1 : bars - 1));
 
   // Joystick, left of the keys as on the Pa300: sideways bends the pitch (up to two semitones), up adds vibrato.
+  const placeStick = (x: number, y: number, held: boolean) => {
+    const element = stick.current;
+    if (element) {
+      element.classList.toggle('pa-joy-held', held);
+      element.style.transform = `translate(${x * 14}px, ${-y * 14}px) rotate(${x * 18}deg)`;
+    }
+    joyBox.current?.setAttribute('aria-valuenow', String(Math.round(x * 20) / 10));
+  };
   const moveJoy = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.type === 'pointermove' && !event.currentTarget.hasPointerCapture(event.pointerId)) return;
     const box = event.currentTarget.getBoundingClientRect();
     const x = Math.max(-1, Math.min(1, ((event.clientX - box.left) / box.width) * 2 - 1));
     const y = Math.max(0, Math.min(1, 1 - ((event.clientY - box.top) / box.height) * 2));
-    setJoy({ x, y });
+    placeStick(x, y, true);
     arranger.setBend(x * 2);
     arranger.setModulation(y);
+  };
+  const releaseJoy = () => {
+    placeStick(0, 0, false);
+    arranger.setBend(0);
+    arranger.setModulation(0);
   };
 
   return (
@@ -367,33 +432,52 @@ export default function PianoInstrument() {
         </div>
 
         <div className="pa-stand" aria-label="Music stand">
-          <Staff notes={standNotes} meter={standMeter} fromBar={fromBar} bars={bars} cursor={cursor} recent={pressed} />
+          <Staff
+            notes={standNotes}
+            meter={standMeter}
+            fromBar={fromBar}
+            bars={bars}
+            cursor={cursor}
+            recent={pressed}
+            version={`${songScore ? 'song' : 'live'}:${standNotes.length}:${standNotes.reduce((sum, note) => sum + note.start + note.length * 3, 0)}:${fromBar}:${bars}:${standMeter.beats}/${standMeter.unit}:${cursor === undefined ? '' : Math.round(cursor * 2)}:${[...pressed].join(',')}`}
+          />
           <span className="pa-stand-caption">{songScore ? `${arranger.song?.title ?? ''}: sheet music` : 'Your playing, written as you play'}</span>
+          {!songScore && (
+            <button
+              type="button"
+              className="pa-stand-clear"
+              onClick={() => {
+                take.current = { origin: 0, last: 0, notes: [] };
+                refresh();
+              }}
+            >
+              Clear
+            </button>
+          )}
         </div>
 
         <div className="pa-felt" aria-hidden="true" />
         <div className="pa-keyrow">
           <div className="pa-left">
             <div
+              ref={joyBox}
               className="pa-joy"
               role="slider"
               aria-label="Pitch bend and modulation joystick"
               aria-valuemin={-2}
               aria-valuemax={2}
-              aria-valuenow={Math.round(joy.x * 20) / 10}
+              aria-valuenow={0}
               onPointerDown={(event) => {
                 capture(event);
                 moveJoy(event);
               }}
               onPointerMove={moveJoy}
-              onPointerUp={() => {
-                setJoy({ x: 0, y: 0 });
-                arranger.setBend(0);
-                arranger.setModulation(0);
-              }}
+              onPointerUp={releaseJoy}
+              onPointerCancel={releaseJoy}
+              onLostPointerCapture={releaseJoy}
             >
               <span className="pa-joy-boot" aria-hidden="true" />
-              <span className="pa-joy-stick" aria-hidden="true" style={{ transform: `translate(${joy.x * 14}px, ${-joy.y * 14}px) rotate(${joy.x * 18}deg)` }} />
+              <span ref={stick} className="pa-joy-stick" aria-hidden="true" />
               <span className="pa-joy-arrow pa-joy-arrow-left" aria-hidden="true">◀</span>
               <span className="pa-joy-arrow pa-joy-arrow-right" aria-hidden="true">▶</span>
               <span className="pa-joy-arrow pa-joy-arrow-up" aria-hidden="true">▲</span>
@@ -412,44 +496,7 @@ export default function PianoInstrument() {
             </button>
           </div>
           <div className="pa-keybed" ref={scroller}>
-            <div className="pa-keys" onPointerLeave={() => { pointerDown.current = false; }}>
-              <span className="pa-pc-window" aria-hidden="true" style={{ left: `${windowStart}%`, width: `${windowEnd - windowStart}%` }} />
-              {keys.map((key) => {
-                const black = isBlack(key);
-                const whiteIndex = whiteKeys.filter((white) => white < key).length;
-                const position = black
-                  ? { left: `${whiteIndex * whiteWidth - whiteWidth * 0.29}%`, width: `${whiteWidth * 0.58}%`, animationDelay: `${1.2 + whiteIndex * 0.012}s` }
-                  : { left: `${whiteIndex * whiteWidth}%`, width: `${whiteWidth}%`, animationDelay: `${1.15 + whiteIndex * 0.012}s` };
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-label={`Play ${keyName(key)}`}
-                    style={position}
-                    className={`pa-key ${black ? 'pa-key-black' : 'pa-key-white'} ${pressed.has(key) ? 'pa-key-down' : ''}`}
-                    onPointerDown={(event) => {
-                      event.preventDefault();
-                      pointerDown.current = true;
-                      arranger.noteOn(key, velocityOf(event));
-                    }}
-                    onPointerUp={() => arranger.noteOff(key)}
-                    onPointerEnter={(event) => {
-                      if (pointerDown.current && event.pointerType === 'mouse') arranger.noteOn(key, velocityOf(event));
-                    }}
-                    onPointerLeave={() => {
-                      if (pressed.has(key)) arranger.noteOff(key);
-                    }}
-                    onClick={(event) => {
-                      if (event.detail !== 0) return;
-                      arranger.noteOn(key);
-                      setTimeout(() => arranger.noteOff(key), 400);
-                    }}
-                  >
-                    {showLetters && labelFor.has(key) && <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`}>{labelFor.get(key)}</span>}
-                  </button>
-                );
-              })}
-            </div>
+            <Keys arranger={arranger} pressed={pressed} showLetters={showLetters} pcBase={pcBase} pointerDown={pointerDown} />
           </div>
         </div>
       </div>
@@ -479,3 +526,6 @@ export default function PianoInstrument() {
     </div>
   );
 }
+
+// Memoised: opening the curtain re-renders the stage, not the 61 keys, screen and score.
+export default memo(PianoInstrument);

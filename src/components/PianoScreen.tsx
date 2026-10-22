@@ -1,11 +1,12 @@
+import type { ReactNode } from 'react';
 import { categories, sounds, styleCategories, styleMeter, styles } from '../piano/arranger';
 import type { Arranger } from '../piano/arranger';
 import { meters } from '../piano/notation';
 import { songs } from '../piano/songs';
 
-// The colour touchscreen. The main page shows the sound, style, song, tempo, time signature and the chord being
-// played; tapping any of them opens its select page, as on a Korg Pa300.
-export type Page = 'main' | 'sound' | 'style' | 'song' | 'metro';
+// The colour touchscreen. The main page shows the sound, style, song, tempo, time signature, settings and the chord
+// being played; tapping any of them opens its page, as on a Korg Pa300.
+export type Page = 'main' | 'sound' | 'style' | 'song' | 'metro' | 'tune';
 
 type Props = {
   arranger: Arranger;
@@ -20,6 +21,19 @@ type Props = {
 const signed = (value: number) => (value > 0 ? `+${value}` : `${value}`);
 const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
+// A select page: a header row (tabs or a title on the left, Exit on the right), then a scrolling list.
+function SelectPage({ head, onExit, children, className = '' }: { head: ReactNode; onExit: () => void; children: ReactNode; className?: string }) {
+  return (
+    <div className="pa-screen-body">
+      <div className="pa-page-head">
+        <div className="pa-page-head-main">{head}</div>
+        <button type="button" className="pa-exit" onClick={onExit}>Exit</button>
+      </div>
+      <div className={`pa-grid ${className}`}>{children}</div>
+    </div>
+  );
+}
+
 export default function PianoScreen({ arranger, page, category, open, message, beat, meterRef }: Props) {
   const sound = arranger.sound;
   const style = arranger.style;
@@ -27,18 +41,26 @@ export default function PianoScreen({ arranger, page, category, open, message, b
   const meter = song && arranger.songScore ? `${arranger.songScore.meter.beats}/${arranger.songScore.meter.unit}` : arranger.running ? styleMeter(style) : arranger.meter.label;
   const beats = arranger.running ? arranger.beatsPerBar : arranger.meter.beats;
   const groupStarts = arranger.running ? [0] : arranger.meter.groups.reduce<number[]>((starts, size) => [...starts, (starts.at(-1) ?? 0) + size], [0]);
+  const exit = () => open('main');
 
-  const header = (
-    <div className="pa-screen-bar">
-      <button type="button" className="pa-touch" onClick={() => open('main')}>{song ? 'SONG PLAY' : 'STYLE PLAY'}</button>
-      <button type="button" className="pa-touch" onClick={() => open('metro')}>♩ {arranger.tempo} · {meter}</button>
-      <span>{song ? `${clock(arranger.songElapsed)} / ${clock(arranger.songLength)}` : `${arranger.measure}.${arranger.beat || 1}`}</span>
+  const tabs = (names: string[]) => (
+    <div className="pa-tabs" role="tablist">
+      {names.map((name) => (
+        <button key={name} type="button" role="tab" aria-selected={name === category} className={`pa-tab ${name === category ? 'pa-tab-on' : ''}`} onClick={() => open(page, name)}>
+          {name}
+        </button>
+      ))}
     </div>
   );
 
   return (
     <div className={`pa-screen ${beat ? 'pa-screen-beat' : ''}`}>
-      {header}
+      <div className="pa-screen-bar">
+        <button type="button" className="pa-touch" onClick={exit}>{song ? 'SONG PLAY' : 'STYLE PLAY'}</button>
+        <button type="button" className="pa-touch" onClick={() => open('metro')}>♩ {arranger.tempo} · {meter}</button>
+        <span>{song ? `${clock(arranger.songElapsed)} / ${clock(arranger.songLength)}` : `${arranger.measure}.${arranger.beat || 1}`}</span>
+      </div>
+
       {page === 'main' && (
         <div className="pa-screen-body pa-main">
           <div className="pa-main-left">
@@ -63,10 +85,18 @@ export default function PianoScreen({ arranger, page, category, open, message, b
               </div>
             )}
             <div className="pa-cells">
-              <span>Var<b>{arranger.variation}</b></span>
-              <span>Trans<b>{signed(arranger.transpose)}</b></span>
-              <span>Oct<b>{signed(arranger.octave)}</b></span>
-              <span>Pedal<b>{arranger.pedal ? 'On' : 'Off'}</b></span>
+              <button type="button" className="pa-cell" aria-label={`Variation ${arranger.variation}, tap for the next`} onClick={() => arranger.setVariation((arranger.variation % 4) + 1)}>
+                Var<b>{arranger.variation}</b>
+              </button>
+              <button type="button" className="pa-cell" aria-label={`Transpose ${signed(arranger.transpose)}, tap to change`} onClick={() => open('tune')}>
+                Trans<b>{signed(arranger.transpose)}</b>
+              </button>
+              <button type="button" className="pa-cell" aria-label={`Octave ${signed(arranger.octave)}, tap to change`} onClick={() => open('tune')}>
+                Oct<b>{signed(arranger.octave)}</b>
+              </button>
+              <button type="button" className={`pa-cell ${arranger.pedal ? 'pa-cell-on' : ''}`} aria-label={`Sustain pedal ${arranger.pedal ? 'on' : 'off'}, tap to switch`} onClick={() => arranger.setPedal(!arranger.pedal)}>
+                Pedal<b>{arranger.pedal ? 'On' : 'Off'}</b>
+              </button>
             </div>
           </div>
           <div className="pa-chord" aria-label="Chord">
@@ -81,88 +111,87 @@ export default function PianoScreen({ arranger, page, category, open, message, b
         </div>
       )}
 
-      {(page === 'sound' || page === 'style') && (
-        <div className="pa-screen-body">
-          <div className="pa-tabs" role="tablist">
-            {(page === 'sound' ? categories : styleCategories).map((name) => (
-              <button key={name} type="button" role="tab" aria-selected={name === category} className={`pa-tab ${name === category ? 'pa-tab-on' : ''}`} onClick={() => open(page, name)}>
-                {name}
+      {page === 'sound' && (
+        <SelectPage head={tabs(categories)} onExit={exit}>
+          {sounds.map((item, index) =>
+            item.category !== category ? null : (
+              <button key={item.name} type="button" className={`pa-item ${arranger.soundIndex === index ? 'pa-item-on' : ''}`} onClick={() => arranger.selectSound(index)}>
+                <span className="pa-item-number">P{String(index + 1).padStart(2, '0')}</span>
+                {item.name}
               </button>
-            ))}
-          </div>
-          <div className="pa-grid">
-            {page === 'sound'
-              ? sounds.map((item, index) =>
-                  item.category !== category ? null : (
-                    <button key={item.name} type="button" className={`pa-item ${arranger.soundIndex === index ? 'pa-item-on' : ''}`} onClick={() => arranger.selectSound(index)}>
-                      <span className="pa-item-number">P{String(index + 1).padStart(2, '0')}</span>
-                      {item.name}
-                    </button>
-                  ),
-                )
-              : styles.map((item, index) =>
-                  item.category !== category ? null : (
-                    <button key={item.name} type="button" className={`pa-item ${arranger.styleIndex === index ? 'pa-item-on' : ''}`} onClick={() => arranger.selectStyle(index)}>
-                      <span className="pa-item-number">{styleMeter(item)} · ♩{item.tempo}</span>
-                      {item.name}
-                    </button>
-                  ),
-                )}
-          </div>
-          <button type="button" className="pa-exit" onClick={() => open('main')}>Exit</button>
-        </div>
+            ),
+          )}
+        </SelectPage>
+      )}
+
+      {page === 'style' && (
+        <SelectPage head={tabs(styleCategories)} onExit={exit}>
+          {styles.map((item, index) =>
+            item.category !== category ? null : (
+              <button key={item.name} type="button" className={`pa-item ${arranger.styleIndex === index ? 'pa-item-on' : ''}`} onClick={() => arranger.selectStyle(index)}>
+                <span className="pa-item-number">{styleMeter(item)} · ♩{item.tempo}</span>
+                {item.name}
+              </button>
+            ),
+          )}
+        </SelectPage>
       )}
 
       {page === 'song' && (
-        <div className="pa-screen-body">
-          <p className="pa-page-title">Song Book</p>
-          <div className="pa-grid pa-grid-songs">
-            {songs.map((item) => {
-              const playing = song?.id === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`pa-item ${playing ? 'pa-item-on' : ''}`}
-                  onClick={() => {
-                    if (playing) arranger.stopSong();
-                    else void arranger.playSong(item);
-                  }}
-                >
-                  <span className="pa-item-number">{playing ? '■ Stop' : '▶'} · {item.composer}</span>
-                  {item.title}
-                </button>
-              );
-            })}
-          </div>
-          <button type="button" className="pa-exit" onClick={() => open('main')}>Exit</button>
-        </div>
+        <SelectPage head={<p className="pa-page-title">Song Book</p>} onExit={exit}>
+          {songs.map((item) => {
+            const playing = song?.id === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`pa-item ${playing ? 'pa-item-on' : ''}`}
+                onClick={() => {
+                  if (playing) arranger.stopSong();
+                  else void arranger.playSong(item);
+                }}
+              >
+                <span className="pa-item-number">{playing ? '■ Stop' : '▶ Play'} · {item.composer}</span>
+                {item.title}
+              </button>
+            );
+          })}
+        </SelectPage>
       )}
 
       {page === 'metro' && (
-        <div className="pa-screen-body">
-          <p className="pa-page-title">Metronome · time signature</p>
-          <div className="pa-grid pa-grid-meters">
-            {meters.map((item, index) => (
-              <button key={item.label} type="button" className={`pa-item pa-item-center ${arranger.meterIndex === index ? 'pa-item-on' : ''}`} onClick={() => arranger.setMeter(index)}>
-                {item.label}
-              </button>
-            ))}
-          </div>
-          <div className="pa-metro-row">
-            <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeTempo(-1)}>Tempo −</button>
-            <span className="pa-big text-center">♩ {arranger.tempo}</span>
-            <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeTempo(1)}>Tempo +</button>
-            <button type="button" className={`pa-item pa-item-center ${arranger.metronome ? 'pa-item-on' : ''}`} onClick={() => arranger.toggleMetronome()}>
-              {arranger.metronome ? 'Click on' : 'Click off'}
+        <SelectPage head={<p className="pa-page-title">Metronome · time signature</p>} onExit={exit} className="pa-grid-meters">
+          {meters.map((item, index) => (
+            <button key={item.label} type="button" className={`pa-item pa-item-center ${arranger.meterIndex === index ? 'pa-item-on' : ''}`} onClick={() => arranger.setMeter(index)}>
+              {item.label}
             </button>
-          </div>
-          <button type="button" className="pa-exit" onClick={() => open('main')}>Exit</button>
-        </div>
+          ))}
+          <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeTempo(-1)}>Tempo −</button>
+          <span className="pa-item pa-item-center pa-item-static">♩ {arranger.tempo}</span>
+          <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeTempo(1)}>Tempo +</button>
+          <button type="button" className={`pa-item pa-item-center pa-item-wide ${arranger.metronome ? 'pa-item-on' : ''}`} onClick={() => arranger.toggleMetronome()}>
+            {arranger.metronome ? 'Click on' : 'Click off'}
+          </button>
+        </SelectPage>
+      )}
+
+      {page === 'tune' && (
+        <SelectPage head={<p className="pa-page-title">Transpose and octave</p>} onExit={exit} className="pa-grid-tune">
+          <span className="pa-item pa-item-center pa-item-static">Transpose <b>{signed(arranger.transpose)}</b></span>
+          <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeTranspose(-1)}>−1</button>
+          <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeTranspose(1)}>+1</button>
+          <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeTranspose(-arranger.transpose)}>Reset</button>
+          <span className="pa-item pa-item-center pa-item-static">Octave <b>{signed(arranger.octave)}</b></span>
+          <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeOctave(-1)}>−1</button>
+          <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeOctave(1)}>+1</button>
+          <button type="button" className="pa-item pa-item-center" onClick={() => arranger.changeOctave(-arranger.octave)}>Reset</button>
+        </SelectPage>
       )}
 
       <div className="pa-meter" aria-hidden="true"><span ref={meterRef} /></div>
-      <p className="pa-message" aria-live="polite">{arranger.loading || message}</p>
+      <p key={arranger.loading ? 'loading' : message} className={`pa-message ${arranger.loading ? '' : 'pa-message-type'}`} aria-live="polite">
+        {arranger.loading || message}
+      </p>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { barLength, engrave, isSharp, stepOf } from '../piano/notation';
 import type { Glyph, ScoreNote, TimeSignature } from '../piano/notation';
 
@@ -11,7 +12,8 @@ const TREBLE_BOTTOM = 70; // y of the treble staff's bottom line (E4)
 const BASS_BOTTOM = 146; // y of the bass staff's bottom line (G2)
 const HEIGHT = 178;
 
-type Props = { notes: ScoreNote[]; meter: TimeSignature; fromBar: number; bars: number; cursor?: number; recent?: Set<number> };
+// `version` sums up what is shown; the staff redraws only when it changes.
+type Props = { notes: ScoreNote[]; meter: TimeSignature; fromBar: number; bars: number; cursor?: number; recent?: Set<number>; version: string };
 
 function staffY(staff: 'treble' | 'bass', step: number) {
   return staff === 'treble' ? TREBLE_BOTTOM - (step - 30) * HALF : BASS_BOTTOM - (step - 18) * HALF;
@@ -118,7 +120,7 @@ function beamOf(staff: 'treble' | 'bass', group: Glyph[]): Beam {
   return { up, end: up ? Math.min(...ys) - 28 : Math.max(...ys) + 28 };
 }
 
-export default function Staff({ notes, meter, fromBar, bars, cursor, recent }: Props) {
+function Staff({ notes, meter, fromBar, bars, cursor, recent }: Props) {
   const bar = barLength(meter);
   const width = LEFT + bars * BAR_WIDTH + 6;
   const xOf = (time: number) => {
@@ -198,3 +200,5 @@ export default function Staff({ notes, meter, fromBar, bars, cursor, recent }: P
     </svg>
   );
 }
+
+export default memo(Staff, (before, after) => before.version === after.version);
