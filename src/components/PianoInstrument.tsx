@@ -142,7 +142,11 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
                   {labelFor.get(key)!.endsWith('*') && <sup className="pa-key-star">*</sup>}
                 </span>
               )}
-              {!black && <span className={`pa-key-note pa-note-${NOTE_LETTERS[key % 12]}`}>{key % 12 === 0 ? keyName(key) : NOTE_LETTERS[key % 12]}</span>}
+              {black ? (
+                <span className={`pa-key-note pa-note-sharp pa-sharp-${NOTE_LETTERS[(key - 1) % 12]}`}>{SHARP_NAMES[key % 12]}</span>
+              ) : (
+                <span className={`pa-key-note pa-note-${NOTE_LETTERS[key % 12]}`}>{key % 12 === 0 ? keyName(key) : NOTE_LETTERS[key % 12]}</span>
+              )}
             </span>
           </button>
         );
@@ -155,6 +159,8 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
 const SPARE_CODES = new Set(['Comma', 'Period', 'Slash', 'KeyL', 'KeyF', 'KeyK']);
 // Note letter of each pitch class for the coloured note badges on the white keys (C carries its octave, as C4).
 const NOTE_LETTERS = ['C', '', 'D', '', 'E', 'F', '', 'G', '', 'A', '', 'B'];
+// Names on the black keys (sharps, as the chord display writes them).
+const SHARP_NAMES = ['', 'C♯', '', 'D♯', '', '', 'F♯', '', 'G♯', '', 'A♯', ''];
 
 // A drawn computer keyboard: which key plays which note. Black-key rows sit between the white keys, as on a piano.
 const MAP_ROWS: { white: [string, string][]; black: (string | null)[] }[] = [
@@ -387,7 +393,8 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         const stage = root.closest<HTMLElement>('.pa-overlay');
         if (!keys) return;
         const top = keys.getBoundingClientRect().top + (stage?.scrollTop ?? 0);
-        root.style.setProperty('--keys-h', `${Math.max(220, Math.floor(window.innerHeight - top - 30))}px`);
+        // The keys run to the bottom edge: the browser's glass toolbar floats over them, as over a native app.
+        root.style.setProperty('--keys-h', `${Math.max(220, Math.floor(window.innerHeight - top))}px`);
       } else {
         root.style.removeProperty('--fit');
         root.style.removeProperty('--keys-h');
@@ -1009,7 +1016,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
               <span className="pa-joy-arrow pa-joy-arrow-right" aria-hidden="true">▶</span>
               <span className="pa-joy-arrow pa-joy-arrow-up" aria-hidden="true">▲</span>
             </div>
-            <span className="pa-left-label">PITCH ◀ ▶ · MOD ▲</span>
+            <span className="pa-left-label">PITCH ◀ ▶<br />MOD ▲</span>
             <button
               type="button"
               aria-pressed={arranger.pedal}
