@@ -1387,3 +1387,31 @@
   .pa-overlay .pa-body:has(.pa-keyrow) { padding-bottom: 22px; }
   .pa-overlay:has(.pa-keys-only) .pa-body { min-height: calc(100lvh - env(safe-area-inset-top)); }
 }
+
+/* Key felt: the strip of red cloth along the back of the keys where they slide under the fallboard, as on a real
+   piano. It lies over the tops of both white and black keys, casts a soft shadow onto them and never takes a touch. */
+.pa-keys::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; z-index: 4; height: 8px; pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 0.1) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #9a1726 0%, #7a1120 55%, #520a14 100%);
+  box-shadow: 0 2px 3px rgb(0 0 0 / 0.45), inset 0 -1px 0 rgb(255 255 255 / 0.08);
+}
+/* Polished key tips: a thin mirror highlight along the front edge of each white key, and a bright reflection across
+   the bevelled front of each black key, as lacquered keys catch a light from above. Pressed and Learn colours keep
+   their own backgrounds, so the shine goes when a key is down. */
+.pa-key-marks { position: relative; z-index: 1; } /* note names stay above the shine */
+.pa-key-black .pa-key-marks { position: absolute; }
+.pa-key-white::after, .pa-key-black::after { content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
+.pa-key-white::after {
+  background:
+    linear-gradient(180deg, transparent 93%, rgb(210 212 218 / 0.7) 94.5%, rgb(255 255 255) 95.5%, rgb(255 255 255 / 0.3) 97.5%, transparent 99%),
+    linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.35) 45%, transparent 60%) bottom / 100% 12% no-repeat;
+}
+.pa-key-black::after {
+  background:
+    linear-gradient(90deg, transparent 10%, rgb(255 255 255 / 0.5) 50%, transparent 90%) 0 82.4% / 100% 1.5px no-repeat,
+    linear-gradient(180deg, transparent 82.5%, rgb(255 255 255 / 0.1) 84%, rgb(255 255 255 / 0.02) 89%, transparent 91%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.06), transparent 30%);
+}
+.pa-key-down::after, .pa-key-target::after { opacity: 0; }
