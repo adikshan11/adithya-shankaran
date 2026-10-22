@@ -12,3 +12,5 @@ alto sax, harmonica, vibraphone, marimba, sitar, shanai, dulcimer, koto), every 
 Scores in /songs: public-domain MIDI files from the Mutopia Project (https://www.mutopiaproject.org), each listed there
 as "Public Domain": Bach BWV 846 Prelude; Beethoven WoO 59 Fur Elise; Mozart K. 331 Rondo alla Turca;
 Chopin Op. 28 No. 4, Op. 28 No. 15 and Op. 64 No. 1. Downloaded 2026-10-22.
+
+Added 2026-10-22: FluidR3_GM bright_acoustic_piano (C1 to C8, every minor third), same licence, for the Bright Piano sound.

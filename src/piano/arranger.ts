@@ -20,13 +20,13 @@ export const keyName = (midi: number) => {
 };
 const mtof = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
-// Computer keyboard, two rows as on desktop music apps, by physical key position (event.code) so any layout works:
-// the bottom row Z X C V B N M , . / plays white keys from the base note (sharps on S D G H J L ;), and the top row
-// Q W E R T Y U I O P [ ] plays white keys from one octave higher (sharps on 2 3 5 6 7 9 0 =). [code, offset, label]
+// Computer keyboard, two rows, one key per note, by physical key position (event.code) so any layout works.
+// Bottom row: Z X C V B N M are the white keys of one octave from the base C, with S D and G H J as its black keys,
+// laid out like a real keyboard. Top row: Q W E R T Y U I O P [ ] are the white keys from the next C up, with
+// 2 3, 5 6 7, 9 0 and = as its black keys. Together they reach 32 notes. [code, offset, label]
 export const PC_KEYS: [string, number, string][] = [
   ['KeyZ', 0, 'Z'], ['KeyS', 1, 'S'], ['KeyX', 2, 'X'], ['KeyD', 3, 'D'], ['KeyC', 4, 'C'], ['KeyV', 5, 'V'], ['KeyG', 6, 'G'],
-  ['KeyB', 7, 'B'], ['KeyH', 8, 'H'], ['KeyN', 9, 'N'], ['KeyJ', 10, 'J'], ['KeyM', 11, 'M'], ['Comma', 12, ','], ['KeyL', 13, 'L'],
-  ['Period', 14, '.'], ['Semicolon', 15, ';'], ['Slash', 16, '/'],
+  ['KeyB', 7, 'B'], ['KeyH', 8, 'H'], ['KeyN', 9, 'N'], ['KeyJ', 10, 'J'], ['KeyM', 11, 'M'],
   ['KeyQ', 12, 'Q'], ['Digit2', 13, '2'], ['KeyW', 14, 'W'], ['Digit3', 15, '3'], ['KeyE', 16, 'E'], ['KeyR', 17, 'R'], ['Digit5', 18, '5'],
   ['KeyT', 19, 'T'], ['Digit6', 20, '6'], ['KeyY', 21, 'Y'], ['Digit7', 22, '7'], ['KeyU', 23, 'U'], ['KeyI', 24, 'I'], ['Digit9', 25, '9'],
   ['KeyO', 26, 'O'], ['Digit0', 27, '0'], ['KeyP', 28, 'P'], ['BracketLeft', 29, '['], ['Equal', 30, '='], ['BracketRight', 31, ']'],
@@ -37,7 +37,7 @@ export const PC_BASE_MIN = 36;
 export const PC_BASE_MAX = 72;
 
 // Sample banks: every minor third, as recorded.
-type Bank = { path: string; files: [string, number][]; loop: boolean; release: number; level: number };
+type Bank = { path: string; files: [string, number][]; loop: boolean; release: number };
 const thirds = (names: [string, string, string, string]) => {
   const files: [string, number][] = [];
   for (let octave = 0; octave <= 8; octave++) {
@@ -51,41 +51,42 @@ const thirds = (names: [string, string, string, string]) => {
 const salamanderFiles = thirds(['C', 'Ds', 'Fs', 'A']);
 const fluidFiles = thirds(['C', 'Eb', 'Gb', 'A']).filter(([, midi]) => midi >= 24);
 const fluidMid = fluidFiles.filter(([, midi]) => midi >= 36 && midi <= 96);
-const fluid = (name: string, loop: boolean, release: number, level = 1, files = fluidFiles): Bank => ({ path: `/samples/fluidr3/${name}/`, files, loop, release, level });
+const fluid = (name: string, loop: boolean, release: number, files = fluidFiles): Bank => ({ path: `/samples/fluidr3/${name}/`, files, loop, release });
 
 const BANKS: Record<string, Bank> = {
-  salamander: { path: '/samples/salamander/', files: salamanderFiles, loop: false, release: 0.32, level: 1.1 },
+  salamander: { path: '/samples/salamander/', files: salamanderFiles, loop: false, release: 0.32 },
+  bright: fluid('bright_acoustic_piano', false, 0.3),
   honkytonk: fluid('honkytonk_piano', false, 0.3),
   tine: fluid('electric_piano_1', false, 0.4),
   fm: fluid('electric_piano_2', false, 0.4),
-  drawbar: fluid('drawbar_organ', true, 0.08, 0.8),
-  church: fluid('church_organ', true, 0.5, 0.8),
+  drawbar: fluid('drawbar_organ', true, 0.08),
+  church: fluid('church_organ', true, 0.5),
   nylon: fluid('acoustic_guitar_nylon', false, 0.3),
   steel: fluid('acoustic_guitar_steel', false, 0.3),
-  strings: fluid('string_ensemble_1', true, 0.6, 0.9),
+  strings: fluid('string_ensemble_1', true, 0.6),
   pizzicato: fluid('pizzicato_strings', false, 0.2),
-  brass: fluid('brass_section', true, 0.2, 0.8),
-  horn: fluid('french_horn', true, 0.3, 0.9),
-  saw: fluid('lead_2_sawtooth', true, 0.2, 0.6),
-  square: fluid('lead_1_square', true, 0.2, 0.6),
-  pad: fluid('pad_2_warm', true, 1.2, 0.9),
-  choir: fluid('choir_aahs', true, 0.8, 0.9),
-  bass: fluid('electric_bass_finger', false, 0.1, 1.1),
-  accordion: fluid('accordion', true, 0.12, 0.8, fluidMid),
-  violin: fluid('violin', true, 0.3, 0.9, fluidMid),
-  cello: fluid('cello', true, 0.35, 1, fluidMid),
-  harp: fluid('orchestral_harp', false, 0.6, 1, fluidMid),
-  trumpet: fluid('trumpet', true, 0.15, 0.8, fluidMid),
-  flute: fluid('flute', true, 0.2, 0.9, fluidMid),
-  clarinet: fluid('clarinet', true, 0.15, 0.9, fluidMid),
-  sax: fluid('alto_sax', true, 0.15, 0.85, fluidMid),
-  harmonica: fluid('harmonica', true, 0.12, 0.7, fluidMid),
-  vibes: fluid('vibraphone', false, 0.8, 1, fluidMid),
-  marimba: fluid('marimba', false, 0.3, 1.1, fluidMid),
-  sitar: fluid('sitar', false, 0.6, 1, fluidMid),
-  shehnai: fluid('shanai', true, 0.15, 0.75, fluidMid),
-  santoor: fluid('dulcimer', false, 0.5, 1, fluidMid),
-  koto: fluid('koto', false, 0.4, 1, fluidMid),
+  brass: fluid('brass_section', true, 0.2),
+  horn: fluid('french_horn', true, 0.3),
+  saw: fluid('lead_2_sawtooth', true, 0.2),
+  square: fluid('lead_1_square', true, 0.2),
+  pad: fluid('pad_2_warm', true, 1.2),
+  choir: fluid('choir_aahs', true, 0.8),
+  bass: fluid('electric_bass_finger', false, 0.1),
+  accordion: fluid('accordion', true, 0.12, fluidMid),
+  violin: fluid('violin', true, 0.3, fluidMid),
+  cello: fluid('cello', true, 0.35, fluidMid),
+  harp: fluid('orchestral_harp', false, 0.6, fluidMid),
+  trumpet: fluid('trumpet', true, 0.15, fluidMid),
+  flute: fluid('flute', true, 0.2, fluidMid),
+  clarinet: fluid('clarinet', true, 0.15, fluidMid),
+  sax: fluid('alto_sax', true, 0.15, fluidMid),
+  harmonica: fluid('harmonica', true, 0.12, fluidMid),
+  vibes: fluid('vibraphone', false, 0.8, fluidMid),
+  marimba: fluid('marimba', false, 0.3, fluidMid),
+  sitar: fluid('sitar', false, 0.6, fluidMid),
+  shehnai: fluid('shanai', true, 0.15, fluidMid),
+  santoor: fluid('dulcimer', false, 0.5, fluidMid),
+  koto: fluid('koto', false, 0.4, fluidMid),
 };
 
 type Kind = 'piano' | 'epiano' | 'organ' | 'pluck' | 'strings' | 'brass' | 'lead' | 'pad' | 'bass';
@@ -95,7 +96,7 @@ export const categories = ['Piano', 'E.Piano', 'Organ', 'Guitar', 'Strings', 'Br
 
 export const sounds: Sound[] = [
   { category: 'Piano', name: 'Grand Piano', bank: 'salamander', kind: 'piano' },
-  { category: 'Piano', name: 'Bright Grand', bank: 'salamander', kind: 'piano', bright: true },
+  { category: 'Piano', name: 'Bright Piano', bank: 'bright', kind: 'piano', bright: true },
   { category: 'Piano', name: 'Honky-Tonk', bank: 'honkytonk', kind: 'piano' },
   { category: 'E.Piano', name: 'Tine E.Piano', bank: 'tine', kind: 'epiano' },
   { category: 'E.Piano', name: 'FM E.Piano', bank: 'fm', kind: 'epiano' },
@@ -259,6 +260,19 @@ function voicing(chord: Chord) {
   });
 }
 
+// Every sample set was recorded at its own level, so each bank is scaled to the same loudness: the RMS of the first
+// 1.5 seconds of its middle sample (the first one loaded) is brought to a common target. The target keeps the grand
+// piano where it was (its middle C measures 0.039) and lifts quieter sets, such as honky-tonk at 0.011, to match.
+const TARGET_RMS = 0.045;
+function loudnessGain(buffer: AudioBuffer) {
+  const data = buffer.getChannelData(0);
+  const length = Math.min(data.length, Math.floor(buffer.sampleRate * 1.5));
+  let sum = 0;
+  for (let i = 0; i < length; i++) sum += data[i] * data[i];
+  const rms = Math.sqrt(sum / Math.max(1, length));
+  return rms > 0 ? Math.min(8, Math.max(0.2, TARGET_RMS / rms)) : 1;
+}
+
 type Voice = { stop: (time: number) => void };
 type Playing = { voice: Voice; sources: AudioBufferSourceNode[] };
 type SongNote = Note & { glide?: number };
@@ -298,6 +312,7 @@ export class Arranger {
   private noise!: AudioBuffer;
   private banks = new Map<string, Map<number, AudioBuffer>>();
   private bankLoads = new Map<string, Promise<void>>();
+  private loudness = new Map<string, number>();
   private held = new Map<number, Playing>();
   private down = new Set<number>();
   private left = new Set<number>();
@@ -408,7 +423,9 @@ export class Arranger {
         const [file, midi] = next;
         try {
           const response = await fetch(`${bank.path}${file}.mp3`);
-          buffers.set(midi, await ctx.decodeAudioData(await response.arrayBuffer()));
+          const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
+          buffers.set(midi, buffer);
+          if (!this.loudness.has(bankId)) this.loudness.set(bankId, loudnessGain(buffer));
         } catch {
           // a missing sample falls back to its neighbours
         }
@@ -458,7 +475,7 @@ export class Arranger {
     shelf.frequency.value = 3000;
     shelf.gain.value = item.bright ? 7 : 0;
     const amp = ctx.createGain();
-    const level = bank.level * (0.18 + 0.82 * velocity * velocity) * 0.6;
+    const level = (this.loudness.get(item.bank) ?? 1) * (0.18 + 0.82 * velocity * velocity) * 0.6;
     amp.gain.setValueAtTime(0, time);
     amp.gain.linearRampToValueAtTime(level, time + 0.004);
     source.connect(tone).connect(shelf).connect(amp).connect(output);

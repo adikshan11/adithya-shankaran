@@ -409,7 +409,7 @@ export default function PianoInstrument() {
         </div>
         <div>
           <dt>Computer keys</dt>
-          <dd>Bottom row <kbd>Z</kbd> to <kbd>/</kbd> and top row <kbd>Q</kbd> to <kbd>]</kbd>, sharps on the rows above them: two and a half octaves at once. <kbd>←</kbd> <kbd>→</kbd> slide them an octave; hold <kbd>Shift</kbd> to play louder.</dd>
+          <dd>Bottom row <kbd>Z</kbd> to <kbd>M</kbd> is one octave from C (black keys <kbd>S D</kbd> <kbd>G H J</kbd>). Top row <kbd>Q</kbd> to <kbd>]</kbd> carries on from the next C (black keys <kbd>2 3</kbd> <kbd>5 6 7</kbd> <kbd>9 0</kbd> <kbd>=</kbd>). <kbd>←</kbd> <kbd>→</kbd> move an octave; hold <kbd>Shift</kbd> to play louder.</dd>
         </div>
         <div>
           <dt>Accompaniment</dt>
