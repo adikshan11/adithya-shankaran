@@ -460,7 +460,9 @@
   .pa-stand-clear { order: 3; flex: none; align-self: center; z-index: 2; padding: 2px 10px; border-radius: 999px; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #3a2a12; background: #f3e6c4; box-shadow: inset 0 0 0 1px #c9a86a; }
   .pa-stand-clear:active { transform: translateY(1px); }
   .pa-stand-screen .pa-stand-clear { display: none !important; } /* on the screen, Clear is in the top bar */
-  .pa-screen-bar .pa-bar-clear { padding: 0 6px; border-radius: 4px; font-weight: 800; color: #3a2a12 !important; background: #f3e6c4; opacity: 1; }
+  /* Bar buttons with their own colours: dark text on light (the bar's button style must not override these). */
+  .pa-screen .pa-screen-bar .pa-bar-clear { padding: 0 6px; border-radius: 4px; font-weight: 800; color: #3a2a12 !important; background: #f3e6c4 !important; opacity: 1 !important; box-shadow: none; }
+  .pa-screen .pa-screen-bar .pa-score-btn-on { color: #071a33 !important; background: #9be3ff !important; opacity: 1 !important; }
   .pa-sheet-bar ~ .pa-sheet-body .pa-stand-clear { display: none; } /* the laptop's sheet bar has its own Clear */
   @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
     .pa-sheet-bar ~ .pa-sheet-body .pa-stand-clear { display: block; }
@@ -1140,6 +1142,15 @@
     .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-page-head { margin-bottom: 4px; }
     .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-tab { padding: 2px 8px; font-size: 0.68rem; }
     .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid-tune { gap: 4px; }
+    /* Lists on the landscape screen: three columns of one-line names, so several songs or sounds fit at once. */
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid:not(.pa-grid-tune, .pa-grid-score, .pa-grid-takes, .pa-grid-meters) { grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: start; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid .pa-item { min-width: 0; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid .pa-item > :is(span, b) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid .pa-item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid:not(.pa-grid-tune, .pa-grid-score, .pa-grid-takes, .pa-grid-meters) { grid-auto-rows: 32px; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid:not(.pa-grid-tune, .pa-grid-score, .pa-grid-takes, .pa-grid-meters) .pa-item { height: 32px; padding: 0 8px; line-height: 32px; font-size: 0.74rem; }
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid:not(.pa-grid-tune, .pa-grid-score, .pa-grid-takes, .pa-grid-meters) .pa-item-number { display: none; } /* one line: the name */
+    .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-page-head .pa-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
     .pa-body:not(:has(.pa-sheet-open)) .pa-screen .pa-grid-tune .pa-item { flex-direction: row; align-items: center; justify-content: center; gap: 6px; min-height: 0; height: 30px; padding: 0 6px; }
     /* The compact display */
     .pa-body:not(:has(.pa-sheet-open)) .pa-screen :is(.pa-cells, .pa-message, .pa-meter, .pa-progress) { display: none; }
