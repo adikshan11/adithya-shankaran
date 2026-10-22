@@ -110,7 +110,7 @@ describe('portfolio', () => {
     // 3 and 4 are the black keys over Q W E, and L plays the same C# as 3
     expect([offsetOf('Digit3'), offsetOf('Digit4'), offsetOf('KeyL')]).toEqual([13, 15, 13]);
     expect(offsetOf('Digit2')).toBeUndefined();
-    expect([offsetOf('KeyA'), offsetOf('KeyF')]).toEqual([-1, offsetOf('KeyV')]);
+    expect([offsetOf('KeyA'), offsetOf('KeyF'), offsetOf('KeyK')]).toEqual([-1, offsetOf('KeyV'), offsetOf('KeyQ')]);
   });
 
   it('recognises chords from the left hand', () => {

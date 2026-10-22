@@ -97,7 +97,12 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
             }}
           >
             <span className="pa-key-marks" aria-hidden="true">
-              {showLetters && labelFor.has(key) && <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`}>{labelFor.get(key)}</span>}
+              {showLetters && labelFor.has(key) && (
+                <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`}>
+                  {labelFor.get(key)!.replace('*', '')}
+                  {labelFor.get(key)!.endsWith('*') && <sup className="pa-key-star">*</sup>}
+                </span>
+              )}
               {!black && <span className={`pa-key-note pa-note-${NOTE_LETTERS[key % 12]}`}>{key % 12 === 0 ? keyName(key) : NOTE_LETTERS[key % 12]}</span>}
             </span>
           </button>
@@ -107,15 +112,15 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
   );
 });
 
-// Extra computer keys that repeat a note another key already plays (, . / L F); on the keys they show as a *.
-const SPARE_CODES = new Set(['Comma', 'Period', 'Slash', 'KeyL', 'KeyF']);
+// Extra computer keys that repeat a note another key already plays (, . / L F K); on the keys they show as a *.
+const SPARE_CODES = new Set(['Comma', 'Period', 'Slash', 'KeyL', 'KeyF', 'KeyK']);
 // Note letter of each pitch class for the coloured note badges on the white keys (C carries its octave, as C4).
 const NOTE_LETTERS = ['C', '', 'D', '', 'E', 'F', '', 'G', '', 'A', '', 'B'];
 
 // A drawn computer keyboard: which key plays which note. Black-key rows sit between the white keys, as on a piano.
 const MAP_ROWS: { white: [string, string][]; black: (string | null)[] }[] = [
   { white: [['Q', 'C'], ['W', 'D'], ['E', 'E'], ['R', 'F'], ['T', 'G'], ['Y', 'A'], ['U', 'B'], ['I', 'C'], ['O', 'D'], ['P', 'E'], ['[', 'F'], [']', 'G']], black: ['3', '4', null, '5', '6', '7', null, '9', '0', null, '='] },
-  { white: [['A', 'B'], ['Z', 'C'], ['X', 'D'], ['C', 'E'], ['V/F', 'F'], ['B', 'G'], ['N', 'A'], ['M', 'B'], [',', 'C'], ['.', 'D'], ['/', 'E']], black: [null, 'S', 'D', null, 'G', 'H', 'J', null, 'L'] },
+  { white: [['A', 'B'], ['Z', 'C'], ['X', 'D'], ['C', 'E'], ['V/F', 'F'], ['B', 'G'], ['N', 'A'], ['M', 'B'], [',/K', 'C'], ['.', 'D'], ['/', 'E']], black: [null, 'S', 'D', null, 'G', 'H', 'J', null, 'L'] },
 ];
 
 function KeyMap() {
