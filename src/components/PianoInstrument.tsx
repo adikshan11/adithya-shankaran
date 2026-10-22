@@ -44,8 +44,17 @@ type KeysProps = { arranger: Arranger; pressed: Set<number>; showLetters: boolea
 
 // The 61 keys, drawn only when a key goes up or down, the letters are toggled, or the computer-key range moves.
 const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointerDown, splitShown }: KeysProps) {
+  // One letter per key; when a second computer key plays the same note, the main letter gets a * instead of both.
   const labelFor = new Map<number, string>();
-  for (const [, offset, label] of PC_KEYS) labelFor.set(pcBase + offset, labelFor.has(pcBase + offset) ? `${labelFor.get(pcBase + offset)} ${label}` : label);
+  for (const [code, offset, label] of PC_KEYS) {
+    if (SPARE_CODES.has(code)) continue;
+    labelFor.set(pcBase + offset, label);
+  }
+  for (const [code, offset, label] of PC_KEYS) {
+    if (!SPARE_CODES.has(code)) continue;
+    const main = labelFor.get(pcBase + offset);
+    labelFor.set(pcBase + offset, main ? (main.endsWith('*') ? main : `${main}*`) : label);
+  }
   const windowStart = whiteKeys.filter((white) => white < Math.max(LOW, pcBase - 1)).length * whiteWidth; // from A's B
   const windowEnd = whiteKeys.filter((white) => white <= Math.min(HIGH, pcBase + 31)).length * whiteWidth;
   return (
@@ -87,13 +96,21 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
               setTimeout(() => arranger.noteOff(key), 400);
             }}
           >
-            {showLetters && labelFor.has(key) && <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`}>{labelFor.get(key)}</span>}
+            <span className="pa-key-marks" aria-hidden="true">
+              {showLetters && labelFor.has(key) && <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`}>{labelFor.get(key)}</span>}
+              {!black && <span className={`pa-key-note pa-note-${NOTE_LETTERS[key % 12]}`}>{key % 12 === 0 ? keyName(key) : NOTE_LETTERS[key % 12]}</span>}
+            </span>
           </button>
         );
       })}
     </div>
   );
 });
+
+// Extra computer keys that repeat a note another key already plays (, . / L F); on the keys they show as a *.
+const SPARE_CODES = new Set(['Comma', 'Period', 'Slash', 'KeyL', 'KeyF']);
+// Note letter of each pitch class for the coloured note badges on the white keys (C carries its octave, as C4).
+const NOTE_LETTERS = ['C', '', 'D', '', 'E', 'F', '', 'G', '', 'A', '', 'B'];
 
 // A drawn computer keyboard: which key plays which note. Black-key rows sit between the white keys, as on a piano.
 const MAP_ROWS: { white: [string, string][]; black: (string | null)[] }[] = [
