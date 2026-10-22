@@ -847,10 +847,10 @@
     .pa-phonebar > :nth-child(2) { grid-column: 1 / 4; grid-row: 1; margin: 0 52px; }
     .pa-phonebar > :nth-child(3) { grid-column: 3; grid-row: 1; justify-self: end; }
     .pa-phonebar > :nth-child(1), .pa-phonebar > :nth-child(3) { width: 44px; position: relative; z-index: 1; }
-    .pa-phonebar { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .pa-phonebar > :nth-child(2) { grid-column: 1 / 5 !important; }
-    .pa-phonebar > :nth-child(3) { grid-column: 4 !important; }
-    .pa-phonebar > :nth-child(4), .pa-phonebar > :nth-child(5), .pa-phonebar > :nth-child(6), .pa-phonebar > :nth-child(7) { grid-row: 2; grid-column: auto; padding: 0 4px; }
+    .pa-phonebar { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+    .pa-phonebar > :nth-child(2) { grid-column: 1 / 6 !important; }
+    .pa-phonebar > :nth-child(3) { grid-column: 5 !important; }
+    .pa-phonebar > :nth-child(n + 4):not(.pa-rotate-hint) { grid-row: 2; grid-column: auto; padding: 0 2px; font-size: 0.74rem; }
     /* !important: the dial row also carries Tailwind's flex utility, whose layer wins over this one. */
     .pa-drawer:not(.pa-drawer-open) .pa-group,
     .pa-drawer:not(.pa-drawer-open) .pa-dial-row,
@@ -859,7 +859,13 @@
     .pa-drawer:not(.pa-drawer-open):has(.pa-sheet-open) .pa-centre { display: none; }
     .pa-drawer:not(.pa-drawer-open) .pa-sheet-open { margin-top: 0; }
     .pa-sheet-hint { display: none; }
-    .pa-drawer-open { max-height: 42dvh; overflow-y: auto; overscroll-behavior: contain; border-radius: 12px; }
+    .pa-drawer-open { max-height: max(300px, calc(100dvh - 485px)); overflow-y: auto; overscroll-behavior: contain; border-radius: 12px; }
+    /* Panel open: the display is fixed at the top of the panel and the buttons around it scroll underneath, as
+       the Korg's buttons sit around its screen. The brand row gives way to make room. */
+    .pa-drawer-open .pa-panel { display: flex; flex-direction: column; }
+    .pa-drawer-open .pa-centre { order: -1; position: sticky; top: 0; z-index: 3; margin: -10px -10px 0; padding: 10px 10px 8px; background: #1c1d21; box-shadow: 0 8px 10px -8px rgb(0 0 0 / 0.8); }
+    .pa-dial-row { display: none !important; }
+    .pa-body:has(.pa-drawer-open) .pa-top { display: none; }
     .pa-drawer:not(.pa-drawer-open) .pa-panel { padding: 0; border: 0; background: none; box-shadow: none; }
     .pa-drawer-open { animation: pa-drawer-in 0.25s ease-out; }
     .pa-keys { height: var(--keys-h, 44dvh); min-height: 220px; }
@@ -868,12 +874,16 @@
   /* Landscape phone, the way phone piano apps do it: the keys run edge to edge and fill the screen under one slim
      toolbar. The full front panel (scaled to fit) or the sheet music opens above the keys from that toolbar. */
   @media (max-height: 500px) and (orientation: landscape) {
-    .pa-overlay { padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+    /* Edge to edge: the stage has no side padding; the toolbar keeps inside the safe area (rounded corners), and
+       the keys keep clear only of the notch or Dynamic Island side (--island-l / --island-r, set from the turn). */
+    .pa-overlay { padding: 0 0 env(safe-area-inset-bottom); }
     .pa-overlay-close { position: absolute; top: 5px; right: calc(8px + env(safe-area-inset-right)); z-index: 90; display: grid; place-items: center; width: 32px; height: 32px; margin: 0; padding: 0; font-size: 0; background: rgb(20 22 26 / 0.92); }
     .pa-overlay-close span { font-size: 0.85rem; }
     .pa-top, .pa-howto, .pa-credits, .pa-rotate-hint { display: none !important; }
     .pa-body { padding: 0; border: 0; border-radius: 0; box-shadow: none; }
-    .pa-phonebar { display: flex; align-items: center; gap: 6px; margin: 0; padding: 5px 48px 5px 8px; }
+    .pa-phonebar { display: flex; align-items: center; gap: 6px; margin: 0; padding: 5px calc(48px + env(safe-area-inset-right)) 5px calc(8px + env(safe-area-inset-left)); }
+    .pa-keyrow { padding-left: var(--island-l, env(safe-area-inset-left)); padding-right: var(--island-r, env(safe-area-inset-right)); }
+    .pa-drawer { margin-left: auto !important; margin-right: auto !important; }
     .pa-phone-btn { height: 32px; font-size: 0.78rem; }
     .pa-phone-sound { flex: 1; height: 32px; font-size: 0.82rem; }
     .pa-phonebar > :nth-child(1), .pa-phonebar > :nth-child(3) { width: 38px; }
@@ -900,7 +910,7 @@
     .pa-left .pa-pedal { width: 60px; font-size: 0.6rem; padding: 0.35rem 0.2rem; }
     .pa-body:has(.pa-drawer-open) .pa-keyrow { grid-template-columns: auto 1fr; gap: 6px; }
     .pa-felt { margin: 4px 0 0; height: 4px; }
-    .pa-minimap { margin: 4px 8px; }
+    .pa-minimap { margin: 4px calc(8px + env(safe-area-inset-right)) 4px calc(8px + env(safe-area-inset-left)); }
     .pa-keys { height: var(--keys-h, calc(100dvh - 70px)); min-height: 150px; min-width: calc(36 * 58px); }
   }
   @keyframes pa-drawer-in { from { transform: translateY(-14px); opacity: 0; } to { transform: none; opacity: 1; } }

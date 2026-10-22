@@ -99,8 +99,15 @@ const hamsadhwani = () => {
   return phrases(62, 0.5, parts);
 };
 
+// Jana Gana Mana, the national anthem of India (Rabindranath Tagore, public domain): the melody in C, 4/4, sung
+// to Sa = C. Taken from the flutetunes.com melody file and checked line by line against two published sargam
+// versions; at its two disagreements (the fifth note of "Punjab Sindhu" and the last "jaya he") it follows the
+// two sargams, which agree with each other. At 0.48 s a beat it lasts about 52 seconds, the official full version.
+const janaGanaMana = () => tune(0.48, [[72, 0.5], [74, 0.5], [76, 0.5], [76, 0.5], [76, 0.5], [76, 0.5], [76, 0.5], [76, 0.5], [76, 1], [76, 0.5], [76, 0.5], [74, 0.5], [76, 0.5], [77, 1], [76, 1], [76, 0.5], [76, 0.5], [74, 1], [74, 0.5], [74, 0.5], [71, 0.5], [74, 0.5], [72, 2], [72, 1], [79, 1], [79, 0.5], [79, 0.5], [79, 0.5], [79, 0.5], [79, 0.5], [79, 0.5], [79, 1], [79, 0.5], [78, 0.5], [79, 0.5], [78, 0.5], [79, 1], [77, 1], [77, 0.5], [77, 0.5], [77, 1], [77, 0.5], [76, 0.5], [74, 0.5], [77, 0.5], [76, 3], [76, 1], [76, 0.5], [76, 0.5], [76, 1], [76, 0.5], [74, 0.5], [79, 0.5], [79, 0.5], [79, 0.5], [77, 0.5], [77, 1], [77, 1], [76, 1], [76, 0.5], [76, 0.5], [74, 1], [74, 0.5], [74, 0.5], [71, 0.5], [74, 0.5], [72, 3], [76, 0.5], [76, 0.5], [76, 0.5], [76, 0.5], [76, 1], [76, 0.5], [77, 0.5], [74, 0.5], [76, 0.5], [77, 3], [76, 0.5], [77, 0.5], [79, 0.5], [79, 0.5], [79, 1], [77, 0.5], [76, 0.5], [74, 0.5], [77, 0.5], [76, 3], [76, 1], [76, 1], [74, 0.5], [74, 0.5], [74, 0.5], [74, 0.5], [71, 0.5], [74, 0.5], [72, 3], [79, 0.5], [79, 0.5], [79, 0.5], [79, 0.5], [79, 1], [79, 0.5], [78, 0.5], [79, 1], [79, 0.5], [79, 0.5], [78, 0.5], [81, 0.5], [79, 1], [77, 1], [77, 0.5], [77, 0.5], [76, 1], [76, 0.5], [76, 0.25], [77, 0.25], [74, 0.5], [77, 0.5], [76, 2], [83, 0.5], [83, 0.5], [84, 3], [83, 0.5], [81, 0.5], [83, 3], [81, 0.5], [79, 0.5], [81, 4], [72, 0.5], [72, 0.5], [74, 0.5], [74, 0.5], [76, 0.5], [76, 0.5], [74, 0.5], [76, 0.5], [77, 4]]);
+
 export const songs: Song[] = [
   { id: 'twinkle', title: 'Twinkle, Twinkle, Little Star', composer: 'Traditional', detail: 'A first piece: one hand, five notes', sound: 'Grand Piano', notes: twinkle, beat: 0.6, easy: true },
+  { id: 'anthem', title: 'Jana Gana Mana', composer: 'Rabindranath Tagore', detail: 'The national anthem of India, full version', sound: 'Grand Piano', notes: janaGanaMana, beat: 0.48, shift16: 0, easy: true },
   { id: 'birthday', title: 'Happy Birthday to You', composer: 'Mildred & Patty Hill', detail: 'In 3/4, with a pickup and a dotted rhythm', sound: 'Grand Piano', notes: birthday, beat: 0.55, meter: { beats: 3, unit: 4 }, shift16: 8, easy: true },
   { id: 'bach', title: 'Prelude in C major, BWV 846', composer: 'J. S. Bach', detail: 'The Well-Tempered Clavier, Book I', sound: 'Grand Piano', file: '/songs/wtk1-prelude1.mid' },
   { id: 'elise', title: 'Für Elise, WoO 59', composer: 'L. van Beethoven', detail: 'Bagatelle in A minor', sound: 'Grand Piano', file: '/songs/fur_Elise_WoO59.mid' },

@@ -7,7 +7,7 @@ export default function Navigation() {
   const lens = useLens(bar);
 
   return (
-    <header className="segment fixed inset-x-0 top-3 z-50 px-3 sm:top-4">
+    <header className="segment site-header fixed inset-x-0 z-50">
       <GlassFilter lens={lens} />
       <div ref={bar} data-lens={lens ? '' : undefined} className="glass mx-auto flex max-w-[calc(64rem-2.5rem)] items-center justify-between rounded-[1.75rem] py-2 pr-2 pl-5 sm:pl-6">
         <a href="#top" className="text-lg font-semibold tracking-tight whitespace-nowrap sm:text-2xl">

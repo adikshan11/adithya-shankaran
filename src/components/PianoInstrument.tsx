@@ -365,8 +365,17 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       const root = scroller.current?.closest<HTMLElement>('.pa-instrument');
       if (!root) return;
       if (window.matchMedia('(max-height: 500px) and (orientation: landscape)').matches) {
-        // Scale the panel to the width first, then shrink it until the keys get at least KEYS_MIN pixels of height.
-        let scale = Math.min((root.clientWidth - 24) / PANEL_WIDTH, 1);
+        // A phone on its side reports the same safe-area inset left and right, but the notch or Dynamic Island is
+        // only on one side: the top of the phone. Keep the keys clear of that side only, so they run to the other
+        // edge. The turn decides the side: 90 degrees (turned left) puts the top of the phone on the left.
+        const turn = (window as Window & { orientation?: number }).orientation ?? screen.orientation?.angle;
+        const island = turn === 90 ? 'left' : turn === -90 || turn === 270 ? 'right' : 'both';
+        root.style.setProperty('--island-l', island === 'right' ? '0px' : 'env(safe-area-inset-left)');
+        root.style.setProperty('--island-r', island === 'left' ? '0px' : 'env(safe-area-inset-right)');
+        // Scale the panel to the width inside the safe area, then shrink it until the keys get KEYS_MIN pixels.
+        const bar = root.querySelector<HTMLElement>('.pa-phonebar');
+        const insets = bar ? parseFloat(getComputedStyle(bar).paddingLeft) - 8 + parseFloat(getComputedStyle(bar).paddingRight) - 48 : 0;
+        let scale = Math.min((root.clientWidth - 24 - Math.max(0, insets)) / PANEL_WIDTH, 1);
         root.style.setProperty('--fit', scale.toFixed(3));
         const keys = root.querySelector<HTMLElement>('.pa-keys');
         const panel = root.querySelector<HTMLElement>('.pa-drawer');
@@ -937,6 +946,24 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             ♪ Sheet
           </button>
           <button type="button" className="pa-phone-btn pa-phone-wide" aria-expanded={drawer} onClick={() => { setDrawer((value) => !value); setShowSheet(false); }}>{drawer ? '▴ Less' : '☰ Panel'}</button>
+          <button
+            type="button"
+            className={`pa-phone-btn pa-phone-wide ${learn ? 'pa-phone-on' : ''}`}
+            aria-pressed={Boolean(learn)}
+            onClick={() => {
+              if (arranger.learn) {
+                arranger.stopLearn();
+                setShowSheet(false);
+                say('Learn stopped.');
+                return;
+              }
+              setDrawer(false);
+              setShowSheet(false);
+              open('learn');
+            }}
+          >
+            {learn ? '■ Learn' : '♫ Learn'}
+          </button>
           <span className="pa-rotate-hint">↻ Turn sideways for a bigger keyboard</span>
         </div>
 
