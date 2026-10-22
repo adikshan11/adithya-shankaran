@@ -64,7 +64,7 @@ export const experience = {
       points: [
         { topic: 'Cloud migration', text: 'led the migration of 13 e-commerce data sources (OMS, Hybris, Shopify, Salsify, Cordial, Zendesk and more) from Databricks to Dataproc and BigQuery, each validated.' },
         { topic: 'Change data capture', text: 'designed CDC for the OMS order tables with Datastream, with BigQuery snapshot and change views as the single source of truth for order reporting, to replace Qlik.' },
-        { topic: 'Data quality', text: 'built Dataplex data-quality scans for 2 data products with thresholds tested on years of production data, and a CI gate that blocks dbt models without a scan.' },
+        { topic: 'Data quality', text: 'built Dataplex data-quality scans for 2 data products with thresholds tested on years of production data.' },
         { topic: 'Generative AI', text: 'at the Centre of Excellence, RAG extraction with LlamaIndex chunking into Weaviate and ChromaDB, and a Claude (AWS Bedrock) Terraform linter for all 6 Well-Architected pillars.' },
       ],
     },
@@ -105,7 +105,7 @@ export const principles = [
   {
     kind: 'Data quality',
     title: 'Profile first, then enforce',
-    text: '**Dataplex** scans with thresholds tested on years of production data, and a CI gate that blocks any dbt model shipped without one.',
+    text: '**Dataplex** data-quality scans for 2 data products, with thresholds tested on years of production data first.',
   },
   {
     kind: 'Architecture',
