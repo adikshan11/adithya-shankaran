@@ -1,13 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Take } from '../piano/recorder';
-import { deleteTake, download, toMidi, toWav } from '../piano/recorder';
+import { deleteTake, download, saveTake, toMidi, toWav } from '../piano/recorder';
 
 const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
-const fileName = (take: Take) => `Adithya piano ${new Date(take.created).toISOString().slice(0, 16).replace('T', ' ').replace(':', '-')}`;
+// Files carry the take's name (as renamed) and its date, with characters no file system accepts removed.
+const fileName = (take: Take) => `${take.name.replace(/[\\/:*?"<>|]/g, '').trim() || 'Take'} ${new Date(take.created).toISOString().slice(0, 10)}`;
 
 // The Recordings page on the touch screen: play a take, save it as WAV or MIDI, or delete it.
 export default function TakesList({ takes, ctx, onChange, say }: { takes: Take[]; ctx: () => BaseAudioContext | null; onChange: () => void; say: (text: string) => void }) {
   const [playing, setPlaying] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const rename = (take: Take, name: string) => {
+    setEditing(null);
+    const clean = name.trim().slice(0, 60);
+    if (!clean || clean === take.name) return;
+    void saveTake({ ...take, name: clean }).then(onChange);
+  };
   const player = useRef<HTMLAudioElement | null>(null);
   useEffect(() => () => player.current?.pause(), []);
 
@@ -43,7 +51,25 @@ export default function TakesList({ takes, ctx, onChange, say }: { takes: Take[]
       {takes.map((take) => (
         <div key={take.id} className={`pa-take ${playing === take.id ? 'pa-take-on' : ''}`}>
           <span className="pa-take-name">
-            {take.name}
+            {editing === take.id ? (
+              <input
+                className="pa-take-input"
+                defaultValue={take.name}
+                aria-label="Name of this recording"
+                autoFocus
+                maxLength={60}
+                onFocus={(event) => event.currentTarget.select()}
+                onBlur={(event) => rename(take, event.currentTarget.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') rename(take, event.currentTarget.value);
+                  if (event.key === 'Escape') setEditing(null);
+                }}
+              />
+            ) : (
+              <button type="button" className="pa-take-title" title="Tap to rename" onClick={() => setEditing(take.id)}>
+                {take.name} <span aria-hidden="true">✎</span>
+              </button>
+            )}
             <small>{clock(take.duration)} · {take.events.filter((event) => event.type === 'on').length} notes</small>
           </span>
           <button type="button" className="pa-take-btn" onClick={() => play(take)}>{playing === take.id ? '■' : '▶'}</button>

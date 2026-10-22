@@ -512,6 +512,10 @@
   .pa-take-on { box-shadow: inset 0 0 0 1.5px #59d0ff; }
   .pa-take-name { display: flex; flex-direction: column; min-width: 0; overflow: hidden; font-size: 0.8rem; font-weight: 700; color: #eef4ff; white-space: nowrap; text-overflow: ellipsis; }
   .pa-take-name small { font-size: 0.62rem; font-weight: 600; color: #8ca3c9; }
+  .pa-take-title { max-width: 100%; overflow: hidden; text-overflow: ellipsis; text-align: left; font: inherit; color: inherit; }
+  .pa-take-title span { margin-left: 4px; font-size: 0.7rem; color: #59d0ff; opacity: 0.7; }
+  .pa-take-title:hover span { opacity: 1; }
+  .pa-take-input { width: 100%; padding: 2px 6px; border-radius: 5px; font: inherit; color: #071a33; background: #eef6ff; box-shadow: inset 0 0 0 1.5px #59d0ff; }
   .pa-take-btn { min-width: 34px; height: 28px; padding: 0 8px; border-radius: 5px; font-size: 0.68rem; font-weight: 800; color: #dff6ff; background: #1d3b6e; box-shadow: inset 0 0 0 1px #2a62c9; }
   .pa-take-btn:hover:not(:disabled) { background: #24508f; }
   .pa-take-btn:disabled { opacity: 0.4; }
@@ -570,16 +574,18 @@
   .pa-ctl-row { display: flex; gap: 6px; }
   /* Learn coach */
   .pa-coach { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; }
-  .pa-coach-figure { flex: none; width: 92px; height: 103px; overflow: visible; filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.22)); }
-  @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) { .pa-coach-figure { width: 62px; height: 70px; } }
+  .pa-coach-figure { flex: none; width: 100px; height: 117px; overflow: visible; filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.22)); }
+  @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) { .pa-coach-figure { width: 66px; height: 77px; } }
   .pa-coach-bubble { position: relative; flex: 1; min-width: 0; margin: 0; padding: 9px 14px; border-radius: 14px; font-size: 0.86rem; font-weight: 600; line-height: 1.4; color: #20232a; background: #fff; box-shadow: 0 2px 0 rgb(0 0 0 / 0.08), inset 0 0 0 1.5px #e1e4ea; }
   .pa-coach-bubble::before { content: ""; position: absolute; left: -7px; top: 50%; width: 14px; height: 14px; margin-top: -7px; background: inherit; transform: rotate(45deg); box-shadow: -1.5px 1.5px 0 #e1e4ea; }
   .pa-coach-upset .pa-coach-bubble { background: #fff4e5; }
   .pa-coach-angry .pa-coach-bubble { background: #ffe9e7; }
   .pa-coach-happy .pa-coach-bubble { background: #ecfbf1; }
   .co-shadow { fill: rgb(0 0 0 / 0.18); }
-  .co-paw { fill: none; stroke: #f39a3d; stroke-width: 7; stroke-linecap: round; }
-  .co-whisker { fill: none; stroke: #8a5a3c; stroke-width: 1; stroke-linecap: round; opacity: 0.7; }
+  .co-paw { fill: none; stroke: #ffb062; stroke-width: 8; stroke-linecap: round; }
+  .co-paw-edge { fill: none; stroke: #d9732a; stroke-width: 10.5; stroke-linecap: round; }
+  .co-stripe { fill: none; stroke: #e0731f; stroke-width: 2.4; stroke-linecap: round; opacity: 0.8; }
+  .co-whisker { fill: none; stroke: #7a4e33; stroke-width: 1; stroke-linecap: round; opacity: 0.65; }
   .co-ear { transition: transform 0.3s ease-out; }
   .co-cheek { fill: #ff7f7f; opacity: 0.45; }
   .co-stroke { fill: none; stroke: #3a2418; stroke-linecap: round; stroke-linejoin: round; }
@@ -587,16 +593,21 @@
   .co-flush { fill: #ff3b30; opacity: 0; transition: opacity 0.2s; }
   .pa-coach-angry .co-flush { opacity: 0.3; }
   /* The pendulum keeps the practice tempo (one swing per beat); it stands still in surprise and droops when upset. */
-  .co-pendulum { transform-box: view-box; transform-origin: 60px 112px; animation: co-swing var(--beat, 0.6s) ease-in-out infinite alternate; }
+  .co-pendulum { transform-box: view-box; transform-origin: 60px 125px; animation: co-swing var(--beat, 0.6s) ease-in-out infinite alternate; }
+  .co-tail { transform-box: view-box; transform-origin: 80px 124px; animation: co-tail var(--beat, 0.6s) ease-in-out infinite alternate; }
+  .pa-coach-astonished .co-tail { animation: none; transform: rotate(-18deg); }
+  .pa-coach-upset .co-tail { animation: none; transform: rotate(40deg); transition: transform 0.4s ease-out; }
+  .pa-coach-angry .co-tail { animation-duration: 0.12s; }
+  @keyframes co-tail { from { transform: rotate(-14deg); } to { transform: rotate(10deg); } }
   .pa-coach-astonished .co-pendulum { animation: none; transform: none; }
-  .pa-coach-upset .co-pendulum { animation: none; transform: rotate(-40deg); transition: transform 0.4s ease-out; }
+  .pa-coach-upset .co-pendulum { animation: none; transform: rotate(-12deg); }
   .pa-coach-angry .co-pendulum { animation-duration: 0.12s; }
-  .co-act { transform-box: view-box; transform-origin: 60px 126px; }
+  .co-act { transform-box: view-box; transform-origin: 60px 134px; }
   .pa-coach-happy .co-act { animation: co-jump 0.45s cubic-bezier(0.3, 1.5, 0.5, 1); }
   .pa-coach-astonished .co-act { animation: co-leap 0.6s cubic-bezier(0.3, 1.6, 0.5, 1); }
   .pa-coach-upset .co-act { animation: co-slump 0.5s ease-out forwards; }
   .pa-coach-angry .co-act { animation: co-stamp 0.45s ease-in-out 2; }
-  @keyframes co-swing { from { transform: rotate(-20deg); } to { transform: rotate(20deg); } }
+  @keyframes co-swing { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
   @keyframes co-jump { 0% { transform: scale(1.05, 0.92); } 45% { transform: translateY(-10px) scale(0.97, 1.05); } 100% { transform: none; } }
   @keyframes co-leap { 0% { transform: scale(1.1, 0.88); } 40% { transform: translateY(-14px) scale(0.95, 1.08) rotate(-4deg); } 70% { transform: translateY(-3px) rotate(3deg); } 100% { transform: none; } }
   @keyframes co-slump { to { transform: translateY(3px) scale(1.03, 0.95); } }
