@@ -702,7 +702,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   useEffect(() => {
     const bed = scroller.current;
     if (!bed) return;
-    const touches = new Map<number, { x: number; key: number | null; first: number | null }>();
+    const touches = new Map<number, { x: number; y: number; key: number | null; first: number | null }>();
     let sliding = false;
     let startX = 0;
     let lastX = 0;
@@ -714,13 +714,16 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     const down = (event: PointerEvent) => {
       if (event.pointerType !== 'touch') return;
       const key = keyAt(event.clientX, event.clientY);
-      touches.set(event.pointerId, { x: event.clientX, key, first: key });
+      touches.set(event.pointerId, { x: event.clientX, y: event.clientY, key, first: key });
       startX = lastX = average();
     };
     const move = (event: PointerEvent) => {
       const touch = touches.get(event.pointerId);
       if (!touch) return;
+      const fromX = touch.x;
+      const fromY = touch.y;
       touch.x = event.clientX;
+      touch.y = event.clientY;
       if (touches.size >= 2) {
         const x = average();
         if (!sliding && Math.abs(x - startX) > 24) {
@@ -736,11 +739,17 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           return;
         }
       }
-      const key = keyAt(event.clientX, event.clientY);
-      if (key === null || key === touch.key) return;
-      if (touch.key !== null && ![...touches.values()].some((other) => other !== touch && other.key === touch.key)) arranger.noteOff(touch.key);
-      touch.key = key;
-      arranger.noteOn(key, 0.7);
+      // Walk the path from the last point to this one in small steps (a fast slide skips keys between the move
+      // events the browser sends), playing each key the finger crosses.
+      const distance = Math.hypot(event.clientX - fromX, event.clientY - fromY);
+      const steps = Math.max(1, Math.ceil(distance / 6));
+      for (let step = 1; step <= steps; step++) {
+        const key = keyAt(fromX + ((event.clientX - fromX) * step) / steps, fromY + ((event.clientY - fromY) * step) / steps);
+        if (key === null || key === touch.key) continue;
+        if (touch.key !== null && ![...touches.values()].some((other) => other !== touch && other.key === touch.key)) arranger.noteOff(touch.key);
+        touch.key = key;
+        arranger.noteOn(key, 0.7);
+      }
     };
     const up = (event: PointerEvent) => {
       const touch = touches.get(event.pointerId);
