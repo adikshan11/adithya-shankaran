@@ -22,6 +22,16 @@ function PanelButton({ label, onClick, active, tone = 'grey', className = '' }: 
   );
 }
 
+// Pointer capture keeps a drag on the joystick or dial even when the pointer leaves it; some synthetic or assistive
+// pointers have nothing to capture, which must not throw.
+function capture(event: ReactPointerEvent<HTMLElement>) {
+  try {
+    event.currentTarget.setPointerCapture(event.pointerId);
+  } catch {
+    // no active pointer to capture
+  }
+}
+
 // Velocity from where the key is struck: nearer the front edge is a firmer press, as on a real keybed.
 function velocityOf(event: ReactPointerEvent<HTMLElement>) {
   const box = event.currentTarget.getBoundingClientRect();
@@ -229,7 +239,7 @@ export default function PianoInstrument() {
 
   // Joystick, left of the keys as on the Pa300: sideways bends the pitch (up to two semitones), up adds vibrato.
   const moveJoy = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    if (event.type === 'pointermove' && !event.currentTarget.hasPointerCapture(event.pointerId)) return;
     const box = event.currentTarget.getBoundingClientRect();
     const x = Math.max(-1, Math.min(1, ((event.clientX - box.left) / box.width) * 2 - 1));
     const y = Math.max(0, Math.min(1, 1 - ((event.clientY - box.top) / box.height) * 2));
@@ -295,7 +305,7 @@ export default function PianoInstrument() {
                 aria-valuemax={240}
                 aria-valuenow={arranger.tempo}
                 onPointerDown={(event) => {
-                  event.currentTarget.setPointerCapture(event.pointerId);
+                  capture(event);
                   dial.current = { y: event.clientY, tempo: arranger.tempo };
                 }}
                 onPointerMove={(event) => {
@@ -372,7 +382,7 @@ export default function PianoInstrument() {
               aria-valuemax={2}
               aria-valuenow={Math.round(joy.x * 20) / 10}
               onPointerDown={(event) => {
-                event.currentTarget.setPointerCapture(event.pointerId);
+                capture(event);
                 moveJoy(event);
               }}
               onPointerMove={moveJoy}
