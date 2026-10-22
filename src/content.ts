@@ -6,8 +6,8 @@ export const profile = {
   email: 'adikshan11@gmail.com',
   headline: ['Building the ', 'data foundations', ' that ', 'analytics and AI', ' run on.'],
   intro: [
-    'Data engineer at **Xebia**, working directly with a global apparel retail brand’s product owners and **BI analysts** on the pipelines, **CDC**, data models and **data quality** checks on Google Cloud behind their sales and demand reporting, plus **RAG** and **LangGraph** AI agents.',
-    'Recently: one reusable **Dataproc** component for **524 production schedules**, per-task **timeouts** with alerts on **59 tasks**, and **1,455 missing records** repaired across **6 months** of events.',
+    'I’m a data engineer at **Xebia**. I build and run the Google Cloud pipelines behind a global apparel retail brand’s **sales and demand reporting**, and I work directly with the product owners and **BI analysts** who depend on it.',
+    'Lately that has meant getting the marketing team’s dashboard **complete again** after a field went missing, making stuck jobs **fail and alert** instead of reporting success, and moving **524 production schedules** onto one shared Dataproc component. I also build **RAG** and **LangGraph** agents, at work and in **imaarat.ai**.',
     'Away from pipelines I play the [piano], cheer for Real Madrid, and lose more hours to Minecraft than I should.',
   ],
   status: [
@@ -47,12 +47,13 @@ export const experience = {
       start: '2026-07',
       stack: ['Dataproc', 'Vertex AI', 'BigQuery', 'DBT', 'Dataplex'],
       points: [
-        { topic: 'Platform engineering', text: 'unified duplicated Dataproc pipeline templates into one reusable framework component powering 524 production schedules with zero output regressions, plus time limits on 600+ DAGs that expose silent 4-hour failures.' },
-        { topic: 'Reliability', text: 'designed per-task time limits in the shared Vertex AI pipeline framework, sized from measured production run times, with alerts naming the failed task; enforced on 59 tasks across 25 e-commerce pipelines.' },
-        { topic: 'Data correctness', text: 'restored a missing campaign attribute for the site marketing team’s twice-weekly reporting with a chained dbt backfill across 6 months of events, reconciling 4,200 hourly windows and repairing 1,455 missing records.' },
-        { topic: 'Cost optimization', text: 'ended repeated 4-hour timeouts on a high-cost Hybris Spark pipeline (0 of 9 runs finished before, 11 of 16 after) and cut its daily cost 19.7%; right-sized clusters for 29 pipelines (17.6% lower cost).' },
-        { topic: 'Source migration', text: 'led preprod validation of 7 Hybris pipelines on the new SQL Server Hyperscale source; all 7 matched.' },
-        { topic: 'Engineering practice', text: 'triaged production incidents, reviewed 102 pull requests across 7 repositories and wrote 7 design and analysis docs.' },
+        { topic: 'Data correctness', text: 'The site marketing team’s twice-weekly dashboard lost its campaign field in September 2026. I fixed the pipeline and ran a chained dbt backfill over 6 months of events, repairing 1,455 records, so their reports are complete again.' },
+        { topic: 'Silent failures', text: 'Batches stopped at the 4-hour Dataproc limit were still reported as successful. I added time limits to 600+ DAGs, sized from each job’s worst recent runs, so a timed-out job now fails and raises an alert.' },
+        { topic: 'Pipeline framework', text: 'Owned per-task time limits in the shared Vertex AI pipeline framework: each limit comes from measured run times, and the alert names the task that failed. Live on 59 tasks across 25 e-commerce pipelines.' },
+        { topic: 'Cost', text: 'A high-cost Hybris Spark pipeline was cancelled at the 4-hour limit on 9 of 9 days. After I pruned its lookup joins and partition scans, 11 of 16 runs succeeded and daily cost fell 19.7%. I also right-sized clusters for 29 pipelines, cutting their cost 17.6%.' },
+        { topic: 'Shared component', text: 'Merged duplicated Dataproc pipeline templates into one framework component. 524 production schedules now run on it with no change in output.' },
+        { topic: 'Source migration', text: 'Led preprod validation of 7 Hybris pipelines on the new SQL Server Hyperscale source; all 7 matched the old output.' },
+        { topic: 'Team practice', text: 'Reviewed 102 pull requests across 7 repositories, triaged production incidents and wrote 7 design and analysis docs.' },
       ],
     },
     {
@@ -62,10 +63,11 @@ export const experience = {
       end: '2026-06',
       stack: ['Apache Spark', 'Dataproc', 'BigQuery', 'Datastream', 'Dataplex', 'LLMs', 'RAG'],
       points: [
-        { topic: 'Cloud migration', text: 'led the migration of 13 e-commerce data sources (OMS, Hybris, Shopify, Salsify, Cordial, Zendesk and more) from Databricks to Dataproc and BigQuery, each validated.' },
-        { topic: 'Change data capture', text: 'designed CDC for the OMS order tables with Datastream, with BigQuery snapshot and change views as the single source of truth for order reporting, to replace Qlik.' },
-        { topic: 'Data quality', text: 'built Dataplex data-quality scans for 2 data products with thresholds tested on years of production data, and a CI gate that blocks dbt models without a scan.' },
-        { topic: 'Generative AI', text: 'at the Centre of Excellence, RAG extraction with LlamaIndex chunking into Weaviate and ChromaDB, and a Claude (AWS Bedrock) Terraform linter for all 6 Well-Architected pillars.' },
+        { topic: 'Cloud migration', text: 'Led the move of 13 e-commerce sources (OMS, Hybris, Shopify, Salsify, Cordial, Zendesk and more) from Databricks to Dataproc and BigQuery, checking each one against the old output.' },
+        { topic: 'Order reporting', text: 'Designed change data capture for the OMS order tables with Datastream, so order reporting reads one source of truth in BigQuery (snapshot and change views), to replace Qlik.' },
+        { topic: 'Data quality', text: 'Built Dataplex quality scans for 2 data products, with thresholds tested against years of production data, and a CI gate that blocks dbt models shipped without a scan.' },
+        { topic: 'Client work', text: 'Turned the Looker Studio sales and demand reporting needs of the brand’s product owners and BI analysts into data models.' },
+        { topic: 'Generative AI', text: 'At the Centre of Excellence, built RAG document extraction (LlamaIndex chunking into Weaviate and ChromaDB) and a Terraform linter that uses Claude on AWS Bedrock to check all 6 Well-Architected pillars.' },
       ],
     },
   ] satisfies Role[],
@@ -85,32 +87,32 @@ export function tenure(start: string, end?: string, today = new Date()) {
 }
 
 export const metrics = [
-  { value: '13', label: 'e-commerce sources migrated to Spark on Google Cloud' },
-  { value: '524', label: 'production schedules on one reusable Dataproc component' },
-  { value: '59', label: 'pipeline tasks with per-task time limits and named alerts' },
-  { value: '1,455', label: 'missing records repaired across 6 months of events' },
+  { value: '1,455', label: 'records restored to the marketing team’s reports' },
+  { value: '600+', label: 'DAGs that now fail and alert instead of hiding a timeout' },
+  { value: '524', label: 'production schedules running on one shared component' },
+  { value: '13', label: 'e-commerce sources moved off Databricks, each validated' },
 ];
 
 export const principles = [
   {
     kind: 'Reliability',
     title: 'Failures are loud',
-    text: 'Shipped per-task **timeouts** with named alerts in the shared pipeline framework, so a stuck job stops and pages the team instead of burning hours of compute.',
+    text: 'A stuck job should stop and alert, not run for hours and report success. Per-task **timeouts** in the shared framework name the task that failed.',
   },
   {
     kind: 'Cost',
     title: 'Cost is a design input',
-    text: 'Pruned joins and scans on a high-cost Spark pipeline: no more 4-hour timeouts (0 of 9 runs finished before, 11 of 16 after) and **19.7%** lower daily cost. Clusters for 29 pipelines are sized from measured runs, not defaults.',
+    text: 'Pruning joins and scans on a costly Spark pipeline took it from 0 of 9 runs finishing to 11 of 16, at **19.7%** lower daily cost. Clusters for 29 pipelines are sized from measured runs, not defaults.',
   },
   {
     kind: 'Data quality',
     title: 'Profile first, then enforce',
-    text: '**Dataplex** scans with thresholds tested on years of production data, and a CI gate that blocks any dbt model shipped without one.',
+    text: '**Dataplex** thresholds come from years of production data, and CI blocks any dbt model that ships without a scan.',
   },
   {
     kind: 'Architecture',
     title: 'Move changes, not tables',
-    text: 'Order-data **CDC** with Datastream into BigQuery, with snapshot and change views, replacing third-party replication.',
+    text: 'Order data moves as changes: **CDC** with Datastream into BigQuery snapshot and change views, designed to replace third-party replication.',
   },
   {
     kind: 'AI',
@@ -119,8 +121,8 @@ export const principles = [
   },
   {
     kind: 'Operations',
-    title: 'Health checks stay green',
-    text: 'Fixed platform **health-check** failures at the cause: renamed data mart tables to the naming standard and added table and dependent-table descriptions for the data products.',
+    title: 'Fix the cause',
+    text: 'Cleared platform **health-check** failures at the source: renamed data mart tables to the naming standard and added table and dependent-table descriptions for the data products.',
   },
 ];
 
@@ -137,14 +139,14 @@ export const projects: Project[] = [
   {
     name: 'imaarat.ai',
     summary:
-      'AI underwriting for Indian commercial property: rules score each proposal against official seismic, flood and cyclone data for 19,312 PIN codes, AI reads hand-filled forms in 26 languages, and referrals wait for reviewer sign-off. Ships with a nightly medallion dbt pipeline, evals, tracing, MCP and A2A APIs, and CI/CD.',
+      'Underwriters get a risk decision they can check: rules score each commercial property proposal against official seismic, flood and cyclone data for 19,312 Indian PIN codes, AI reads hand-filled forms in 26 languages and explains the score, and a reviewer signs off. I built it myself: hazard joins by PIN code, a nightly ELT to Parquet, 9 dbt models with 26 tests, and LangGraph agents served over MCP and A2A.',
     stack: ['FastAPI', 'DBT', 'DuckDB', 'PostgreSQL', 'LangGraph', 'Langfuse', 'RAG', 'MCP'],
     links: [
       { label: 'Live', href: 'https://imaarat-ai.vercel.app' },
       { label: 'Code', href: 'https://github.com/adikshan11/imaarat-ai' },
       { label: 'Docs', href: 'https://adikshan11.github.io/imaarat-ai/' },
     ],
-    note: 'Xebia capstone, team of three',
+    note: 'Inspired by a Xebia capstone team project',
     image: { src: '/projects/imaarat.webp', alt: 'imaarat.ai assessment result with risk score, decision, reasons and score breakdown' },
   },
   {
@@ -158,7 +160,7 @@ export const projects: Project[] = [
   {
     name: 'IaC Linter',
     summary:
-      'Checks Terraform against all 6 AWS Well-Architected pillars, including security, with Claude on AWS Bedrock, then applies fixes with backups.',
+      'Reviews Terraform against all 6 AWS Well-Architected pillars, security included, using Claude on AWS Bedrock, then applies the fixes and keeps backups.',
     stack: ['Python', 'AWS Bedrock', 'Terraform'],
     links: [{ label: 'Code', href: 'https://github.com/XI4684-AdithyaShankaran/Iac-Linter' }],
   },
