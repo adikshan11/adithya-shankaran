@@ -63,25 +63,25 @@ export default function PianoRoom() {
   // instrument does not redraw when the curtain opens.
   const partCurtain = useCallback(() => {
     const idle = (window as Window & { requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number }).requestIdleCallback;
-    const go = () => document.getElementById('piano-stage')?.querySelectorAll('.pa-curtains, .pa-keys, .pa-screen').forEach((element) => element.classList.add('pa-go'));
+    const go = () => document.querySelectorAll('.pa-tear, #piano-stage .pa-keys').forEach((element) => element.classList.add('pa-go'));
     if (idle) idle(go, { timeout: 400 });
     else setTimeout(go, 100);
   }, []);
 
   return (
     <section id="piano" aria-labelledby="piano-heading" className="py-8">
-      <div className="card flex flex-wrap items-center justify-between gap-5 p-5">
-        <div className="flex items-center gap-4">
-          <span className="pa-seal" aria-hidden="true">
-            <span className="pa-seal-grade">8</span>
-            <span className="pa-seal-word">GRADE</span>
-          </span>
-          <div>
-            <h2 id="piano-heading" className="text-2xl font-bold tracking-tight">Off the clock</h2>
-            <p className="mt-1 text-xs font-bold tracking-[0.14em] text-accent uppercase">Certificate</p>
-            <p className="font-semibold text-ink">Grade 8 in Electronic Keyboard, Trinity Guildhall (Trinity College London)</p>
-            <p className="mt-0.5 text-sm text-muted">Earned while learning piano as a child. Behind the curtain is an arranger keyboard you can play.</p>
-          </div>
+      <div className="card pa-card p-5">
+        <span className="pa-seal pa-card-seal" aria-hidden="true">
+          <span className="pa-seal-grade">8</span>
+          <span className="pa-seal-word">GRADE</span>
+        </span>
+        <div className="pa-card-title">
+          <h2 id="piano-heading" className="text-2xl font-bold tracking-tight">Off the clock</h2>
+          <p className="mt-1 text-xs font-bold tracking-[0.14em] text-accent uppercase">Certificate</p>
+        </div>
+        <div className="pa-card-text">
+          <p className="font-semibold text-ink">Grade 8 in Electronic Keyboard, Trinity Guildhall (Trinity College London)</p>
+          <p className="mt-0.5 text-sm text-muted">Earned while learning piano as a child. Open the stage to play an arranger keyboard.</p>
         </div>
         <button
           ref={trigger}
@@ -93,10 +93,11 @@ export default function PianoRoom() {
           onPointerEnter={() => void loadInstrument()}
           onFocus={() => void loadInstrument()}
           onClick={() => pianoStore.set(!open)}
-          className="pa-handle"
+          className="pa-handle pa-card-button"
         >
           <PianoIcon open={open} />
           <span className="pa-handle-text" aria-hidden="true">{open ? 'Close' : 'Play'}</span>
+          <span className="pa-handle-wide" aria-hidden="true">{open ? 'Close the piano' : 'Play the piano'}</span>
         </button>
       </div>
 
@@ -104,6 +105,15 @@ export default function PianoRoom() {
         createPortal(
           <div className="pa-overlay" role="dialog" aria-modal="true" aria-label="Piano stage" onClick={(event) => event.target === event.currentTarget && pianoStore.set(false)}>
             <div className="pa-overlay-frame">
+              <div className="pa-tear" aria-hidden="true">
+                <span className="pa-tear-half pa-tear-left" />
+                <span className="pa-tear-half pa-tear-right" />
+                <span className="pa-tear-valance" />
+                <span className="pa-tuning">
+                  <span className="pa-tuning-dots"><span /><span /><span /></span>
+                  Tuning the piano
+                </span>
+              </div>
               <button ref={closer} type="button" className="pa-overlay-close" aria-label="Close the curtain" onClick={() => pianoStore.set(false)}>
                 <span aria-hidden="true">✕</span> Close <kbd>Esc</kbd>
               </button>
@@ -111,15 +121,7 @@ export default function PianoRoom() {
                 <Suspense fallback={<div className="pa-stage-wait" />}>
                   <PianoInstrument onReady={partCurtain} />
                 </Suspense>
-                <div className="pa-curtains" aria-hidden="true">
-                  <span className="pa-curtain pa-curtain-left" />
-                  <span className="pa-curtain pa-curtain-right" />
-                  <span className="pa-valance" />
-                  <span className="pa-tuning">
-                    <span className="pa-tuning-dots"><span /><span /><span /></span>
-                    Tuning the piano
-                  </span>
-                </div>
+
               </div>
             </div>
           </div>,

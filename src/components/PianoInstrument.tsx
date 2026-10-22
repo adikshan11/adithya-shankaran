@@ -1,6 +1,6 @@
 import { memo, useEffect, useReducer, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { Arranger, HIGH, LOW, PC_BASE_MAX, PC_BASE_MIN, PC_KEYS, PC_KEY_OFFSET, SPLIT, categories, isBlack, keyName, styleCategories, styleMeter } from '../piano/arranger';
+import { Arranger, HIGH, LOW, PC_BASE_MAX, PC_BASE_MIN, PC_KEYS, PC_KEY_OFFSET, SPLIT, categories, isBlack, keyName, sounds, styleCategories, styleMeter } from '../piano/arranger';
 import { barLength, meterNamed, meters } from '../piano/notation';
 import type { ScoreNote } from '../piano/notation';
 import PianoScreen from './PianoScreen';
@@ -151,6 +151,9 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const take = useRef<{ origin: number; last: number; notes: Played[] }>({ origin: 0, last: 0, notes: [] });
   const downbeat = useRef(0);
   const [showSheet, setShowSheet] = useState(false);
+  const [drawer, setDrawer] = useState(false);
+  const [edges, setEdges] = useState({ left: false, right: false });
+  const minimapWindow = useRef<HTMLSpanElement>(null);
 
   // Screen pages; a select page closes itself after a while, like the Pa300's auto-exit.
   const open = (next: Page, nextCategory?: string) => {
@@ -293,6 +296,47 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     };
   }, [arranger]);
 
+  useEffect(() => {
+    const element = scroller.current;
+    if (!element) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const { scrollLeft, scrollWidth, clientWidth } = element;
+      const span = minimapWindow.current;
+      if (span) {
+        span.style.left = `${(100 * scrollLeft) / scrollWidth}%`;
+        span.style.width = `${(100 * clientWidth) / scrollWidth}%`;
+      }
+      const next = { left: scrollLeft > 4, right: scrollLeft + clientWidth < scrollWidth - 4 };
+      setEdges((previous) => (previous.left === next.left && previous.right === next.right ? previous : next));
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    element.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      element.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  // One octave of white keys, for the ‹ › buttons.
+  const octave = () => {
+    const element = scroller.current;
+    return element ? (element.scrollWidth / whiteKeys.length) * 7 : 300;
+  };
+  const scrollKeys = (direction: number) => scroller.current?.scrollBy({ left: direction * octave(), behavior: 'smooth' });
+  const minimapTo = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const element = scroller.current;
+    if (!element) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    element.scrollLeft = ((event.clientX - box.left) / box.width) * element.scrollWidth - element.clientWidth / 2;
+  };
+
   // Level meter, drawn straight to the DOM so the keyboard does not re-render every frame.
   useEffect(() => {
     if (typeof requestAnimationFrame !== 'function') return;
@@ -367,6 +411,11 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           <span className="pa-badge">Touch screen · 33 sounds · 13 styles</span>
         </div>
 
+        <div className={`pa-drawer ${drawer ? 'pa-drawer-open' : ''}`}>
+        <div className="pa-drawer-head">
+          <span>Panel</span>
+          <button type="button" className="pa-drawer-done" onClick={() => setDrawer(false)}>Done</button>
+        </div>
         <div className="pa-panel">
           <div className="pa-group">
             <span className="pa-label">Style</span>
@@ -528,7 +577,35 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           </div>
         </div>
 
+        </div>
+
+        <div className="pa-phonebar" role="toolbar" aria-label="Quick controls">
+          <button type="button" className="pa-phone-btn" aria-label="Previous sound" onClick={() => arranger.selectSound((arranger.soundIndex + sounds.length - 1) % sounds.length)}>‹</button>
+          <span className="pa-phone-sound">{arranger.sound.name}</span>
+          <button type="button" className="pa-phone-btn" aria-label="Next sound" onClick={() => arranger.selectSound((arranger.soundIndex + 1) % sounds.length)}>›</button>
+          <button type="button" className={`pa-phone-btn pa-phone-wide ${arranger.running ? 'pa-phone-on' : ''}`} onClick={() => arranger.toggleStyle()}>
+            {arranger.running ? '■ Stop' : '▶ Style'}
+          </button>
+          <button
+            type="button"
+            className={`pa-phone-btn pa-phone-wide ${arranger.pedal ? 'pa-phone-on' : ''}`}
+            onPointerDown={() => arranger.setPedal(true)}
+            onPointerUp={() => arranger.setPedal(false)}
+            onPointerCancel={() => arranger.setPedal(false)}
+            onClick={(event) => {
+              if (event.detail === 0) arranger.setPedal(!arranger.pedal);
+            }}
+          >
+            Sustain
+          </button>
+          <button type="button" className="pa-phone-btn pa-phone-wide" aria-expanded={drawer} onClick={() => setDrawer((value) => !value)}>☰ Panel</button>
+          <span className="pa-rotate-hint">↻ Turn sideways for a bigger keyboard</span>
+        </div>
+
         <div className="pa-felt" aria-hidden="true" />
+        <div className={`pa-minimap ${edges.left || edges.right ? '' : 'pa-minimap-hidden'}`} onPointerDown={(event) => { capture(event); minimapTo(event); }} onPointerMove={(event) => { if (event.buttons) minimapTo(event); }} aria-hidden="true">
+          <span ref={minimapWindow} className="pa-minimap-window" />
+        </div>
         <div className="pa-keyrow">
           <div className="pa-left">
             <div
@@ -567,8 +644,12 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
               Sustain
             </button>
           </div>
-          <div className="pa-keybed" ref={scroller}>
-            <Keys arranger={arranger} pressed={pressed} showLetters={showLetters} pcBase={pcBase} pointerDown={pointerDown} splitShown={arranger.running && arranger.split} />
+          <div className="pa-keybed-wrap">
+            <div className="pa-keybed" ref={scroller}>
+              <Keys arranger={arranger} pressed={pressed} showLetters={showLetters} pcBase={pcBase} pointerDown={pointerDown} splitShown={arranger.running && arranger.split} />
+            </div>
+            {edges.left && <button type="button" className="pa-edge pa-edge-left" aria-label="Show lower keys" onClick={() => scrollKeys(-1)}>‹</button>}
+            {edges.right && <button type="button" className="pa-edge pa-edge-right" aria-label="Show higher keys" onClick={() => scrollKeys(1)}>›</button>}
           </div>
         </div>
       </div>
