@@ -138,17 +138,18 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
               setTimeout(() => arranger.noteOff(key), 400);
             }}
           >
+            {/* The labels are drawn by CSS (data-t), not written as text: iOS shows its magnifier and selection on a
+                long press over any text, even text that cannot be selected, and a held key is a long press. */}
             <span className="pa-key-marks" aria-hidden="true">
               {showLetters && labelFor.has(key) && (
-                <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`}>
-                  {labelFor.get(key)!.replace('*', '')}
-                  {labelFor.get(key)!.endsWith('*') && <sup className="pa-key-star">*</sup>}
+                <span className={`pa-key-label ${black ? 'pa-key-label-dark' : ''}`} data-t={labelFor.get(key)!.replace('*', '')}>
+                  {labelFor.get(key)!.endsWith('*') && <sup className="pa-key-star" data-t="*" />}
                 </span>
               )}
               {black ? (
-                <span className={`pa-key-note pa-note-sharp pa-sharp-${NOTE_LETTERS[(key - 1) % 12]}`}>{SHARP_NAMES[key % 12]}</span>
+                <span className={`pa-key-note pa-note-sharp pa-sharp-${NOTE_LETTERS[(key - 1) % 12]}`} data-t={SHARP_NAMES[key % 12]} />
               ) : (
-                <span className={`pa-key-note pa-note-${NOTE_LETTERS[key % 12]}`}>{key % 12 === 0 ? keyName(key) : NOTE_LETTERS[key % 12]}</span>
+                <span className={`pa-key-note pa-note-${NOTE_LETTERS[key % 12]}`} data-t={key % 12 === 0 ? keyName(key) : NOTE_LETTERS[key % 12]} />
               )}
             </span>
           </button>
@@ -404,6 +405,8 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       return null;
     }
   });
+  const zoomRef = useRef(zoomKeys);
+  zoomRef.current = zoomKeys;
   const setZoom = (count: number) => {
     setZoomKeys(count);
     try {
@@ -489,6 +492,12 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       setBars(window.innerWidth < 700 ? 2 : window.innerWidth < 1000 ? 3 : 4);
       const root = scroller.current?.closest<HTMLElement>('.pa-instrument');
       if (!root) return;
+      // Until the Keys slider is moved, each layout uses its own key width (a tablet upright sets one below).
+      const ownKeys = root.querySelector<HTMLElement>('.pa-keys');
+      if (zoomRef.current === null && ownKeys) {
+        ownKeys.style.minWidth = '';
+        ownKeys.style.width = '';
+      }
       if (window.matchMedia('(max-height: 560px) and (orientation: landscape)').matches) {
         // A phone on its side reports the same safe-area inset left and right, but the notch or Dynamic Island is
         // only on one side: the top of the phone. Keep the keys clear of that side only, so they run to the other
@@ -545,7 +554,15 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         // toolbar itself (131 pt on an iPhone 15/16 in portrait, measured from a screenshot, 23 Oct 2026).
         const floatingBar = /iPhone/.test(navigator.userAgent) && small >= window.screen.height - 4;
         const below = floatingBar ? 132 : 8;
-        root.style.setProperty("--keys-h", `${Math.max(window.innerHeight <= 700 ? 120 : 150, Math.floor(Math.min(window.innerHeight - 30, small - below) - top))}px`);
+        const keysHeight = Math.max(window.innerHeight <= 700 ? 120 : 150, Math.floor(Math.min(window.innerHeight - 30, small - below) - top));
+        root.style.setProperty('--keys-h', `${keysHeight}px`);
+        // A tablet held upright has tall keys; until the Keys slider is moved, show about ten keys, each nearer a real
+        // key's shape (about 6.5 times taller than wide) than the phone's narrow default.
+        if (zoomRef.current === null && window.innerWidth >= 600) {
+          const width = Math.max(44, Math.min((keys.parentElement?.clientWidth ?? window.innerWidth) / 10, keysHeight / 6.5));
+          keys.style.minWidth = `${Math.round(whiteKeys.length * width)}px`;
+          keys.style.width = keys.style.minWidth;
+        }
       } else {
         root.style.removeProperty('--fit');
         root.style.removeProperty('--keys-h');
@@ -833,6 +850,11 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       saveOnLeave.current();
       arranger.park();
     };
+    // A sheet or another app over Safari takes the focus (and the audio) without hiding the page.
+    const blurred = () => {
+      if (touch) arranger.markStale();
+    };
+    window.addEventListener('blur', blurred);
     document.addEventListener('visibilitychange', back);
     window.addEventListener('pageshow', back);
     window.addEventListener('pagehide', away);
@@ -841,6 +863,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       document.removeEventListener('visibilitychange', back);
       window.removeEventListener('pageshow', back);
       window.removeEventListener('pagehide', away);
+      window.removeEventListener('blur', blurred);
     };
   }, [arranger]);
 
@@ -1216,7 +1239,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
                   if (event.key === 'ArrowDown' || event.key === 'ArrowLeft') arranger.changeTempo(-1);
                 }}
               >
-                <span className="pa-dial-cap" style={{ transform: `rotate(${(arranger.tempo - 40) * 1.5}deg)` }}>
+                <span className="pa-dial-cap" style={{ transform: `rotate(${(Math.min(240, Math.max(40, arranger.tempo)) - 40) * 1.5}deg)` }}>
                   <span className="pa-dial-mark" />
                 </span>
               </div>

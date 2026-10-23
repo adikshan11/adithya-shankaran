@@ -504,6 +504,11 @@ export class Arranger {
     preferPlayback();
     const ctx = takePrimed() ?? new Context({ latencyHint: 'interactive' });
     this.ctx = ctx;
+    // iOS interrupts the audio for a call, a share sheet or another app without always hiding the page; any state
+    // other than running that we did not ask for means the next tap must bring the sound back.
+    ctx.onstatechange = () => {
+      if (this.ctx === ctx && !this.parked && ctx.state !== 'running') this.stale = true;
+    };
     const limiter = ctx.createDynamicsCompressor();
     limiter.threshold.value = -10;
     limiter.ratio.value = 4;
@@ -546,13 +551,27 @@ export class Arranger {
   // Unlock audio from a completed tap or a click (iOS will not start sound from a finger going down).
   unlockAudio() {
     if (!this.init() || !this.ctx) return;
-    if (this.parked) {
+    // A context that says "running" but whose clock has not moved since the last tap is iOS's silent context.
+    const wall = performance.now();
+    const clock = this.ctx.currentTime;
+    if (this.ctx.state === 'running' && this.lastCheck && wall - this.lastCheck.wall > 400 && clock === this.lastCheck.clock) this.stale = true;
+    this.lastCheck = { wall, clock };
+    if (this.parked || this.stale) {
       this.parked = false;
+      this.stale = false;
       this.revive();
+      this.lastCheck = null;
       return;
     }
     if (this.ctx.state !== 'running') unlock(this.ctx);
   }
+
+  // Something took the audio away while the page stayed visible (a share sheet, Siri, a call banner).
+  markStale() {
+    if (this.ctx && !this.parked) this.stale = true;
+  }
+  private stale = false;
+  private lastCheck: { wall: number; clock: number } | null = null;
 
   // Leaving the page (another app, the lock screen): stop what is playing and suspend the audio on purpose, so its
   // state is known when the page comes back. iOS can otherwise hand back an interrupted context that says
@@ -576,6 +595,11 @@ export class Arranger {
     if (!old) return;
     const touch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
     if (touch) {
+      // A new context has a new clock, so anything scheduled on the old one stops first.
+      this.releaseAll();
+      if (this.running) this.stopStyle();
+      if (this.song && !this.learn) this.stopSong();
+      this.stopMetro();
       this.ctx = null;
       this.init();
       if (this.ctx) unlock(this.ctx);
@@ -1053,7 +1077,9 @@ export class Arranger {
     const meterLabel = `${meter.beats}/${meter.unit}`;
     const pieceTempo = Math.round(60 / (songPer16 * 4));
     // Practice at the chosen speed: the tempo and time signature follow, so Metro clicks along with the piece.
-    this.tempo = Math.min(240, Math.max(40, Math.round(pieceTempo * speed)));
+    // Up to 600 so the Metro click keeps pace with fast pieces and the bonus speeds (the Minute Waltz's file tempo is
+    // 280 at 100%); the hand tempo controls still stop at 240.
+    this.tempo = Math.min(600, Math.max(20, Math.round(pieceTempo * speed)));
     const meterIndex = meters.findIndex((item) => item.label === meterLabel);
     if (meterIndex >= 0) this.setMeter(meterIndex);
     this.learn = { song, hand, steps, at: 0, remaining: new Set(steps[0]?.notes), misses: 0, streak: 0, wrongRun: 0, recent: [], startedAt: 0, result: null, speed, per16: songPer16 / speed, meterLabel, lastAt: 0, ratios: [], held: new Map(), holdUntil: 0, tipAt: -10 };

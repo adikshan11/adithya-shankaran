@@ -56,6 +56,11 @@ export default function PianoScreen({ arranger, page, category, open, message, b
   useEffect(() => {
     const measure = () => {
       for (const item of screenRef.current?.querySelectorAll<HTMLElement>('.pa-grid .pa-item') ?? []) {
+        // Measure only when the name or its box changes: re-measuring restarts the slide, and the screen redraws on
+        // every note played, so a name never got to the end while someone played.
+        const key = `${item.textContent}|${item.clientWidth}`;
+        if (item.dataset.marquee === key) continue;
+        item.dataset.marquee = key;
         item.classList.remove('pa-marquee');
         const over = item.scrollWidth - item.clientWidth;
         if (over > 2) {

@@ -1518,3 +1518,7 @@
    layer can turn it back on); text boxes such as renaming a recording stay selectable. */
 :is(.pa-overlay, .pa-help, .pa-meter-float, .pa-result) :not(input, textarea),
 :is(.pa-overlay, .pa-help, .pa-meter-float, .pa-result) { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+
+/* Key labels come from data-t, drawn as generated content (not text in the page, so iOS has nothing to magnify). */
+.pa-key-marks [data-t]::before { content: attr(data-t); }
+.pa-key-label > .pa-key-star { order: 2; }
