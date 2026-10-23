@@ -1579,7 +1579,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
               </div>
               <p className="pa-help-credits">
                 Piano: Salamander Grand Piano, a Yamaha C5 recorded by Alexander Holm. Other instruments: FluidR3 GM soundfont. Both CC BY 3.0.
-                Scores: Mutopia Project, public domain. Raga pieces written for this page. Drums and tabla are synthesised.
+                Scores: Mutopia Project, public domain, except the Moonlight Sonata (CC BY-SA 2.5) and Gnossienne No. 1 (CC BY-SA 4.0). Raga pieces written for this page. Drums and tabla are synthesised.
               </p>
             </div>
           </div>,

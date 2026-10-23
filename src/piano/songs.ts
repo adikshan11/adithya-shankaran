@@ -1,6 +1,7 @@
 import type { Note } from './midi';
 
-// The song book. Western pieces are public-domain scores from the Mutopia Project, played from their MIDI files.
+// The song book. Western pieces are scores from the Mutopia Project, played from their MIDI files: public domain,
+// except the Moonlight Sonata (CC BY-SA 2.5) and Gnossienne No. 1 (CC BY-SA 4.0), credited in Help.
 // The two raga pieces are short improvisations written for this page in each raga's scale.
 export type Song = {
   id: string;
@@ -45,6 +46,16 @@ const birthday = () =>
     [G4, 0.75], [G4, 0.25], [A4, 1], [G4, 1], [D5, 1], [C5, 2],
     [G4, 0.75], [G4, 0.25], [G5, 1], [E5, 1], [C5, 1], [B4, 1], [A4, 1],
     [F5, 0.75], [F5, 0.25], [E5, 1], [C5, 1], [D5, 1], [C5, 3],
+  ]);
+// Ode to Joy (Beethoven, Symphony No. 9, public domain): the melody in C, 4/4, as it is first learned; the third
+// line dips to the G below middle C.
+const G3 = 55;
+const odeToJoy = () =>
+  tune(0.55, [
+    [E4, 1], [E4, 1], [F4, 1], [G4, 1], [G4, 1], [F4, 1], [E4, 1], [D4, 1], [C4, 1], [C4, 1], [D4, 1], [E4, 1], [E4, 1.5], [D4, 0.5], [D4, 2],
+    [E4, 1], [E4, 1], [F4, 1], [G4, 1], [G4, 1], [F4, 1], [E4, 1], [D4, 1], [C4, 1], [C4, 1], [D4, 1], [E4, 1], [D4, 1.5], [C4, 0.5], [C4, 2],
+    [D4, 1], [D4, 1], [E4, 1], [C4, 1], [D4, 1], [E4, 0.5], [F4, 0.5], [E4, 1], [C4, 1], [D4, 1], [E4, 0.5], [F4, 0.5], [E4, 1], [D4, 1], [C4, 1], [D4, 1], [G3, 2],
+    [E4, 1], [E4, 1], [F4, 1], [G4, 1], [G4, 1], [F4, 1], [E4, 1], [D4, 1], [C4, 1], [C4, 1], [D4, 1], [E4, 1], [D4, 1.5], [C4, 0.5], [C4, 2],
   ]);
 
 // Builds notes from [swara, beats] phrases. Swaras are semitones above Sa; a trailing glide bends into the note (meend or gamaka).
@@ -109,12 +120,16 @@ const janaGanaMana = () => tune(0.48, [[72, 0.5], [74, 0.5], [76, 0.5], [76, 0.5
 export const songs: Song[] = [
   { id: 'twinkle', short: 'Twinkle Twinkle', title: 'Twinkle, Twinkle, Little Star', composer: 'Traditional', detail: 'A first piece: one hand, five notes', sound: 'Grand Piano', notes: twinkle, beat: 0.6, easy: true },
   { id: 'anthem', short: 'Jana Gana Mana', title: 'Jana Gana Mana', composer: 'Rabindranath Tagore', detail: 'The national anthem of India, full version', sound: 'Grand Piano', notes: janaGanaMana, beat: 0.48, shift16: 0, easy: true },
+  { id: 'ode', short: 'Ode to Joy', title: 'Ode to Joy', composer: 'L. van Beethoven', detail: 'From Symphony No. 9: one hand, mostly steps', sound: 'Grand Piano', notes: odeToJoy, beat: 0.55, easy: true },
   { id: 'birthday', short: 'Happy Birthday', title: 'Happy Birthday to You', composer: 'Mildred & Patty Hill', detail: 'In 3/4, with a pickup and a dotted rhythm', sound: 'Grand Piano', notes: birthday, beat: 0.55, meter: { beats: 3, unit: 4 }, shift16: 8, easy: true },
   { id: 'bach', short: 'Bach Prelude', title: 'Prelude in C major, BWV 846', composer: 'J. S. Bach', detail: 'The Well-Tempered Clavier, Book I', sound: 'Grand Piano', file: '/songs/wtk1-prelude1.mid' },
   { id: 'elise', short: 'Für Elise', title: 'Für Elise, WoO 59', composer: 'L. van Beethoven', detail: 'Bagatelle in A minor', sound: 'Grand Piano', file: '/songs/fur_Elise_WoO59.mid' },
   { id: 'turca', short: 'Rondo alla Turca', title: 'Rondo alla Turca, K. 331', composer: 'W. A. Mozart', detail: 'Piano Sonata No. 11, third movement', sound: 'Grand Piano', file: '/songs/KV331_3_RondoAllaTurca.mid' },
   { id: 'prelude4', short: 'Prelude E minor', title: 'Prelude in E minor, Op. 28 No. 4', composer: 'F. Chopin', detail: '24 Preludes', sound: 'Grand Piano', file: '/songs/Chop-28-4.mid' },
   { id: 'raindrop', short: 'Raindrop Prelude', title: '“Raindrop” Prelude, Op. 28 No. 15', composer: 'F. Chopin', detail: '24 Preludes', sound: 'Grand Piano', file: '/songs/Chop-28-15.mid' },
+  { id: 'moonlight', short: 'Moonlight Sonata', title: '“Moonlight” Sonata, 1st movement', composer: 'L. van Beethoven', detail: 'Piano Sonata No. 14, Op. 27 No. 2 (CC BY-SA 2.5)', sound: 'Grand Piano', file: '/songs/beethoven_moonlight_1.mid' },
+  { id: 'clair', short: 'Clair de Lune', title: 'Clair de Lune', composer: 'C. Debussy', detail: 'Suite bergamasque, third movement', sound: 'Grand Piano', file: '/songs/debussy_clair_de_lune.mid' },
+  { id: 'gnossienne', short: 'Gnossienne 1', title: 'Gnossienne No. 1', composer: 'E. Satie', detail: 'Free time, no barlines (CC BY-SA 4.0)', sound: 'Grand Piano', file: '/songs/satie_gnossienne_1.mid' },
   { id: 'minute', short: 'Minute Waltz', title: '“Minute” Waltz, Op. 64 No. 1', composer: 'F. Chopin', detail: 'Waltz in D-flat major', sound: 'Grand Piano', file: '/songs/chopin_valse_op64_no1.mid' },
   { id: 'yaman', short: 'Raga Yaman', title: 'Raga Yaman', composer: 'Hindustani classical', detail: 'Alaap and taans on sitar, over tanpura', sound: 'Sitar', notes: yaman, drone: 61, beat: 0.55 },
   { id: 'hamsadhwani', short: 'Hamsadhwani', title: 'Raga Hamsadhwani', composer: 'Carnatic classical', detail: 'Phrases and a tihai on flute (venu), over tanpura', sound: 'Flute', notes: hamsadhwani, drone: 62, beat: 0.5 },
