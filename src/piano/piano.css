@@ -1596,3 +1596,16 @@
   .pa-keys-only .pa-keyrow { order: 3; }
   .pa-keys-only .pa-mapbar { margin-top: 4px; margin-bottom: 6px; }
 }
+
+/* Phone held sideways: the joystick and Sustain always have a place. In Safari they sit in the Dynamic Island's
+   strip; where the browser keeps the page clear of the island (the Google app, Android phones) they take a slim
+   column left of the keys. Either way the top bar's Sustain steps aside (one Sustain per layout) and Style widens. */
+@media (max-height: 560px) and (orientation: landscape) {
+  .pa-overlay .pa-left { display: flex !important; flex-direction: column; justify-content: center; align-items: center; gap: 6px; padding: 4px 2px; }
+  .pa-overlay .pa-instrument:not([data-island]) .pa-keyrow { grid-template-columns: 64px minmax(0, 1fr) !important; gap: 4px; }
+  .pa-overlay .pa-instrument:not([data-island]) .pa-joy { width: 50px; height: 50px; }
+  .pa-overlay .pa-instrument:not([data-island]) .pa-left .pa-pedal { width: 58px; font-size: 0.55rem; padding: 0.35rem 0; }
+  .pa-overlay .pa-left-label { display: none !important; }
+  .pa-overlay .pa-phonebar > .pa-phone-sustain { display: none !important; }
+  .pa-overlay .pa-body:not(:has(.pa-sheet-open)) .pa-phonebar > :nth-child(4) { grid-column: 2 / 6; }
+}

@@ -640,10 +640,21 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         // only on one side: the top of the phone. Keep the keys clear of that side only, so they run to the other
         // edge. The turn decides the side: 90 degrees (turned left) puts the top of the phone on the left.
         const turn = (window as Window & { orientation?: number }).orientation ?? screen.orientation?.angle;
-        const island = turn === 90 ? 'left' : turn === -90 || turn === 270 ? 'right' : 'both';
-        root.style.setProperty('--island-l', island === 'right' ? '0px' : 'env(safe-area-inset-left)');
-        root.style.setProperty('--island-r', island === 'left' ? '0px' : 'env(safe-area-inset-right)');
-        root.dataset.island = island;
+        // Only when the browser really runs the page under the island does it report room on that side (Safari
+        // does). In-app browsers such as the Google app keep the page clear of it and report none; there the joystick
+        // and Sustain take their own column beside the keys instead of an island strip that is not there.
+        const sides = document.createElement('div');
+        sides.style.cssText = 'position:fixed;top:0;left:0;height:0;width:0;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);visibility:hidden';
+        document.body.append(sides);
+        const insetLeft = parseFloat(getComputedStyle(sides).paddingLeft) || 0;
+        const insetRight = parseFloat(getComputedStyle(sides).paddingRight) || 0;
+        sides.remove();
+        let island = turn === 90 ? 'left' : turn === -90 || turn === 270 ? 'right' : 'both';
+        if ((island === 'left' && insetLeft < 20) || (island === 'right' && insetRight < 20) || (island === 'both' && Math.max(insetLeft, insetRight) < 20)) island = 'none';
+        root.style.setProperty('--island-l', island === 'right' || island === 'none' ? '0px' : 'env(safe-area-inset-left)');
+        root.style.setProperty('--island-r', island === 'left' || island === 'none' ? '0px' : 'env(safe-area-inset-right)');
+        if (island === 'none') delete root.dataset.island;
+        else root.dataset.island = island;
         // The joystick and Sustain sit in the island's strip, centred in the space between the bottom of the Dynamic
         // Island and the bottom of the screen. In landscape the island is centred on that edge and about 126 pt long;
         // the page starts below Safari's bars, so convert from screen to page by the difference in heights.
@@ -1554,7 +1565,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           <button
             type="button"
             aria-pressed={arranger.pedal}
-            className={`pa-phone-btn pa-phone-wide ${arranger.pedal ? 'pa-phone-on' : ''}`}
+            className={`pa-phone-btn pa-phone-wide pa-phone-sustain ${arranger.pedal ? 'pa-phone-on' : ''}`}
             onPointerDown={(event) => {
               event.preventDefault();
               arranger.setPedal(!arranger.pedal);
