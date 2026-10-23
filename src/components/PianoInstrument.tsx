@@ -729,18 +729,23 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const say = (text: string) => setMessage(text);
 
   // Rec: records the output (keyboard, style and song) and the notes played; press again to stop and keep the take.
-  const toggleRecord = async () => {
+  // left: the page was hidden mid-take (another app, the lock screen). The take stops and is saved there and then,
+  // before the audio is parked, so nothing recorded is lost and no take carries on into a silent context.
+  const toggleRecord = async (left = false) => {
     if (recorder.current.recording) {
       arranger.onPlayed = () => {};
-      const take = await recorder.current.stop(`Take ${takes.length + 1}`);
+      const take = await recorder.current.stop(`Take ${(await listTakes()).length + 1}`);
       setRecording(false);
       if (!take) return;
       await saveTake(take);
       setTakes(await listTakes());
       open('rec');
-      say(`${take.name} saved. Play it here, or save it as WAV (any device) or MIDI (any DAW).`);
+      say(left
+        ? `${take.name} was saved when you left the app (recording stops there). Press Rec to record again.`
+        : `${take.name} saved. Play it here, or save it as WAV (any device) or MIDI (any DAW).`);
       return;
     }
+    if (left) return;
     if (!TakeRecorder.supported()) {
       say('This browser cannot record audio.');
       return;
@@ -752,6 +757,11 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     arranger.onPlayed = (event) => recorder.current.mark(event);
     setRecording(true);
     say('● Recording. Play, then press Rec again to stop.');
+  };
+
+  const saveOnLeave = useRef<() => void>(() => undefined);
+  saveOnLeave.current = () => {
+    if (recorder.current.recording) void toggleRecord(true);
   };
 
   // MIDI: plays this piano from a real keyboard connected by USB or Bluetooth.
@@ -814,10 +824,15 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     // only lets a tap start sound again).
     const touch = window.matchMedia('(pointer: coarse)').matches;
     const back = () => {
-      if (document.visibilityState === 'hidden') arranger.park();
-      else if (!touch) arranger.unlockAudio();
+      if (document.visibilityState === 'hidden') {
+        saveOnLeave.current();
+        arranger.park();
+      } else if (!touch) arranger.unlockAudio();
     };
-    const away = () => arranger.park();
+    const away = () => {
+      saveOnLeave.current();
+      arranger.park();
+    };
     document.addEventListener('visibilitychange', back);
     window.addEventListener('pageshow', back);
     window.addEventListener('pagehide', away);
