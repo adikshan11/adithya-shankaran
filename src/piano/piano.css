@@ -1506,3 +1506,10 @@
   .pa-overlay .pa-brand-model { display: none; }
 }
 .pa-overlay .pa-top .pa-help-btn { margin-left: auto; }
+
+/* One way to open Help per layout: the ? in the title bar wherever there is one; the Panel's Help button only on a
+   phone held sideways, which has no title bar. */
+.pa-btn-help { display: none !important; }
+@media (max-height: 560px) and (orientation: landscape) {
+  .pa-overlay .pa-btn-help { display: inline-flex !important; }
+}
