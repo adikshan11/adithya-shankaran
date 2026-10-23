@@ -90,7 +90,12 @@ for (const [name, script, wantsOut, pass, minutes] of checks) {
   const seconds = Math.round((Date.now() - started) / 1000);
   results.push({ name, ok, seconds, text });
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  (${seconds} s)`);
-  if (!ok) console.log(text.split('\n').slice(-25).join('\n'));
+  if (!ok) {
+    const tail = text.split('\n').filter((line) => line.trim()).slice(-14).join('\n');
+    console.log(tail);
+    // On GitHub, a failure also becomes an annotation: readable on the run page (and through the public API).
+    if (process.env.GITHUB_ACTIONS) console.log(`::error title=${name.replace(/[:,]/g, ' ')}::${tail.slice(-1800).replace(/%/g, '%25').replace(/\r/g, '').replace(/\n/g, '%0A')}`);
+  }
 }
 server.kill();
 
