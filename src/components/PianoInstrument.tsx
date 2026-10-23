@@ -605,10 +605,15 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     const ready = () => {
       if (told) return;
       told = true;
-      arranger.pauseLoading(2400); // let the curtain part without decoding competing for the CPU
+      // Hold back sample decoding until the curtain has parted: long enough to cover the wait before it starts (up to
+      // about 2.7 s), and then exactly its motion once it starts (below). Decoding that resumed mid-motion made the
+      // curtain stutter whenever it started late.
+      arranger.pauseLoading(4000);
       onReady?.();
     };
     const fallback = setTimeout(ready, 1500);
+    const curtainGo = () => arranger.pauseLoading(1900); // the curtain moves for 1.75 s
+    window.addEventListener('pa-curtain-go', curtainGo);
     void arranger.loadFirst('salamander', 3).then(ready);
     arranger.chime();
     const greeting = 'Concert Grand ready. Tap the screen to choose sounds, styles and songs.';
@@ -735,8 +740,12 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         if (stage && body) {
           const current = Number(stage.style.zoom) || 1;
           const natural = body.getBoundingClientRect().height / current;
-          const scale = Math.max(0.5, Math.min(2, window.innerWidth / 1440, (window.innerHeight - 24) / natural));
-          stage.style.zoom = Math.abs(scale - 1) > 0.01 ? scale.toFixed(3) : '';
+          // Rounded down to steps of 0.02 and changed only by a whole step: measuring the zoomed stage wobbles by a pixel,
+          // and a fine-grained scale then flipped between two values (1.624 and 1.625) about 75 times while the curtain
+          // moved, each flip forcing a full layout and redraw of the stage (the stutter on big monitors).
+          const scale = Math.floor(Math.max(0.5, Math.min(2, window.innerWidth / 1440, (window.innerHeight - 24) / natural)) * 50) / 50;
+          const next = Math.abs(scale - 1) > 0.01 ? scale.toFixed(2) : '';
+          if (!next ? stage.style.zoom !== '' : Math.abs(Number(next) - current) >= 0.02 || stage.style.zoom === '') stage.style.zoom = next;
           const close = stage.parentElement?.querySelector<HTMLElement>('.pa-overlay-close');
           if (close) close.style.zoom = stage.style.zoom; // Close grows with the piano
         }
@@ -756,6 +765,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     const host = scroller.current?.closest<HTMLElement>('.pa-instrument');
     for (const part of host?.querySelectorAll('.pa-top, .pa-drawer, .pa-phonebar') ?? []) above?.observe(part);
     return () => {
+      window.removeEventListener('pa-curtain-go', curtainGo);
       clearTimeout(fallback);
       clearTimeout(centre);
       clearTimeout(settle);

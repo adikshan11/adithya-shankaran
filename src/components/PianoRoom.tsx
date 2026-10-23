@@ -80,7 +80,10 @@ export default function PianoRoom() {
   // instrument does not redraw when the curtain opens.
   const partCurtain = useCallback(() => {
     const idle = (window as Window & { requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number }).requestIdleCallback;
-    const go = () => document.querySelectorAll('.pa-tear, #piano-stage .pa-keys').forEach((element) => element.classList.add('pa-go'));
+    const go = () => {
+      document.querySelectorAll('.pa-tear, #piano-stage .pa-keys').forEach((element) => element.classList.add('pa-go'));
+      window.dispatchEvent(new Event('pa-curtain-go')); // the instrument holds back sample decoding until the curtain is open
+    };
     // Start only after the main thread has been quiet for three frames in a row (audio start-up can block it for over
     // a second on Windows), so the curtain never stalls mid-motion. Give up waiting after 2.5 s.
     const started = performance.now();
@@ -90,8 +93,9 @@ export default function PianoRoom() {
       calm = now - last < 25 ? calm + 1 : 0;
       last = now;
       if (calm >= 3 || now - started > 2500) {
-        if (idle) idle(go, { timeout: 200 });
-        else go();
+        // A beat more for the graphics chip to finish drawing the stage behind the curtain (on a big monitor its first
+        // full draw took one 400 ms frame when the curtain started straight away).
+        setTimeout(() => (idle ? idle(go, { timeout: 200 }) : go()), 250);
       } else requestAnimationFrame(watch);
     };
     requestAnimationFrame(watch);
