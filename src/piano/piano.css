@@ -1369,7 +1369,7 @@
   .pa-fold svg { width: 16px; height: 10px; fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
   .pa-fold:active { transform: scale(0.94); }
   /* Keys only: nothing above the keys, not even the corner close (the fold button is the way back). */
-  .pa-keys-only .pa-body > :not(.pa-keyrow, .pa-mapbar), .pa-keys-only :is(.pa-howto, .pa-credits) { display: none !important; }
+  .pa-keys-only .pa-body > :not(.pa-keyrow, .pa-keyrow2, .pa-mapbar), .pa-keys-only :is(.pa-howto, .pa-credits) { display: none !important; }
   .pa-keys-only .pa-mapbar { display: flex !important; }
   .pa-overlay:has(.pa-keys-only) .pa-overlay-close { display: none !important; }
   .pa-keys-only .pa-body { display: block !important; }
@@ -1522,3 +1522,13 @@
 /* Key labels come from data-t, drawn as generated content (not text in the page, so iOS has nothing to magnify). */
 .pa-key-marks [data-t]::before { content: attr(data-t); }
 .pa-key-label > .pa-key-star { order: 2; }
+
+/* Two keyboards (phone or tablet upright, keys only), as in Perfect Piano: the upper row sits above the lower one,
+   each slides on its own (‹ › or two fingers) and the Keys slider sizes both. Hidden everywhere else. */
+.pa-keyrow2 { display: none; }
+@media (max-width: 1100px) and (orientation: portrait) {
+  .pa-keys-only .pa-body { display: flex !important; flex-direction: column; }
+  .pa-keys-only .pa-mapbar { order: 0; }
+  .pa-keys-only .pa-keyrow2 { display: block; order: 1; position: relative; margin-bottom: 10px; }
+  .pa-keys-only .pa-keyrow { order: 2; }
+}

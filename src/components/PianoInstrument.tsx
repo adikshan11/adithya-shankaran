@@ -296,6 +296,8 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   const typed = useRef(new Map<string, number>());
   const meter = useRef<HTMLSpanElement | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
+  // The upper keyboard of the two-row view (phone or tablet upright, keys only), as in Perfect Piano's dual mode.
+  const scroller2 = useRef<HTMLDivElement>(null);
   const pointerDown = useRef(false);
   const dial = useRef<{ x: number; y: number; angle: number; tempo: number } | null>(null);
   const refit = useRef<() => void>(() => undefined);
@@ -347,7 +349,12 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   useEffect(() => {
     const stage = document.querySelector<HTMLElement>('.pa-overlay');
     if (stage) stage.scrollTop = 0; // start at the top: the strip and slider in view
-    const frame = requestAnimationFrame(() => refit.current());
+    const frame = requestAnimationFrame(() => {
+      refit.current();
+      const lower = scroller.current;
+      const upper = scroller2.current;
+      if (keysOnly && lower && upper && upper.offsetParent) upper.scrollLeft = lower.scrollLeft + (lower.scrollWidth / whiteKeys.length) * 7;
+    });
     return () => cancelAnimationFrame(frame);
   }, [keysOnly]);
   const [hand, setHand] = useState<Hand>('right');
@@ -421,8 +428,11 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     const keys = bed?.querySelector<HTMLElement>('.pa-keys');
     if (!bed || !keys || zoomKeys === null) return;
     const middle = (bed.scrollLeft + bed.clientWidth / 2) / bed.scrollWidth;
-    keys.style.minWidth = `${(100 * whiteKeys.length) / zoomKeys}%`;
-    keys.style.width = keys.style.minWidth;
+    for (const row of [keys, scroller2.current?.querySelector<HTMLElement>('.pa-keys')]) {
+      if (!row) continue;
+      row.style.minWidth = `${(100 * whiteKeys.length) / zoomKeys}%`;
+      row.style.width = row.style.minWidth;
+    }
     bed.scrollLeft = middle * bed.scrollWidth - bed.clientWidth / 2;
     bed.dispatchEvent(new Event('scroll'));
   }, [zoomKeys]);
@@ -493,11 +503,18 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       const root = scroller.current?.closest<HTMLElement>('.pa-instrument');
       if (!root) return;
       // Until the Keys slider is moved, each layout uses its own key width (a tablet upright sets one below).
-      const ownKeys = root.querySelector<HTMLElement>('.pa-keys');
-      if (zoomRef.current === null && ownKeys) {
-        ownKeys.style.minWidth = '';
-        ownKeys.style.width = '';
-      }
+      // Key width for each row, changed only when it differs: clearing and re-setting it would snap a scrolled row
+      // back to the start.
+      const sizeRows = (width: string) => {
+        if (zoomRef.current !== null) return;
+        for (const row of root.querySelectorAll<HTMLElement>('.pa-keys')) {
+          if (row.style.minWidth === width) continue;
+          row.style.minWidth = width;
+          row.style.width = width;
+        }
+      };
+      const portrait = window.matchMedia('(max-width: 1100px) and (orientation: portrait)').matches;
+      if (!portrait) sizeRows('');
       if (window.matchMedia('(max-height: 560px) and (orientation: landscape)').matches) {
         // A phone on its side reports the same safe-area inset left and right, but the notch or Dynamic Island is
         // only on one side: the top of the phone. Keep the keys clear of that side only, so they run to the other
@@ -540,7 +557,10 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         const keys = root.querySelector<HTMLElement>('.pa-keys');
         const stage = root.closest<HTMLElement>('.pa-overlay');
         if (!keys) return;
-        const top = keys.getBoundingClientRect().top + (stage?.scrollTop ?? 0);
+        // Two rows (keys only): they share the height from the top of the upper row down.
+        const upperRow = root.querySelector<HTMLElement>('.pa-keyrow2');
+        const dual = Boolean(upperRow?.offsetParent);
+        const top = (dual && upperRow ? upperRow : keys).getBoundingClientRect().top + (stage?.scrollTop ?? 0);
         // The keys stop just above the browser's toolbar (keys under it cannot be tapped); the instrument's casing
         // continues below them to the bottom edge, so the glass toolbar floats over the piano, not a bare band.
         // Portrait: stop above the browser's floating toolbar. 100svh is the height with the browser's bars showing,
@@ -554,15 +574,16 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         // toolbar itself (131 pt on an iPhone 15/16 in portrait, measured from a screenshot, 23 Oct 2026).
         const floatingBar = /iPhone/.test(navigator.userAgent) && small >= window.screen.height - 4;
         const below = floatingBar ? 132 : 8;
-        const keysHeight = Math.max(window.innerHeight <= 700 ? 120 : 150, Math.floor(Math.min(window.innerHeight - 30, small - below) - top));
+        const room = Math.floor(Math.min(window.innerHeight - 30, small - below) - top);
+        const keysHeight = dual ? Math.max(110, Math.floor((room - 22) / 2)) : Math.max(window.innerHeight <= 700 ? 120 : 150, room);
         root.style.setProperty('--keys-h', `${keysHeight}px`);
-        // A tablet held upright has tall keys; until the Keys slider is moved, show about ten keys, each nearer a real
-        // key's shape (about 6.5 times taller than wide) than the phone's narrow default.
-        if (zoomRef.current === null && window.innerWidth >= 600) {
-          const width = Math.max(44, Math.min((keys.parentElement?.clientWidth ?? window.innerWidth) / 10, keysHeight / 6.5));
-          keys.style.minWidth = `${Math.round(whiteKeys.length * width)}px`;
-          keys.style.width = keys.style.minWidth;
-        }
+        // Until the Keys slider is moved: a tablet upright shows about ten keys and the two-row view about seven per
+        // row, each nearer a real key's shape (about 6 to 6.5 times taller than wide) than a phone's narrow default.
+        if (window.innerWidth >= 600 || dual) {
+          const across = keys.parentElement?.clientWidth ?? window.innerWidth;
+          const width = Math.max(44, dual ? Math.min(across / 7, keysHeight / 6) : Math.min(across / 10, keysHeight / 6.5));
+          sizeRows(`${Math.round(whiteKeys.length * width)}px`);
+        } else sizeRows('');
       } else {
         root.style.removeProperty('--fit');
         root.style.removeProperty('--keys-h');
@@ -871,8 +892,11 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   // one go (glissandos and slid trills; a browser keeps a touch on the key it started on, so this is done here).
   // Two fingers that move sideways together slide the keyboard instead; fingers held still play chords.
   useEffect(() => {
-    const bed = scroller.current;
-    if (!bed) return;
+    const beds = [scroller.current, scroller2.current].filter((element): element is HTMLDivElement => Boolean(element));
+    const cleanups = beds.map((bed) => attachTouch(bed));
+    return () => cleanups.forEach((cleanup) => cleanup());
+  }, [arranger]); // eslint-disable-line react-hooks/exhaustive-deps
+  function attachTouch(bed: HTMLDivElement) {
     const touches = new Map<number, { x: number; y: number; key: number | null; first: number | null }>();
     let sliding = false;
     let startX = 0;
@@ -948,7 +972,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       window.removeEventListener('pointerup', up, true);
       window.removeEventListener('pointercancel', up, true);
     };
-  }, [arranger]);
+  }
 
   // Learn: choose a piece and a hand; the keys to press glow green and the music waits until they are played.
   const learn = arranger.learn;
@@ -1506,6 +1530,15 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             </div>
             {edges.left && <button type="button" className="pa-edge pa-edge-left" aria-label="Show lower keys" onClick={() => scrollKeys(-1)}>‹</button>}
             {edges.right && <button type="button" className="pa-edge pa-edge-right" aria-label="Show higher keys" onClick={() => scrollKeys(1)}>›</button>}
+          </div>
+        </div>
+        <div className="pa-keyrow2" role="group" aria-label="Upper keyboard">
+          <div className="pa-keybed-wrap">
+            <div className="pa-keybed" ref={scroller2}>
+              <Keys arranger={arranger} pressed={pressed} showLetters={showLetters} pcBase={pcBase} pointerDown={pointerDown} splitShown={false} targets={targets} />
+            </div>
+            <button type="button" className="pa-edge pa-edge-left" aria-label="Upper keyboard: lower keys" onClick={() => scroller2.current?.scrollBy({ left: -octave(), behavior: 'smooth' })}>‹</button>
+            <button type="button" className="pa-edge pa-edge-right" aria-label="Upper keyboard: higher keys" onClick={() => scroller2.current?.scrollBy({ left: octave(), behavior: 'smooth' })}>›</button>
           </div>
         </div>
       </div>
