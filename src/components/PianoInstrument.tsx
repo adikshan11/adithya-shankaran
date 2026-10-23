@@ -312,12 +312,32 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   // Two keyboards: keys only on a phone or tablet held upright. The upper row exists only then (not hidden in the
   // page the rest of the time), so the piano has one set of 61 keys everywhere else.
   const [upright, setUpright] = useState(false);
+  // Turning the phone: some in-app browsers (the Google app's, for one) do not report a media-query change, and
+  // all of them report the size in stages while turning. So the way it is held is checked on every resize, turn and
+  // visible-area change, and the keys are measured again as the turn settles.
   useEffect(() => {
     const query = window.matchMedia('(max-width: 1100px) and (orientation: portrait)');
-    const update = () => setUpright(query.matches);
+    const timers: number[] = [];
+    const update = () => {
+      setUpright(query.matches);
+      timers.splice(0).forEach(clearTimeout);
+      for (const wait of [50, 250, 600]) timers.push(window.setTimeout(() => {
+        setUpright(query.matches);
+        refit.current();
+      }, wait));
+    };
     update();
     query.addEventListener('change', update);
-    return () => query.removeEventListener('change', update);
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    window.visualViewport?.addEventListener('resize', update);
+    return () => {
+      timers.forEach(clearTimeout);
+      query.removeEventListener('change', update);
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+      window.visualViewport?.removeEventListener('resize', update);
+    };
   }, []);
   const dual = keysOnly && upright;
   // Help: how to play, the computer-keyboard map and the credits, in a pop-up on demand (not under the piano, so no
