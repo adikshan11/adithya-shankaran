@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import type { Mood } from '../piano/arranger';
 
@@ -30,11 +30,9 @@ const TAIL = {
   upset: { x: 130, y: 135, w: 46, h: 51, px: 132, py: 178 },
   angry: { x: 136, y: 140, w: 46, h: 52, px: 138, py: 183 },
 };
-// Eyes the lids can close over (only the faces with open, round eyes).
-const EYES: Partial<Record<keyof typeof TAIL, [number, number][]>> = {
-  idle: [[79.5, 66], [111, 69]],
-  upset: [[75, 67.5], [105, 67]],
-};
+// Faces with a closed-eye photo (made from the same picture, the fur above each eye drawn down over it), used for
+// blinks, purring and sleep.
+const SHUT = new Set(['idle', 'upset']);
 const HABITS: [Habit, number, number][] = [['flick', 0.34, 1000], ['tilt', 0.24, 1700], ['glance', 0.24, 1900], ['stretch', 0.18, 1300]];
 const rand = (low: number, high: number) => low + Math.random() * (high - low);
 
@@ -49,7 +47,6 @@ export default function Coach({ mood: coachMood, text: coachText, tick, tempo }:
   const stroke = useRef<{ x: number; y: number; moved: number; at: number; patted: boolean; hold: number } | null>(null);
   const restRef = useRef(rest);
   restRef.current = rest;
-  const uid = useId().replace(/:/g, '');
   // Every coach message means a note was played: wake up (with a start if it was dozing) and restart the timers.
   useEffect(() => {
     if (restRef.current !== 'awake') setWoke((value) => value + 1);
@@ -80,7 +77,7 @@ export default function Coach({ mood: coachMood, text: coachText, tick, tempo }:
     const blinkLoop = () => {
       later(rand(2500, 6000), () => {
         setBlink(true);
-        later(150, () => setBlink(false));
+        later(mood === 'sleepy' ? rand(700, 1300) : 150, () => setBlink(false)); // sleepy: slow, heavy blinks
         if (Math.random() < 0.25) later(330, () => { setBlink(true); later(140, () => setBlink(false)); });
         blinkLoop();
       });
@@ -157,8 +154,7 @@ export default function Coach({ mood: coachMood, text: coachText, tick, tempo }:
 
   const text = pet?.text ?? (rest === 'asleep' ? 'Zzz… play a note to wake me.' : rest === 'sleepy' ? '*yawn* … still there? Play the green key.' : coachText);
   const tail = TAIL[photo];
-  const eyes = EYES[photo] ?? [];
-  const lids = mood === 'purr' || mood === 'asleep' ? 'shut' : mood === 'sleepy' ? 'heavy' : blink ? 'shut' : 'open';
+  const shut = SHUT.has(photo) && (mood === 'purr' || mood === 'asleep' || blink);
   return (
     <div className={`pa-coach pa-coach-${mood}`} role="status" aria-live="polite" style={{ '--beat': `${(60 / Math.max(30, tempo)).toFixed(3)}s` } as CSSProperties}>
       <button
@@ -172,22 +168,11 @@ export default function Coach({ mood: coachMood, text: coachText, tick, tempo }:
         aria-label="Pet the cat (tap to boop, stroke to pat)"
       >
       <svg key={`w${woke}`} className={`pa-coach-figure co-photo ${woke ? 'co-woke' : ''}`} viewBox="0 0 200 200" aria-hidden="true">
-        <defs>
-          {eyes.map(([cx, cy], index) => <clipPath key={index} id={`${uid}-eye${index}`}><ellipse cx={cx} cy={cy} rx={8.2} ry={7.6} /></clipPath>)}
-          <linearGradient id={`${uid}-lid`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#e3a56a" /><stop offset="1" stopColor="#c98a4f" /></linearGradient>
-        </defs>
         <g className={`co-life ${habit ? `co-do-${habit}` : ''}`}>
         <g key={tick} className="co-act">
           <image href={`/coach/${photo}.webp`} x={0} y={0} width={200} height={200} className="co-img" />
+          {SHUT.has(photo) && <image href={`/coach/${photo}-shut.webp`} x={0} y={0} width={200} height={200} className={`co-img co-shut ${shut ? 'co-shut-on' : ''}`} />}
           <image href={`/coach/${photo}-tail.webp`} x={tail.x} y={tail.y} width={tail.w} height={tail.h} className="co-tailimg" style={{ transformOrigin: `${tail.px}px ${tail.py}px` }} />
-          {eyes.map(([cx, cy], index) => (
-            <g key={index} className={`co-lids co-lids-${lids}`}>
-              <g clipPath={`url(#${uid}-eye${index})`}>
-                <rect className="co-lid" x={cx - 9} y={cy - 8} width={18} height={16} fill={`url(#${uid}-lid)`} />
-              </g>
-              <path className="co-lash" d={`M${cx - 7} ${cy} Q${cx} ${cy + 3.4} ${cx + 7} ${cy}`} />
-            </g>
-          ))}
           {/* the metronome on its chest: a thin needle and gold weight ticking at the practice tempo */}
           <g className="co-pendulum">
             <line x1={100} y1={158} x2={100} y2={112} stroke="#6b5a4a" strokeWidth={2} strokeLinecap="round" opacity={0.75} />

@@ -1644,27 +1644,28 @@
 @keyframes co-tilt { 0%, 100% { transform: none; } 25%, 70% { transform: rotate(-4.5deg); } }
 @keyframes co-glance { 0%, 100% { transform: none; } 20%, 45% { transform: translateX(2.5px) rotate(1.8deg); } 60%, 85% { transform: translateX(-2px) rotate(-1.4deg); } }
 @keyframes co-stretch { 0%, 100% { transform: none; } 40%, 60% { transform: scale(0.97, 1.06); } }
-/* the tail: a lazy sway when calm, a quick flick now and then, a wag on a right note, puffed up when booped, a slow
+/* the tail: in time with the beat when calm, a quick flick now and then, a wag on a right note, puffed up when booped, a slow
    swish while purring, lashing when cross, and still when asleep or upset */
-.co-tailimg { transform-box: view-box; animation: co-tail-laze 3.8s ease-in-out infinite alternate; }
+/* by default the tail swings in time with the practice tempo, one side per beat, like the metronome needle */
+.co-tailimg { transform-box: view-box; animation: co-tail-beat var(--beat, 0.6s) ease-in-out infinite alternate; }
+@keyframes co-tail-beat { from { transform: rotate(3deg); } to { transform: rotate(-11deg); } }
 .co-do-flick .co-tailimg { animation: co-tail-flick 1s ease-in-out; }
 .pa-coach-happy .co-tailimg { animation: co-tail-wag 0.32s ease-in-out infinite alternate; }
 .pa-coach-purr .co-tailimg { animation: co-tail-laze 1.5s ease-in-out infinite alternate; }
 .pa-coach-boop .co-tailimg, .pa-coach-astonished .co-tailimg { animation: co-tail-puff 0.22s ease-out forwards; }
 .pa-coach-angry .co-tailimg, .pa-coach-grumpy .co-tailimg { animation: co-tail-wag 0.16s linear infinite alternate; }
 .pa-coach-upset .co-tailimg, .pa-coach-ashamed .co-tailimg { animation: none; transform: rotate(4deg); }
-.pa-coach-asleep .co-tailimg { animation: none; transform: none; }
-.pa-coach-sleepy .co-tailimg { animation-duration: 6s; }
+.pa-coach-sleepy .co-tailimg { animation-duration: calc(var(--beat, 0.6s) * 2); } /* sleepy: half time */
 @keyframes co-tail-laze { from { transform: rotate(1.5deg); } to { transform: rotate(-4deg); } }
 @keyframes co-tail-flick { 0%, 100% { transform: none; } 22% { transform: rotate(-13deg); } 45% { transform: rotate(3deg); } 66% { transform: rotate(-7deg); } }
 @keyframes co-tail-wag { from { transform: rotate(2deg); } to { transform: rotate(-9deg); } }
 @keyframes co-tail-puff { to { transform: rotate(-12deg) scale(1.08); } }
-/* eyelids: closed for a blink, while purring and asleep, half shut when sleepy */
-.co-lid { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(0); transition: transform 70ms ease-in; }
-.co-lids-shut .co-lid { transform: scaleY(1); }
-.co-lids-heavy .co-lid { transform: scaleY(0.5); transition-duration: 0.6s; }
-.co-lash { fill: none; stroke: #3a2418; stroke-width: 1.3; stroke-linecap: round; opacity: 0; transition: opacity 70ms; }
-.co-lids-shut .co-lash { opacity: 0.85; }
+/* eyes: the closed-eye photo fades in over the open one (both stay loaded, so a blink never flickers) */
+.co-shut { opacity: 0; transition: opacity 60ms ease-in; }
+.co-shut-on { opacity: 1; }
+/* asleep, the tail lies still but its tip twitches now and then, as a dozing cat's does */
+.pa-coach-asleep .co-tailimg { animation: co-tail-doze 6.5s ease-in-out infinite; }
+@keyframes co-tail-doze { 0%, 70%, 100% { transform: none; } 76% { transform: rotate(-6deg); } 82% { transform: rotate(1deg); } 88% { transform: rotate(-3deg); } }
 .pa-coach-sleepy .co-photo :is(.co-img, .co-tailimg), .pa-coach-asleep .co-photo :is(.co-img, .co-tailimg) { filter: brightness(0.82) saturate(0.85); }
 /* each mood's body motion for the photo kitten */
 .pa-coach-happy .co-photo .co-act { animation: co-jump 0.45s cubic-bezier(0.3, 1.5, 0.5, 1); }
