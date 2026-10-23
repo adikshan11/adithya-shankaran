@@ -1586,3 +1586,13 @@
 
 /* In the keys-only column every row spans the full width (the strip collapsed to its content when centred). */
 .pa-keys-only .pa-body > :is(.pa-mapbar, .pa-keyrow, .pa-keyrow2) { align-self: stretch; width: auto; }
+
+/* Two keyboards: each row has its own strip and Keys slider right above it (upper strip, upper keys, lower strip,
+   lower keys); the one fold button sits at the top. */
+@media (max-width: 1100px) and (orientation: portrait) {
+  .pa-keys-only .pa-mapbar-upper { order: 0; }
+  .pa-keys-only .pa-keyrow2 { order: 1; margin-bottom: 6px; }
+  .pa-keys-only .pa-mapbar:not(.pa-mapbar-upper) { order: 2; }
+  .pa-keys-only .pa-keyrow { order: 3; }
+  .pa-keys-only .pa-mapbar { margin-top: 4px; margin-bottom: 6px; }
+}

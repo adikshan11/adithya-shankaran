@@ -172,6 +172,97 @@ const MAP_ROWS: { white: [string, string][]; black: (string | null)[] }[] = [
   { white: [['A', 'B'], ['Z', 'C'], ['X', 'D'], ['C', 'E'], ['V/F', 'F'], ['B', 'G'], ['N', 'A'], ['M', 'B'], [',/K', 'C'], ['.', 'D'], ['/', 'E']], black: [null, 'S', 'D', null, 'G', 'H', 'J', null, 'L', ';'] },
 ];
 
+// The upper keyboard's own strip (where it is on the keyboard; tap or drag to move) and its own Keys slider, so each
+// of the two rows can be moved and sized on its own. Its size is kept in this browser, apart from the lower row's.
+function UpperStrip({ bed, fold }: { bed: { current: HTMLDivElement | null }; fold: React.ReactNode }) {
+  const windowSpan = useRef<HTMLSpanElement>(null);
+  const [shown, setShown] = useState(15);
+  const [zoom, setZoomState] = useState<number | null>(() => {
+    try {
+      const saved = Number(localStorage.getItem('piano-keys-shown-upper'));
+      return saved >= 7 && saved <= whiteKeys.length ? saved : null;
+    } catch {
+      return null;
+    }
+  });
+  const setZoom = (count: number) => {
+    setZoomState(count);
+    try {
+      localStorage.setItem('piano-keys-shown-upper', String(count));
+    } catch {
+      // storage blocked: the size lasts until the page closes
+    }
+  };
+  useEffect(() => {
+    const element = bed.current;
+    if (!element) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const { scrollWidth, clientWidth } = element;
+      const left = Math.min(Math.max(element.scrollLeft, 0), scrollWidth - clientWidth);
+      if (windowSpan.current) {
+        windowSpan.current.style.left = `${(100 * left) / scrollWidth}%`;
+        windowSpan.current.style.width = `${(100 * clientWidth) / scrollWidth}%`;
+      }
+      setShown(Math.max(7, Math.min(whiteKeys.length, Math.round((clientWidth / scrollWidth) * whiteKeys.length))));
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    element.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    const settle = setTimeout(update, 400);
+    return () => {
+      element.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      cancelAnimationFrame(frame);
+      clearTimeout(settle);
+    };
+  }, [bed]);
+  useEffect(() => {
+    const element = bed.current;
+    const keys = element?.querySelector<HTMLElement>('.pa-keys');
+    if (!element || !keys || zoom === null) return;
+    const middle = (element.scrollLeft + element.clientWidth / 2) / element.scrollWidth;
+    keys.dataset.zoomed = '1';
+    keys.style.minWidth = `${(100 * whiteKeys.length) / zoom}%`;
+    keys.style.width = keys.style.minWidth;
+    element.scrollLeft = middle * element.scrollWidth - element.clientWidth / 2;
+    element.dispatchEvent(new Event('scroll'));
+  }, [zoom, bed]);
+  const moveTo = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const element = bed.current;
+    if (!element) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    element.scrollLeft = ((event.clientX - box.left) / box.width) * element.scrollWidth - element.clientWidth / 2;
+  };
+  return (
+    <div className="pa-mapbar pa-mapbar-upper">
+      {fold}
+      <div
+        className="pa-minimap"
+        onPointerDown={(event) => {
+          event.currentTarget.setPointerCapture?.(event.pointerId);
+          moveTo(event);
+        }}
+        onPointerMove={(event) => {
+          if (event.buttons) moveTo(event);
+        }}
+        aria-hidden="true"
+      >
+        <span ref={windowSpan} className="pa-minimap-window" />
+      </div>
+      <label className="pa-zoom" title="How many white keys the upper keyboard shows">
+        <span className="pa-zoom-label">Keys</span>
+        <input type="range" min={7} max={whiteKeys.length} step={1} value={zoom ?? shown} aria-label="Number of white keys shown on the upper keyboard" onChange={(event) => setZoom(Number(event.currentTarget.value))} />
+        <b className="pa-zoom-count">{zoom ?? shown}</b>
+      </label>
+    </div>
+  );
+}
+
 function KeyMap() {
   return (
     <figure className="pa-keymap">
@@ -459,11 +550,8 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     const keys = bed?.querySelector<HTMLElement>('.pa-keys');
     if (!bed || !keys || zoomKeys === null) return;
     const middle = (bed.scrollLeft + bed.clientWidth / 2) / bed.scrollWidth;
-    for (const row of [keys, scroller2.current?.querySelector<HTMLElement>('.pa-keys')]) {
-      if (!row) continue;
-      row.style.minWidth = `${(100 * whiteKeys.length) / zoomKeys}%`;
-      row.style.width = row.style.minWidth;
-    }
+    keys.style.minWidth = `${(100 * whiteKeys.length) / zoomKeys}%`;
+    keys.style.width = keys.style.minWidth;
     bed.scrollLeft = middle * bed.scrollWidth - bed.clientWidth / 2;
     bed.dispatchEvent(new Event('scroll'));
   }, [zoomKeys]);
@@ -537,8 +625,9 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       // Key width for each row, changed only when it differs: clearing and re-setting it would snap a scrolled row
       // back to the start.
       const sizeRows = (width: string) => {
-        if (zoomRef.current !== null) return;
         for (const row of root.querySelectorAll<HTMLElement>('.pa-keys')) {
+          const upper = Boolean(row.closest('.pa-keyrow2'));
+          if (upper ? row.dataset.zoomed === '1' : zoomRef.current !== null) continue; // a size the person chose stays
           if (row.style.minWidth === width) continue;
           row.style.minWidth = width;
           row.style.width = width;
@@ -1504,7 +1593,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
 
         <div className="pa-felt" aria-hidden="true" />
         <div className="pa-mapbar">
-          {foldButton}
+          {!dual && foldButton}
           <div className={`pa-minimap ${edges.left || edges.right ? '' : 'pa-minimap-hidden'}`} onPointerDown={(event) => { capture(event); minimapTo(event); }} onPointerMove={(event) => { if (event.buttons) minimapTo(event); }} aria-hidden="true">
             <span ref={minimapWindow} className="pa-minimap-window" />
           </div>
@@ -1570,6 +1659,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             {edges.right && <button type="button" className="pa-edge pa-edge-right" aria-label="Show higher keys" onClick={() => scrollKeys(1)}>›</button>}
           </div>
         </div>
+        {dual && <UpperStrip bed={scroller2} fold={foldButton} />}
         {dual && (
         <div className="pa-keyrow2" role="group" aria-label="Upper keyboard">
           <div className="pa-keybed-wrap">
