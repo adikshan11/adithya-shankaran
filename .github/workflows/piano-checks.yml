@@ -1,0 +1,70 @@
+# Every push to preprod (and every pull request) runs the unit tests, the build and the piano's browser checks in
+# headless Chrome on GitHub's machines. When all pass on preprod, main is moved to the same commit and the site is
+# deployed to Vercel. The deploy needs one repository secret, VERCEL_TOKEN (Vercel > Account settings > Tokens);
+# until it is added, the checks still run and the deploy step says it was skipped.
+name: Piano checks
+
+on:
+  push:
+    branches: [preprod]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: piano-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Browser checks (headless Chrome)
+        env:
+          CI: 'true'
+        run: |
+          export CHROME_PATH="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium)"
+          echo "Chrome: $CHROME_PATH ($("$CHROME_PATH" --version))"
+          node tests/e2e/run.mjs
+      - name: Keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: piano-screenshots
+          path: tests/e2e/out
+          retention-days: 7
+
+  deploy:
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/preprod'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: team_IjFtm7aRrxcQ8mlUKZGG864P
+      VERCEL_PROJECT_ID: prj_zcSDAVrokvstOt5q29Qe8TreQLw3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Move main to the tested commit
+        run: git push origin HEAD:main
+      - name: Deploy to Vercel (production)
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN is not set: skipping the deploy. Add it under Settings > Secrets and variables > Actions." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          npx --yes vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN" | tee deploy.txt
+          echo "Deployed: $(tail -1 deploy.txt)" >> "$GITHUB_STEP_SUMMARY"

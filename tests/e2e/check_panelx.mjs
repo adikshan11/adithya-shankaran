@@ -1,0 +1,23 @@
+import { spawn } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+const [, , url, outDir, profile, h] = process.argv;
+const chrome = spawn(process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe', [...(process.env.CI ? ['--no-sandbox', '--disable-dev-shm-usage'] : []), '--headless=new', '--remote-debugging-port=9543', '--user-data-dir=' + profile, 'about:blank'], { stdio: 'ignore' });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let target; for (let i = 0; i < 40 && !target; i++) { await sleep(250); try { target = (await (await fetch('http://127.0.0.1:9543/json')).json()).find((t) => t.type === 'page'); } catch {} }
+const ws = new WebSocket(target.webSocketDebuggerUrl); await new Promise((r) => ws.addEventListener('open', r));
+let id = 0; const pending = new Map();
+ws.addEventListener('message', (e) => { const m = JSON.parse(e.data); if (pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } });
+const send = (method, params = {}) => new Promise((r) => { pending.set(++id, r); ws.send(JSON.stringify({ id, method, params })); });
+const run = async (expression) => { const r = await send('Runtime.evaluate', { expression: `(async()=>{${expression}})()`, awaitPromise: true, returnByValue: true, userGesture: true }); return r.result?.exceptionDetails ? 'ERROR ' + r.result.exceptionDetails.exception?.description?.slice(0, 160) : r.result?.result?.value; };
+await send('Page.enable');
+await send('Emulation.setDeviceMetricsOverride', { width: 844, height: Number(h), deviceScaleFactor: 2, mobile: true });
+await send('Page.navigate', { url }); await sleep(3000);
+await run(`document.querySelector('[aria-controls="piano-stage"]').click(); for (let i=0;i<120&&!document.querySelector('.pa-tear.pa-go');i++) await new Promise(r=>setTimeout(r,50)); await new Promise(r=>setTimeout(r,2400));`);
+await run(`for (const l of ['Play C4','Play E4','Play G4']) { const k=document.querySelector('[aria-label="'+l+'"]'); k.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:1})); await new Promise(r=>setTimeout(r,250)); k.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:1})); }`);
+await run(`document.querySelector('.pa-phone-panel').click(); await new Promise(r=>setTimeout(r,600));`);
+console.log('panel open, Panel button shown:', await run(`return !!document.querySelector('.pa-phone-panel')?.offsetParent`));
+await run(`document.querySelector('.pa-overlay-close').click(); await new Promise(r=>setTimeout(r,500));`);
+console.log('after ✕ with the sheet open:', await run(`return JSON.stringify({pianoOpen: !!document.querySelector('.pa-overlay'), panelOpen: !!document.querySelector('.pa-drawer-open'), screenShown: !!document.querySelector('.pa-screen')?.offsetParent, closeLabel: document.querySelector('.pa-overlay-close').getAttribute('aria-label')})`));
+await run(`document.querySelector('.pa-overlay-close').click(); await new Promise(r=>setTimeout(r,500));`);
+console.log('after ✕ again:', await run(`return 'piano open ' + !!document.querySelector('.pa-overlay')`));
+ws.close(); chrome.kill();
