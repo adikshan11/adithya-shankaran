@@ -36,6 +36,7 @@ const checks = [
   ['One way to open Help in every layout', 'check_onehelp.mjs', true, (t) => count(t, 'total ways to open Help: 1') === 5, 4],
   ['Help pop-up, Escape, and the ; key', 'check_help.mjs', true, (t) => count(t, 'help open, 6 tips') >= 1 && t.includes('piano open true') && t.includes('; plays: Play D sharp 4'), 3],
   ['No text selection on the instrument', 'check_select.mjs', true, (t) => count(t, 'selection kept false') >= 4 && !t.includes('ALLOWED') && !t.includes('selection kept true'), 3],
+  ['Cat: tap boops, stroke purrs, blinks between notes', 'check_cat_alive.mjs', true, (t) => t.includes('tap: boop') && /stroke.*purr.*hearts 3.*co-lids-shut/.test(t) && /"blinks":[1-9]/.test(t), 3],
   ['Recording, WAV and MIDI files, MIDI keyboard', 'check_rec.mjs', true, (t) => t.includes('RIFF/WAVE') && t.includes('saved takes: Take 1'), 3],
   ['Recording saved when leaving the app', 'check_recleave.mjs', true, (t) => /saved takes: Take 1: 3 notes/.test(t), 3],
   ['Sound comes back after share sheets and interruptions', 'check_heal.mjs', true, (t) => count(t, 'current running') >= 4, 3],

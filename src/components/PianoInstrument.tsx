@@ -612,7 +612,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       onReady?.();
     };
     const fallback = setTimeout(ready, 1500);
-    const curtainGo = () => arranger.pauseLoading(1900); // the curtain moves for 1.75 s
+    const curtainGo = () => arranger.pauseLoading(2800); // the curtain moves for 2.6 s
     window.addEventListener('pa-curtain-go', curtainGo);
     void arranger.loadFirst('salamander', 3).then(ready);
     arranger.chime();

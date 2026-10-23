@@ -36,6 +36,8 @@ function PianoIcon({ open }: { open: boolean }) {
   );
 }
 
+let openedAt = 0; // when the curtain was last opened, so the loader shows for a minimum time
+
 export default function PianoRoom() {
   const open = useSyncExternalStore(pianoStore.subscribe, pianoStore.get, () => false);
 
@@ -95,7 +97,9 @@ export default function PianoRoom() {
       if (calm >= 3 || now - started > 2500) {
         // A beat more for the graphics chip to finish drawing the stage behind the curtain (on a big monitor its first
         // full draw took one 400 ms frame when the curtain started straight away).
-        setTimeout(() => (idle ? idle(go, { timeout: 200 }) : go()), 250);
+        // The loader also stays until its hairline has filled once (about 1.7 s), so on a fast load it reads as a
+        // short tuning moment, not a flash.
+        setTimeout(() => (idle ? idle(go, { timeout: 200 }) : go()), Math.max(250, openedAt + 1700 - performance.now()));
       } else requestAnimationFrame(watch);
     };
     requestAnimationFrame(watch);
@@ -131,7 +135,10 @@ export default function PianoRoom() {
             void loadInstrument();
           }}
           onClick={() => {
-            if (!open) primeAudio(); // start phone audio inside this tap, so the piano can sound at once
+            if (!open) {
+              primeAudio(); // start phone audio inside this tap, so the piano can sound at once
+              openedAt = performance.now();
+            }
             pianoStore.set(!open);
           }}
           className="pa-handle pa-card-button"
