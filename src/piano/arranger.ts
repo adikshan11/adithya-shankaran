@@ -545,7 +545,46 @@ export class Arranger {
 
   // Unlock audio from a completed tap or a click (iOS will not start sound from a finger going down).
   unlockAudio() {
-    if (this.init() && this.ctx && this.ctx.state !== 'running') unlock(this.ctx);
+    if (!this.init() || !this.ctx) return;
+    if (this.parked) {
+      this.parked = false;
+      this.revive();
+      return;
+    }
+    if (this.ctx.state !== 'running') unlock(this.ctx);
+  }
+
+  // Leaving the page (another app, the lock screen): stop what is playing and suspend the audio on purpose, so its
+  // state is known when the page comes back. iOS can otherwise hand back an interrupted context that says
+  // "running" and plays nothing.
+  private parked = false;
+  park() {
+    if (!this.ctx || this.parked) return;
+    this.parked = true;
+    this.releaseAll();
+    if (this.running) this.stopStyle();
+    if (this.song && !this.learn) this.stopSong();
+    this.stopMetro();
+    void this.ctx.suspend().catch(() => undefined);
+  }
+
+  // Coming back: on a touch screen, inside the first tap, a fresh audio context replaces the old one (the only
+  // reliable cure for iOS's silent "running" context); the loaded samples are reused, since an AudioBuffer works in
+  // any context. On a computer the same context simply resumes.
+  private revive() {
+    const old = this.ctx;
+    if (!old) return;
+    const touch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+    if (touch) {
+      this.ctx = null;
+      this.init();
+      if (this.ctx) unlock(this.ctx);
+      void old.close().catch(() => undefined);
+    } else {
+      unlock(old);
+    }
+    if (this.metronome && !this.running) this.startMetro();
+    this.onChange();
   }
 
   // The final output (after the limiter), for recording exactly what the speakers play.

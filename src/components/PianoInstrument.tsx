@@ -810,15 +810,22 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     const wake = () => arranger.unlockAudio();
     const events = ['touchstart', 'touchend', 'pointerdown', 'click', 'keydown'] as const;
     for (const name of events) window.addEventListener(name, wake, { capture: true, passive: true });
+    // Leaving parks the audio; coming back wakes it at once on a computer, and on the first tap on a phone (iOS
+    // only lets a tap start sound again).
+    const touch = window.matchMedia('(pointer: coarse)').matches;
     const back = () => {
-      if (document.visibilityState === 'visible') arranger.unlockAudio();
+      if (document.visibilityState === 'hidden') arranger.park();
+      else if (!touch) arranger.unlockAudio();
     };
+    const away = () => arranger.park();
     document.addEventListener('visibilitychange', back);
     window.addEventListener('pageshow', back);
+    window.addEventListener('pagehide', away);
     return () => {
       for (const name of events) window.removeEventListener(name, wake, { capture: true });
       document.removeEventListener('visibilitychange', back);
       window.removeEventListener('pageshow', back);
+      window.removeEventListener('pagehide', away);
     };
   }, [arranger]);
 
@@ -886,11 +893,18 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       startX = lastX = average();
       if (!touches.size) sliding = false;
     };
+    // iOS: a finger held on a key would start the text loupe (magnifier) and selection; cancelling the touch's
+    // default stops that. Keys play from pointer events, which still arrive, and sliding is handled above.
+    const noLoupe = (event: TouchEvent) => {
+      if (event.cancelable) event.preventDefault();
+    };
+    bed.addEventListener('touchstart', noLoupe, { passive: false });
     bed.addEventListener('pointerdown', down, true);
     bed.addEventListener('pointermove', move, true);
     window.addEventListener('pointerup', up, true);
     window.addEventListener('pointercancel', up, true);
     return () => {
+      bed.removeEventListener('touchstart', noLoupe);
       bed.removeEventListener('pointerdown', down, true);
       bed.removeEventListener('pointermove', move, true);
       window.removeEventListener('pointerup', up, true);
