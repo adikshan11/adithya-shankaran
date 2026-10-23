@@ -499,12 +499,12 @@
   .pa-screen .pa-screen-bar .pa-bar-clear { padding: 0 6px; border-radius: 4px; font-weight: 800; color: #3a2a12 !important; background: #f3e6c4 !important; opacity: 1 !important; box-shadow: none; }
   .pa-screen .pa-screen-bar .pa-score-btn-on { color: #071a33 !important; background: #9be3ff !important; opacity: 1 !important; }
   .pa-sheet-bar ~ .pa-sheet-body .pa-stand-tools { display: none; } /* the laptop's sheet bar has its own Time and Clear */
-  @media (max-height: 500px) and (orientation: landscape) { /* phone sideways: the sheet bar is hidden there */
+  @media (max-height: 560px) and (orientation: landscape) { /* phone sideways: the sheet bar is hidden there */
     .pa-sheet-bar ~ .pa-sheet-body .pa-stand-tools { display: flex; }
   }
   /* Intro, Fill, Ending and Start on the screen: phones only. */
   .pa-arr-row { display: none; }
-  @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
+  @media (max-width: 760px), (max-width: 1100px) and (orientation: portrait), (max-height: 560px) and (orientation: landscape) {
     .pa-arr-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 6px; }
     /* Start lives in this row on a phone, so the Style row does not repeat it. */
     .pa-main-left:has(.pa-arr-row) > .pa-row-split:first-of-type .pa-row-action { display: none; }
@@ -684,7 +684,7 @@
   /* Learn coach */
   .pa-coach { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; }
   .pa-coach-figure { flex: none; width: 100px; height: 130px; overflow: visible; filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.22)); }
-  @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) { .pa-coach-figure { width: 66px; height: 77px; } }
+  @media (max-width: 760px), (max-width: 1100px) and (orientation: portrait), (max-height: 560px) and (orientation: landscape) { .pa-coach-figure { width: 66px; height: 77px; } }
   /* The kitten is a button: tap to pet. Sleepy and asleep slow the tail and stop the needle; a note startles it awake. */
   .pa-coach-pet { flex: none; display: block; padding: 0; border-radius: 12px; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .pa-coach-pet:focus-visible { outline: 2px solid #59d0ff; outline-offset: 2px; }
@@ -739,19 +739,19 @@
   .pa-t-short { display: none; }
   /* Phone sideways: while Panel is open the corner ✕ closes it, so the Panel button steps aside (no two buttons for
      one job). Upright it stays in its place as "✕ Panel": the thumb closes it where it opened it, and no gap opens. */
-  @media (max-height: 500px) and (orientation: landscape) {
+  @media (max-height: 560px) and (orientation: landscape) {
     .pa-phonebar > .pa-phone-panel[aria-expanded="true"] { display: none !important; }
   }
   /* Phones: Master volume and Balance live in the Panel. Portrait: in the strip with the other groups. Landscape:
      beside MIDI, in the space the Panel button leaves. */
-  @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
+  @media (max-width: 760px), (max-width: 1100px) and (orientation: portrait), (max-height: 560px) and (orientation: landscape) {
     .pa-overlay .pa-body .pa-drawer-open .pa-faders { display: flex !important; flex-direction: column; gap: 4px; min-width: 120px; }
     .pa-overlay .pa-body .pa-drawer-open .pa-fader { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 6px; }
     .pa-overlay .pa-body .pa-drawer-open .pa-fader-label { margin: 0; font-size: 0.55rem; letter-spacing: 0.08em; }
     .pa-overlay .pa-body .pa-drawer-open .pa-fader-scale { display: none; }
     .pa-overlay .pa-body .pa-drawer-open .pa-fader input { height: 18px; }
   }
-  @media (max-height: 500px) and (orientation: landscape) {
+  @media (max-height: 560px) and (orientation: landscape) {
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-faders { grid-column: 8; grid-row: 2; align-self: center; min-width: 0; max-width: 100%; padding-left: 8px; overflow: hidden; gap: 8px; }
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-fader { width: 100%; grid-template-columns: 1fr; gap: 4px; }
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)):has(.pa-drawer-open) .pa-fader-master { display: none; } /* "Volume": the column is narrow */
@@ -1004,7 +1004,7 @@
      Portrait: brand, the touch screen, a quick bar, then finger-sized keys; Panel shows the full button panel in
      place. Landscape: the whole desktop front panel (styles, screen, sounds) scaled to fit the width, with the
      joystick and big keys below, like holding the real keyboard. */
-  @media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
+  @media (max-width: 760px), (max-width: 1100px) and (orientation: portrait), (max-height: 560px) and (orientation: landscape) {
     .pa-overlay { padding: 10px 12px 20px; }
     .pa-overlay-close { position: static; display: flex; width: max-content; margin: 0 0 10px auto; padding: 6px 14px; font-size: 0.8rem; }
     .pa-overlay-close kbd { display: none; }
@@ -1029,7 +1029,7 @@
     .pa-felt { margin: 12px -14px 0; }
     .pa-panel { padding: 10px; }
   }
-  @media (max-width: 760px) and (orientation: portrait) {
+  @media (max-width: 1100px) and (orientation: portrait) {
     /* The instrument runs to the bottom of the screen, under the browser's floating glass toolbar (no dark band below
        the keys); the note names sit above the home-indicator inset so they stay readable. */
     .pa-overlay { padding-bottom: 0; }
@@ -1086,7 +1086,7 @@
   }
   /* Landscape phone, the way phone piano apps do it: the keys run edge to edge and fill the screen under one slim
      toolbar. The full front panel (scaled to fit) or the sheet music opens above the keys from that toolbar. */
-  @media (max-height: 500px) and (orientation: landscape) {
+  @media (max-height: 560px) and (orientation: landscape) {
     /* Edge to edge: the stage has no side padding; the toolbar keeps inside the safe area (rounded corners), and
        the keys keep clear only of the notch or Dynamic Island side (--island-l / --island-r, set from the turn). */
     .pa-overlay { padding: 0; } /* keys reach the bottom edge; their names sit above the home bar */
@@ -1152,7 +1152,7 @@
     .pa-keys { height: var(--keys-h, calc(100dvh - 70px)); min-height: 150px; min-width: calc(36 * 58px); }
   }
   /* Landscape with Safari's bars showing: the display drops its Song row and tightens, so the keys keep room. */
-  @media (max-height: 340px) and (orientation: landscape) {
+  @media (max-height: 360px) and (orientation: landscape) {
     .pa-body:not(:has(.pa-sheet-open)) .pa-main-left > .pa-row-split:nth-of-type(2) { display: none; }
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)) .pa-arr-row { display: none; }
     .pa-overlay .pa-body:not(:has(.pa-sheet-open)) .pa-main-left > .pa-row-split:first-of-type .pa-row-action { display: inline-flex; }
@@ -1175,7 +1175,7 @@
   }
   /* Landscape with Safari's bars showing (under ~340 px tall): the panel screen at 85%, and in Learn the coach as its
      speech bubble only, a shorter staff and no mini keyboard strip (‹ › still move along), so the keys keep room. */
-  @media (max-height: 340px) and (orientation: landscape) {
+  @media (max-height: 360px) and (orientation: landscape) {
     .pa-drawer-open .pa-centre { zoom: 0.85; }
     .pa-body:has(.pa-sheet-open) .pa-minimap, .pa-body:has(.pa-sheet-open) .pa-felt { display: none; }
     .pa-stand .pa-coach .pa-coach-figure { width: 58px; height: 75px; } /* smaller, not hidden */
@@ -1188,7 +1188,7 @@
      the middle above the keys, the sound selector, Style and Sustain to its left, Sheet, Learn and Panel (rightmost)
      to its right, and the keys run full width underneath. The display is the compact form: sound, style, song and
      the chord at full size, without the tiles and message line. */
-  @media (max-height: 500px) and (orientation: landscape) {
+  @media (max-height: 560px) and (orientation: landscape) {
     .pa-body:not(:has(.pa-sheet-open)) {
       display: grid;
       grid-template-columns:
@@ -1301,7 +1301,7 @@
   }
   /* Landscape phone: the piano's body colour runs edge to edge, top and bottom (no black bands), and the joystick
      and Sustain sit in the Dynamic Island's strip, at the bottom below the island, so the keys keep their width. */
-  @media (max-height: 500px) and (orientation: landscape) {
+  @media (max-height: 560px) and (orientation: landscape) {
     .pa-overlay { background: linear-gradient(180deg, #26282d, #26282d 60px, #17181b 45%, #0c0d0f); }
     .pa-body { background: transparent; }
     .pa-minimap { display: block !important; }
@@ -1317,12 +1317,12 @@
     .pa-instrument:is([data-island="left"], [data-island="right"]) .pa-left-label { display: none; }
   }
   /* Landscape: note names clear of the home bar now that the keys reach the bottom edge. */
-  @media (max-height: 500px) and (orientation: landscape) {
+  @media (max-height: 560px) and (orientation: landscape) {
     .pa-keys .pa-key-white .pa-key-marks { margin-bottom: calc(8px + env(safe-area-inset-bottom)); }
     .pa-keyrow { position: relative; }
   }
   /* Portrait: shorter black keys, so the white keys show more and their names have room. */
-  @media (max-width: 760px) and (orientation: portrait) {
+  @media (max-width: 1100px) and (orientation: portrait) {
     .pa-keys .pa-key-black { height: 52%; }
   }
   @keyframes pa-drawer-in { from { transform: translateY(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -1343,7 +1343,7 @@
 /* Phone upright, Panel open: the Panel sits between the screen and the quick bar, so it gives up what it repeats or
    does not need, to leave the keys in view: Learn is already in the quick bar, the turn hint can wait, and the two
    faders share one row. */
-@media (max-width: 760px) and (orientation: portrait) {
+@media (max-width: 1100px) and (orientation: portrait) {
   .pa-overlay .pa-body:has(.pa-drawer-open) .pa-btn-learn, .pa-overlay .pa-body:has(.pa-drawer-open) .pa-rotate-hint { display: none !important; }
   .pa-overlay .pa-body .pa-drawer-open .pa-faders { flex-direction: row !important; gap: 14px; }
   .pa-overlay .pa-body .pa-drawer-open .pa-fader { flex: 1; min-width: 0; grid-template-columns: 1fr; gap: 2px; }
@@ -1359,7 +1359,7 @@
 /* Keys only (phones): the fold button sits centred on the line between the controls and the keys; pressed, every
    part above the keys goes and the keys take the whole screen, with the button at their top edge to bring it back. */
 .pa-fold { display: none; }
-@media (max-width: 760px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
+@media (max-width: 1100px) and (orientation: portrait), (max-height: 560px) and (orientation: landscape) {
   .pa-keyrow { position: relative; }
   .pa-fold {
     flex: none; display: grid; place-items: center; width: 36px; height: 18px; padding: 0; border-radius: 999px;
@@ -1375,7 +1375,7 @@
   .pa-keys-only .pa-body { display: block !important; }
 }
 /* Portrait keys only: the keys run edge to edge (no casing border, rounded top or side gaps), under the strip. */
-@media (max-width: 760px) and (orientation: portrait) {
+@media (max-width: 1100px) and (orientation: portrait) {
   .pa-overlay:has(.pa-keys-only) { padding: env(safe-area-inset-top) 0 0; }
   .pa-overlay:has(.pa-keys-only) :is(.pa-overlay-frame, .pa-stage, .pa-instrument) { margin: 0; padding: 0; max-width: none; border: 0; border-radius: 0; box-shadow: none; }
   .pa-keys-only .pa-body { padding: 0; border: 0; border-radius: 0; box-shadow: none; min-height: 0; background: #1d1e22; }
@@ -1391,8 +1391,7 @@
 
 /* Portrait: a front rail (the key slip) under the keys, and the casing on down to the bottom of the screen, under
    Safari's glass toolbar (100lvh is the full height with the bars hidden), so the instrument never just stops. */
-@media (max-width: 760px) and (orientation: portrait) {
-  .pa-overlay .pa-body { min-height: calc(100lvh - 60px); }
+@media (max-width: 1100px) and (orientation: portrait) {
   .pa-overlay .pa-keyrow { position: relative; }
   .pa-overlay .pa-keyrow::after {
     content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 16px; pointer-events: none;
@@ -1441,13 +1440,13 @@
 .pa-result-actions button.bonus { color: #2a1a00; background: linear-gradient(180deg, #ffe08a, #f5b800); }
 /* The display's top bar keeps every label on one line; on a phone during Learn the long words drop out. */
 .pa-screen-bar > * { white-space: nowrap; }
-@media (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
+@media (max-width: 760px), (max-width: 1100px) and (orientation: portrait), (max-height: 560px) and (orientation: landscape) {
   .pa-screen-bar:has(.pa-learn-flag) .pa-long { display: none; }
 }
 
 /* Portrait phone: the name plate stays, on one compact line, and Close sits at its right end (no separate row above
    the piano), so the keys keep the height. */
-@media (max-width: 760px) and (orientation: portrait) {
+@media (max-width: 1100px) and (orientation: portrait) {
   .pa-overlay .pa-top { align-items: center; min-height: 34px; padding: 0 96px 8px 2px; }
   .pa-overlay .pa-brand { flex-direction: row; align-items: baseline; gap: 10px; white-space: nowrap; }
   .pa-overlay .pa-brand-name { font-size: 1.05rem; letter-spacing: 0.32em; }
@@ -1456,13 +1455,13 @@
 }
 
 /* Touch phones have no computer keyboard, so PC keys (letters on the keys for typing) is left out of their Panel. */
-@media (pointer: coarse) and (max-width: 760px), (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+@media (pointer: coarse) and (max-width: 1100px), (pointer: coarse) and (max-height: 560px) and (orientation: landscape) {
   .pa-btn-pckeys { display: none !important; }
 }
 
 /* Portrait phone: the piano is the whole page (as sideways); the laptop's how-to guide and credits below it are left
    out, so scrolling never runs past the instrument into text. */
-@media (max-width: 760px) and (orientation: portrait) {
+@media (max-width: 1100px) and (orientation: portrait) {
   .pa-overlay :is(.pa-howto, .pa-credits) { display: none !important; }
 }
 
@@ -1470,3 +1469,40 @@
    under a fade (the bonus speeds at its end could not be seen or tapped). */
 .pa-screen .pa-page-head .pa-tabs { flex-wrap: wrap !important; overflow: visible !important; row-gap: 3px; mask-image: none; -webkit-mask-image: none; }
 .pa-screen .pa-page-head .pa-tab { border-radius: 4px; }
+
+/* Laptops, monitors and tablets held sideways: the piano fits the window (scaled in code), Close and Help sit in its
+   title bar, and nothing scrolls. Close is outside the scaled stage, so it is placed in the same scaled units. */
+.pa-overlay:has(.pa-instrument[data-layout="desk"]) { padding: 12px 14px; overflow: hidden; }
+.pa-overlay:has(.pa-instrument[data-layout="desk"]) .pa-overlay-close { position: absolute; top: 20px; right: 24px; margin: 0; }
+.pa-instrument[data-layout="desk"] .pa-top { padding-right: 150px; }
+/* Help: a round ? in the title bar, and a pop-up card that scrolls on its own if it is taller than the screen. */
+.pa-help-btn { flex: none; display: grid; place-items: center; width: 28px; height: 28px; margin-left: 12px; border-radius: 50%; font-weight: 800; font-size: 0.9rem; color: #f6d7a0; background: rgb(255 255 255 / 0.08); box-shadow: inset 0 0 0 1px rgb(246 215 160 / 0.4); }
+.pa-help-btn:hover { background: rgb(255 255 255 / 0.14); }
+.pa-help { position: fixed; inset: 0; z-index: 140; display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); background: rgb(6 8 12 / 0.65); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.pa-help-card { width: min(760px, 100%); max-height: 100%; overflow: auto; overscroll-behavior: contain; padding: 16px 20px 18px; border-radius: 16px; color: #d8dbe1; background: linear-gradient(180deg, #23252b, #17181c); box-shadow: 0 20px 60px rgb(0 0 0 / 0.55), inset 0 0 0 1px #34363d; }
+.pa-help-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 0.95rem; letter-spacing: 0.04em; color: #fff; }
+.pa-help-close { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: rgb(255 255 255 / 0.08); }
+.pa-help-close svg { width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; }
+.pa-help-tips, .pa-help-credits { display: block; margin: 0; padding: 0; }
+.pa-help .pa-howto-list { display: grid; gap: 8px; margin: 0 0 14px; padding: 0; list-style: none; font-size: 0.85rem; line-height: 1.45; }
+.pa-help .pa-howto-list b { display: inline-block; min-width: 88px; color: #fff; }
+.pa-help .pa-help-credits { margin-top: 14px; font-size: 0.72rem; line-height: 1.5; color: #8d9098; }
+.pa-help .pa-keymap { margin: 0; }
+
+/* Phones and tablets held upright: the page never scrolls. The piano fits the visible height (in code), and the
+   area under a floating browser toolbar shows the casing colour from the background, not from extra height. */
+@media (max-width: 1100px) and (orientation: portrait) {
+  .pa-overlay { overflow: hidden !important; overscroll-behavior: none; background: #141518; }
+}
+/* Short upright screens (iPhone SE, small Androids): the sound row is left out (the screen picks sounds too), and so
+   are the turn hint and the screen's message line, so the keys still fit above the toolbar. */
+@media (max-width: 1100px) and (orientation: portrait) and (max-height: 700px) {
+  .pa-overlay .pa-phonebar > :nth-child(-n + 3), .pa-overlay .pa-rotate-hint, .pa-overlay .pa-screen .pa-message { display: none !important; }
+  .pa-overlay .pa-keys { min-height: 120px; }
+}
+
+/* Narrow upright phones: the title keeps ADITHYA and drops the model line, so Help and Close fit beside it. */
+@media (max-width: 420px) and (orientation: portrait) {
+  .pa-overlay .pa-brand-model { display: none; }
+}
+.pa-overlay .pa-top .pa-help-btn { margin-left: auto; }

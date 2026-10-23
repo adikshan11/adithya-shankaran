@@ -158,8 +158,8 @@ const Keys = memo(function Keys({ arranger, pressed, showLetters, pcBase, pointe
   );
 });
 
-// Extra computer keys that repeat a note another key already plays (, . / L F K); on the keys they show as a *.
-const SPARE_CODES = new Set(['Comma', 'Period', 'Slash', 'KeyL', 'KeyF', 'KeyK']);
+// Extra computer keys that repeat a note another key already plays (, . / L ; F K); on the keys they show as a *.
+const SPARE_CODES = new Set(['Comma', 'Period', 'Slash', 'KeyL', 'Semicolon', 'KeyF', 'KeyK']);
 // Note letter of each pitch class for the coloured note badges on the white keys (C carries its octave, as C4).
 const NOTE_LETTERS = ['C', '', 'D', '', 'E', 'F', '', 'G', '', 'A', '', 'B'];
 // Names on the black keys (sharps, as the chord display writes them).
@@ -168,7 +168,7 @@ const SHARP_NAMES = ['', 'C♯', '', 'D♯', '', '', 'F♯', '', 'G♯', '', 'A�
 // A drawn computer keyboard: which key plays which note. Black-key rows sit between the white keys, as on a piano.
 const MAP_ROWS: { white: [string, string][]; black: (string | null)[] }[] = [
   { white: [['Q', 'C'], ['W', 'D'], ['E', 'E'], ['R', 'F'], ['T', 'G'], ['Y', 'A'], ['U', 'B'], ['I', 'C'], ['O', 'D'], ['P', 'E'], ['[', 'F'], [']', 'G']], black: ['3', '4', null, '5', '6', '7', null, '9', '0', null, '='] },
-  { white: [['A', 'B'], ['Z', 'C'], ['X', 'D'], ['C', 'E'], ['V/F', 'F'], ['B', 'G'], ['N', 'A'], ['M', 'B'], [',/K', 'C'], ['.', 'D'], ['/', 'E']], black: [null, 'S', 'D', null, 'G', 'H', 'J', null, 'L'] },
+  { white: [['A', 'B'], ['Z', 'C'], ['X', 'D'], ['C', 'E'], ['V/F', 'F'], ['B', 'G'], ['N', 'A'], ['M', 'B'], [',/K', 'C'], ['.', 'D'], ['/', 'E']], black: [null, 'S', 'D', null, 'G', 'H', 'J', null, 'L', ';'] },
 ];
 
 function KeyMap() {
@@ -266,7 +266,7 @@ function MeterPicker({ value, disabled, onPick, floating = false }: { value: str
         <span aria-hidden="true">▾</span>
       </button>
       {/* Phones always float it: above the sheet bar it would open off the top of the screen. */}
-      {list && (floating || window.matchMedia('(max-width: 760px), (max-height: 500px) and (orientation: landscape)').matches ? createPortal(<div className="pa-meter-float">{list}</div>, document.body) : list)}
+      {list && (floating || window.matchMedia('(max-width: 760px), (max-width: 1100px) and (orientation: portrait), (max-height: 560px) and (orientation: landscape)').matches ? createPortal(<div className="pa-meter-float">{list}</div>, document.body) : list)}
     </div>
   );
 }
@@ -306,6 +306,20 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   // Phones: keys only. The fold button hides everything above the keys (the screen, the quick bar, the strip) so the
   // keys take the whole screen, and brings it all back on the next tap.
   const [keysOnly, setKeysOnly] = useState(false);
+  // Help: how to play, the computer-keyboard map and the credits, in a pop-up on demand (not under the piano, so no
+  // device ever scrolls the page). Escape closes it before it would close the piano.
+  const [helpOpen, setHelpOpen] = useState(false);
+  useEffect(() => {
+    if (!helpOpen) return;
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.stopImmediatePropagation();
+      event.preventDefault();
+      setHelpOpen(false);
+    };
+    window.addEventListener('keydown', escape, true);
+    return () => window.removeEventListener('keydown', escape, true);
+  }, [helpOpen]);
   useEffect(() => {
     const stage = document.querySelector<HTMLElement>('.pa-overlay');
     if (stage) stage.scrollTop = 0; // start at the top: the strip and slider in view
@@ -332,7 +346,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   };
   const [phoneLandscape, setPhoneLandscape] = useState(false);
   useEffect(() => {
-    const query = window.matchMedia('(max-height: 500px) and (orientation: landscape)');
+    const query = window.matchMedia('(max-height: 560px) and (orientation: landscape)');
     const update = () => setPhoneLandscape(query.matches);
     update();
     query.addEventListener('change', update);
@@ -452,7 +466,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       setBars(window.innerWidth < 700 ? 2 : window.innerWidth < 1000 ? 3 : 4);
       const root = scroller.current?.closest<HTMLElement>('.pa-instrument');
       if (!root) return;
-      if (window.matchMedia('(max-height: 500px) and (orientation: landscape)').matches) {
+      if (window.matchMedia('(max-height: 560px) and (orientation: landscape)').matches) {
         // A phone on its side reports the same safe-area inset left and right, but the notch or Dynamic Island is
         // only on one side: the top of the phone. Keep the keys clear of that side only, so they run to the other
         // edge. The turn decides the side: 90 degrees (turned left) puts the top of the phone on the left.
@@ -488,7 +502,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         // Landscape: the keys run to the bottom edge (the note names sit above the home bar, in CSS).
         void homeBar;
         root.style.setProperty('--keys-h', `${Math.max(KEYS_MIN - 55, Math.floor(window.innerHeight - top - 2))}px`);
-      } else if (window.matchMedia('(max-width: 760px) and (orientation: portrait)').matches) {
+      } else if (window.matchMedia('(max-width: 1100px) and (orientation: portrait)').matches) {
         // Portrait phone: the keys take the rest of the screen below the touch screen and quick bar.
         root.style.removeProperty('--fit');
         const keys = root.querySelector<HTMLElement>('.pa-keys');
@@ -508,11 +522,30 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         // toolbar itself (131 pt on an iPhone 15/16 in portrait, measured from a screenshot, 23 Oct 2026).
         const floatingBar = /iPhone/.test(navigator.userAgent) && small >= window.screen.height - 4;
         const below = floatingBar ? 132 : 8;
-        root.style.setProperty('--keys-h', `${Math.max(150, Math.floor(Math.min(window.innerHeight - 30, small - below) - top))}px`);
+        root.style.setProperty("--keys-h", `${Math.max(window.innerHeight <= 700 ? 120 : 150, Math.floor(Math.min(window.innerHeight - 30, small - below) - top))}px`);
       } else {
         root.style.removeProperty('--fit');
         root.style.removeProperty('--keys-h');
+        // Laptops, monitors and tablets held sideways: the instrument is laid out for a 1440 px wide window and scaled
+        // as one piece (keys, text and buttons together) to fit the window exactly: up to twice the size on a big
+        // monitor, smaller on a short laptop screen, so it never needs scrolling. The current scale is divided out,
+        // so measuring never resets it.
+        root.dataset.layout = 'desk';
+        const stage = root.closest<HTMLElement>('.pa-stage');
+        const body = root.querySelector<HTMLElement>('.pa-body');
+        if (stage && body) {
+          const current = Number(stage.style.zoom) || 1;
+          const natural = body.getBoundingClientRect().height / current;
+          const scale = Math.max(0.5, Math.min(2, window.innerWidth / 1440, (window.innerHeight - 24) / natural));
+          stage.style.zoom = Math.abs(scale - 1) > 0.01 ? scale.toFixed(3) : '';
+          const close = stage.parentElement?.querySelector<HTMLElement>('.pa-overlay-close');
+          if (close) close.style.zoom = stage.style.zoom; // Close grows with the piano
+        }
+        return;
       }
+      root.dataset.layout = 'phone';
+      root.closest<HTMLElement>('.pa-stage')?.style.removeProperty('zoom'); // phones keep their own layouts
+      root.closest('.pa-overlay-frame')?.querySelector<HTMLElement>('.pa-overlay-close')?.style.removeProperty('zoom');
     };
     fit();
     refit.current = fit;
@@ -726,7 +759,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   // Phone held sideways: the Panel button steps aside while the Panel is open, so the stage's ✕ first goes back to the
   // blue screen; from the screen it closes the piano. Caught before the stage's own handler runs. Upright, the Panel
   // and Sheet buttons stay under the thumb and close their own views, so Close at the top only closes the piano.
-  const SIDEWAYS = '(max-height: 500px) and (orientation: landscape)';
+  const SIDEWAYS = '(max-height: 560px) and (orientation: landscape)';
   const views = useRef({ drawer, showSheet });
   views.current = { drawer, showSheet };
   useEffect(() => {
@@ -1058,6 +1091,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           </div>
           <span className="pa-grille" aria-hidden="true" />
           <span className="pa-badge">Touch screen · 33 sounds · 13 styles</span>
+          <button type="button" className="pa-help-btn" aria-label="Help: how to play" onClick={() => setHelpOpen(true)}>?</button>
         </div>
 
         <div className={`pa-drawer ${drawer ? 'pa-drawer-open' : ''}`}>
@@ -1238,6 +1272,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
               <div className="pa-ctl-row">
             <PanelButton label="MIDI" active={Boolean(midiDevices?.length)} onClick={() => void toggleMidi()} />
             <PanelButton label="PC keys" className="pa-btn-pckeys" active={showLetters} onClick={() => setShowLetters((value) => !value)} />
+            <PanelButton label="Help" className="pa-btn-help" active={helpOpen} onClick={() => setHelpOpen(true)} />
               </div>
             </div>
           </div>
@@ -1400,19 +1435,35 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         </div>
       </div>
 
-      <div className="pa-howto">
-        <ul className="pa-howto-list">
-          <li><b>Play</b> Click or tap the keys. Strike lower on a key for a louder note.</li>
-          <li><b>Choose</b> Tap the screen: the sound, style, song or tempo.</li>
-          <li><b>Accompany</b> Press Start. Your left hand, below middle C, picks the chord.</li>
-          <li><b>Express</b> Hold <kbd>Space</kbd> for the pedal. Push the joystick sideways to bend, up for vibrato.</li>
-        </ul>
-        <KeyMap />
-      </div>
-      <p className="pa-credits">
-        Piano: Salamander Grand Piano, a Yamaha C5 recorded by Alexander Holm. Other instruments: FluidR3 GM soundfont. Both CC BY 3.0.
-        Scores: Mutopia Project, public domain. Raga pieces written for this page. Drums and tabla are synthesised.
-      </p>
+      {helpOpen &&
+        createPortal(
+          <div className="pa-help" role="dialog" aria-modal="true" aria-label="How to play" onClick={(event) => event.target === event.currentTarget && setHelpOpen(false)}>
+            <div className="pa-help-card">
+              <div className="pa-help-head">
+                <b>How to play</b>
+                <button type="button" className="pa-help-close" aria-label="Close help" onClick={() => setHelpOpen(false)}>
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4 L12 12 M12 4 L4 12" /></svg>
+                </button>
+              </div>
+              <div className="pa-help-tips">
+                <ul className="pa-howto-list">
+                  <li><b>Play</b> Click or tap the keys. Strike lower on a key for a louder note. Slide a finger for a glissando; two fingers sideways move along the keyboard.</li>
+                  <li><b>Choose</b> Tap the screen: the sound, style, song or tempo.</li>
+                  <li><b>Accompany</b> Press Start. Your left hand, below middle C, picks the chord.</li>
+                  <li><b>Express</b> Hold <kbd>Space</kbd> (or Sustain) for the pedal. Push the joystick sideways to bend, up for vibrato.</li>
+                  <li><b>Learn</b> Pick a piece, a hand and a speed; play the green keys and the cat coaches you. Master it at 100% to open the bonus speeds.</li>
+                  <li><b>Keys</b> The Keys slider sets how many keys fit the screen; the arrow beside the strip shows the keys alone.</li>
+                </ul>
+                <KeyMap />
+              </div>
+              <p className="pa-help-credits">
+                Piano: Salamander Grand Piano, a Yamaha C5 recorded by Alexander Holm. Other instruments: FluidR3 GM soundfont. Both CC BY 3.0.
+                Scores: Mutopia Project, public domain. Raga pieces written for this page. Drums and tabla are synthesised.
+              </p>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
