@@ -611,6 +611,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
         // toolbar itself (131 pt on an iPhone 15/16 in portrait, measured from a screenshot, 23 Oct 2026).
         const floatingBar = /iPhone/.test(navigator.userAgent) && small >= window.screen.height - 4;
         const below = floatingBar ? 132 : 8;
+        stage?.style.setProperty('--below', `${floatingBar ? 132 : 0}px`);
         const room = Math.floor(Math.min(window.innerHeight - 30, small - below) - top);
         const keysHeight = dual ? Math.max(110, Math.floor((room - 22) / 2)) : Math.max(window.innerHeight <= 700 ? 120 : 150, room);
         root.style.setProperty('--keys-h', `${keysHeight}px`);

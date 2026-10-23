@@ -1552,3 +1552,37 @@
 @media (max-height: 560px) and (orientation: landscape) {
   .pa-overlay .pa-keys { min-height: 100px; }
 }
+
+/* Phones and tablets (upright, or a short screen sideways): the keys are sized by layout, not by measuring. Some
+   in-app browsers (the Google app's iOS web view) report a viewport height that differs from what they show, so keys
+   sized from measurements came out twice too tall upright and far too short sideways. Here the stage is a column
+   that fills the overlay (whatever the browser really shows): the controls take their own height and the keys, one
+   row or two equal rows, stretch over the rest. --below keeps room for a floating toolbar (Safari on iOS 26, set in
+   code); the keys keep at least 120 px. */
+@media (max-width: 1100px) and (orientation: portrait), (max-height: 560px) and (orientation: landscape) {
+  .pa-overlay:has(.pa-instrument) { display: flex; flex-direction: column; }
+  .pa-overlay:has(.pa-instrument) > .pa-overlay-frame { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; width: 100%; }
+  .pa-overlay .pa-stage { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; height: auto; }
+  .pa-overlay .pa-instrument { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+  .pa-overlay .pa-body { flex: 1 1 auto; min-height: 0 !important; height: auto; }
+  .pa-overlay :is(.pa-keyrow, .pa-keyrow2) .pa-keybed-wrap { height: 100%; min-height: 0; }
+  .pa-overlay :is(.pa-keyrow, .pa-keyrow2) .pa-keybed { height: 100%; }
+  .pa-overlay :is(.pa-keyrow, .pa-keyrow2) .pa-keys { height: 100%; min-height: 0; }
+  .pa-overlay :is(.pa-keyrow, .pa-keyrow2) { min-height: 120px; }
+}
+@media (max-width: 1100px) and (orientation: portrait) {
+  .pa-overlay:has(.pa-instrument) { padding-bottom: var(--below, 0px); }
+  .pa-overlay .pa-body { display: flex !important; flex-direction: column; }
+  .pa-overlay .pa-body > :not(.pa-keyrow, .pa-keyrow2) { flex: none; }
+  .pa-overlay :is(.pa-keyrow, .pa-keyrow2) { display: grid; grid-template-rows: minmax(0, 1fr); flex: 1 1 0; }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  /* The sideways layout is a grid: its last row (the keys) takes what the rows above leave. */
+  .pa-overlay .pa-body:not(.pa-keys-only .pa-body) { grid-template-rows: auto auto auto auto minmax(0, 1fr) !important; }
+  .pa-overlay .pa-keyrow { align-self: stretch !important; grid-template-rows: minmax(0, 1fr); }
+  .pa-keys-only .pa-body { display: flex !important; flex-direction: column; }
+  .pa-keys-only .pa-keyrow { display: grid; flex: 1 1 0; }
+}
+
+/* In the keys-only column every row spans the full width (the strip collapsed to its content when centred). */
+.pa-keys-only .pa-body > :is(.pa-mapbar, .pa-keyrow, .pa-keyrow2) { align-self: stretch; width: auto; }
