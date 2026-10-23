@@ -558,10 +558,16 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
           const box = first.getBoundingClientRect();
           stage.style.setProperty('--close-top', `${Math.max(4, Math.round(box.top + box.height / 2 - 16 + stage.scrollTop))}px`);
         }
-        const homeBar = stage ? parseFloat(getComputedStyle(stage).paddingBottom) || 0 : 0; // iPhone home indicator inset
-        // Landscape: the keys run to the bottom edge (the note names sit above the home bar, in CSS).
-        void homeBar;
-        root.style.setProperty('--keys-h', `${Math.max(KEYS_MIN - 55, Math.floor(window.innerHeight - top - 2))}px`);
+        // The keys stop above the bottom strip where a touch wakes the phone's home bar (iOS) or gesture bar
+        // (Android); a page cannot hide that bar, so the piano's front rail fills the strip instead of keys.
+        const edge = document.createElement('div');
+        edge.style.cssText = 'position:fixed;bottom:0;height:0;padding-bottom:env(safe-area-inset-bottom);visibility:hidden';
+        document.body.append(edge);
+        const homeBar = edge.getBoundingClientRect().height;
+        edge.remove();
+        const rail = Math.max(homeBar, 16) + 6;
+        root.style.setProperty('--rail-h', `${Math.round(rail)}px`);
+        root.style.setProperty('--keys-h', `${Math.max(KEYS_MIN - 75, Math.floor(window.innerHeight - top - rail))}px`); // 100 px at least, so the rail still fits with the sheet open
       } else if (window.matchMedia('(max-width: 1100px) and (orientation: portrait)').matches) {
         // Portrait phone: the keys take the rest of the screen below the touch screen and quick bar.
         root.style.removeProperty('--fit');

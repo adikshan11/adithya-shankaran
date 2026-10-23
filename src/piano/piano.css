@@ -1532,3 +1532,23 @@
   .pa-keys-only .pa-keyrow2 { display: block; order: 1; position: relative; margin-bottom: 10px; }
   .pa-keys-only .pa-keyrow { order: 2; }
 }
+
+/* The photo-style kitten: soft tabby stripes and fine whiskers rather than drawn lines. */
+.pa-coach .co-stripe { stroke: #e3893a; stroke-width: 2.8; opacity: 0.5; }
+.pa-coach .co-whisker { stroke: #a5805f; stroke-width: 0.7; opacity: 0.55; }
+
+/* Phone held sideways: the front rail (key slip) under the keys fills the strip at the bottom of the screen where a
+   touch wakes the home or gesture bar, so fingers on the keys stay clear of it. Note names sit just above the rail. */
+@media (max-height: 560px) and (orientation: landscape) {
+  .pa-overlay .pa-keyrow {
+    padding-bottom: var(--rail-h, 22px);
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.12) 0 1px, #3a3c42 1px, #24262b 30%, #141518 100%) bottom / 100% var(--rail-h, 22px) no-repeat;
+  }
+  .pa-overlay .pa-keys .pa-key-white .pa-key-marks { margin-bottom: 8px !important; }
+}
+
+/* Sideways, with the Panel or the sheet music open, the keys may go down to 100 px (the code sizes them to the room
+   left), so the rail below them still fits the screen. */
+@media (max-height: 560px) and (orientation: landscape) {
+  .pa-overlay .pa-keys { min-height: 100px; }
+}
