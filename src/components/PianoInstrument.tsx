@@ -309,6 +309,29 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   // Help: how to play, the computer-keyboard map and the credits, in a pop-up on demand (not under the piano, so no
   // device ever scrolls the page). Escape closes it before it would close the piano.
   const [helpOpen, setHelpOpen] = useState(false);
+  // An instrument, not a page of text: no text selection and no Copy / Look Up / Translate menu from a long press
+  // anywhere in the piano or its pop-ups (iOS can still start one through CSS alone). Text boxes stay editable.
+  useEffect(() => {
+    const inPiano = (node: Node | null) => {
+      const element = node instanceof Element ? node : node?.parentElement;
+      return Boolean(element?.closest('.pa-overlay, .pa-help, .pa-meter-float, .pa-result, .pa-confetti') && !element.closest('input, textarea'));
+    };
+    const stop = (event: Event) => {
+      if (inPiano(event.target as Node)) event.preventDefault();
+    };
+    const clear = () => {
+      const selection = document.getSelection();
+      if (selection && selection.rangeCount && inPiano(selection.anchorNode)) selection.removeAllRanges();
+    };
+    document.addEventListener('selectstart', stop, true);
+    document.addEventListener('contextmenu', stop, true);
+    document.addEventListener('selectionchange', clear);
+    return () => {
+      document.removeEventListener('selectstart', stop, true);
+      document.removeEventListener('contextmenu', stop, true);
+      document.removeEventListener('selectionchange', clear);
+    };
+  }, []);
   useEffect(() => {
     if (!helpOpen) return;
     const escape = (event: KeyboardEvent) => {
