@@ -423,6 +423,10 @@ export class Arranger {
     steps: { start16: number; notes: number[]; lengths: Map<number, number> }[];
     at: number;
     remaining: Set<number>;
+    // A chord (two or more notes at once) counts only when every note is held down together: when its first note
+    // went down, and whether this chord already cost a slip (a note let go before the others were down).
+    chordAt: number;
+    chordSlip: boolean;
     misses: number;
     streak: number;
     wrongRun: number;
@@ -1082,7 +1086,7 @@ export class Arranger {
     this.tempo = Math.min(600, Math.max(20, Math.round(pieceTempo * speed)));
     const meterIndex = meters.findIndex((item) => item.label === meterLabel);
     if (meterIndex >= 0) this.setMeter(meterIndex);
-    this.learn = { song, hand, steps, at: 0, remaining: new Set(steps[0]?.notes), misses: 0, streak: 0, wrongRun: 0, recent: [], startedAt: 0, result: null, speed, per16: songPer16 / speed, meterLabel, lastAt: 0, ratios: [], held: new Map(), holdUntil: 0, tipAt: -10 };
+    this.learn = { song, hand, steps, at: 0, remaining: new Set(steps[0]?.notes), chordAt: 0, chordSlip: false, misses: 0, streak: 0, wrongRun: 0, recent: [], startedAt: 0, result: null, speed, per16: songPer16 / speed, meterLabel, lastAt: 0, ratios: [], held: new Map(), holdUntil: 0, tipAt: -10 };
     const count = meter.unit === 8 ? `${meter.beats} quavers` : `${meter.beats} crotchet beats`;
     this.say('idle', `${meterLabel}: count ${count} a bar. ${Math.round(speed * 100)}% speed (♩ = ${this.tempo}); Metro gives a click. First: ${(steps[0]?.notes ?? []).map(spoken).join(' + ')}.`);
     this.onChange();
@@ -1126,6 +1130,23 @@ export class Arranger {
     const learn = this.learn;
     const hold = learn?.held.get(pitch);
     if (!learn || !hold) return;
+    // A note of an unfinished chord let go before the rest went down: it was not played together, so it goes back
+    // to green and must be played again with the others (one slip per chord).
+    const chord = learn.steps[learn.at]?.notes ?? [];
+    if (chord.length > 1 && chord.includes(pitch) && learn.remaining.size > 0 && !learn.remaining.has(pitch)) {
+      learn.held.delete(pitch);
+      learn.remaining.add(pitch);
+      if (!learn.chordSlip) {
+        learn.chordSlip = true;
+        learn.misses++;
+        learn.streak = 0;
+        learn.recent = [...learn.recent, false].slice(-10);
+      }
+      if (![...learn.held.keys()].some((note) => chord.includes(note))) learn.chordAt = 0;
+      this.say('upset', `Together! ${chord.map(spoken).join(' + ')} is one chord: keep ${spoken(pitch)} down while you add ${[...learn.remaining].filter((note) => note !== pitch).map(spoken).join(' + ') || 'the others'}.`);
+      this.onChange();
+      return;
+    }
     learn.held.delete(pitch);
     if (learn.at - learn.tipAt < 3 || learn.at >= learn.steps.length) return;
     const held = (performance.now() - hold.at) / 1000;
@@ -1178,9 +1199,16 @@ export class Arranger {
     const nextStart = learn.steps[learn.at + 1]?.start16;
     const length16 = step.lengths.get(pitch) ?? 2;
     learn.held.set(pitch, { at: performance.now(), length16, gap16: nextStart === undefined ? length16 : nextStart - step.start16 });
+    if (step.notes.length > 1 && !learn.chordAt) learn.chordAt = performance.now();
     if (learn.remaining.size) {
-      this.say('happy', `Good! Now also ${[...learn.remaining].map(spoken).join(' + ')}.`);
+      // Half a chord is not a right answer yet: no praise until every note is down together.
+      this.say('idle', `Keep ${spoken(pitch)} down and add ${[...learn.remaining].map(spoken).join(' + ')}: the notes of a chord sound together.`);
+      this.onChange();
+      return;
     } else {
+      // Struck one after another (but all held): it counts, with a word about striking them at once.
+      const spread = step.notes.length > 1 && learn.chordAt ? performance.now() - learn.chordAt : 0;
+      if (spread > Math.max(450, learn.per16 * 2000)) this.tip('idle', `All of ${step.notes.map(spoken).join(' + ')} down: next time strike them at the same moment.`);
       // Rhythm: how long this chord took after the last one, against what the score asks at the practice speed.
       const now = performance.now();
       if (learn.lastAt && learn.at > 0) {
@@ -1195,6 +1223,8 @@ export class Arranger {
       learn.recent = [...learn.recent, true].slice(-10);
       const lastTen = learn.recent.length === 10 ? learn.recent.filter(Boolean).length : 0;
       learn.remaining = new Set(learn.steps[learn.at]?.notes);
+      learn.chordAt = 0;
+      learn.chordSlip = false;
       const next = ` Next: ${[...learn.remaining].map(spoken).join(' + ')}.`;
       const pace = this.pace();
       if (learn.at >= learn.steps.length) {
