@@ -309,6 +309,17 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
   // Phones: keys only. The fold button hides everything above the keys (the screen, the quick bar, the strip) so the
   // keys take the whole screen, and brings it all back on the next tap.
   const [keysOnly, setKeysOnly] = useState(false);
+  // Two keyboards: keys only on a phone or tablet held upright. The upper row exists only then (not hidden in the
+  // page the rest of the time), so the piano has one set of 61 keys everywhere else.
+  const [upright, setUpright] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 1100px) and (orientation: portrait)');
+    const update = () => setUpright(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+  const dual = keysOnly && upright;
   // Help: how to play, the computer-keyboard map and the credits, in a pop-up on demand (not under the piano, so no
   // device ever scrolls the page). Escape closes it before it would close the piano.
   const [helpOpen, setHelpOpen] = useState(false);
@@ -356,7 +367,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
       if (keysOnly && lower && upper && upper.offsetParent) upper.scrollLeft = lower.scrollLeft + (lower.scrollWidth / whiteKeys.length) * 7;
     });
     return () => cancelAnimationFrame(frame);
-  }, [keysOnly]);
+  }, [keysOnly, dual]);
   const [hand, setHand] = useState<Hand>('right');
   // Bars on the screen's Score page, from its card's shape: bars that make the staff as wide (for its height) as the card.
   const [screenBars, setScreenBars] = useState(3);
@@ -895,7 +906,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
     const beds = [scroller.current, scroller2.current].filter((element): element is HTMLDivElement => Boolean(element));
     const cleanups = beds.map((bed) => attachTouch(bed));
     return () => cleanups.forEach((cleanup) => cleanup());
-  }, [arranger]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [arranger, dual]); // eslint-disable-line react-hooks/exhaustive-deps
   function attachTouch(bed: HTMLDivElement) {
     const touches = new Map<number, { x: number; y: number; key: number | null; first: number | null }>();
     let sliding = false;
@@ -1532,6 +1543,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             {edges.right && <button type="button" className="pa-edge pa-edge-right" aria-label="Show higher keys" onClick={() => scrollKeys(1)}>›</button>}
           </div>
         </div>
+        {dual && (
         <div className="pa-keyrow2" role="group" aria-label="Upper keyboard">
           <div className="pa-keybed-wrap">
             <div className="pa-keybed" ref={scroller2}>
@@ -1541,6 +1553,7 @@ function PianoInstrument({ onReady }: { onReady?: () => void }) {
             <button type="button" className="pa-edge pa-edge-right" aria-label="Upper keyboard: higher keys" onClick={() => scroller2.current?.scrollBy({ left: octave(), behavior: 'smooth' })}>›</button>
           </div>
         </div>
+        )}
       </div>
 
       {helpOpen &&
