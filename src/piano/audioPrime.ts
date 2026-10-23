@@ -46,6 +46,21 @@ export function primeAudio() {
   }
 }
 
+// Warm the audio before the click, on a computer: the first audio context in a browser session starts the browser's
+// audio service, which blocks the page for about a second (measured 970 ms, then about 100 ms for any later one).
+// Done when the pointer reaches (or focus lands on) the Play button, that second passes before the curtain moves.
+// The context starts suspended (no sound) and the instrument takes it over; the first tap or key resumes it.
+export function warmAudio() {
+  if (primed || typeof window === 'undefined') return;
+  const Context = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Context) return;
+  try {
+    primed = new Context({ latencyHint: 'interactive' });
+  } catch {
+    primed = null;
+  }
+}
+
 // The instrument takes the primed context once, if there is one.
 export function takePrimed() {
   const ctx = primed;

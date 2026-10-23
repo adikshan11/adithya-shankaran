@@ -97,25 +97,20 @@
     transition: opacity 0.3s;
   }
   .pa-tear.pa-go .pa-tuning { opacity: 0; }
-  /* Tuner: the needle swings and settles on pitch every 2.4 s; the lamp lights green while it is on pitch. */
-  .pa-tuner { width: 132px; height: 72px; overflow: visible; }
-  .tu-arc { fill: none; stroke: rgb(246 215 160 / 0.35); stroke-width: 2; stroke-linecap: round; }
-  .tu-tick { stroke: rgb(246 215 160 / 0.6); stroke-width: 1.4; stroke-linecap: round; }
-  .tu-tick-mid { stroke: #7cf0a8; stroke-width: 2; }
-  .tu-flat, .tu-sharp { font: 700 11px system-ui, sans-serif; fill: rgb(246 215 160 / 0.7); text-anchor: middle; letter-spacing: 0; }
-  .tu-needle { stroke: #ff6b5a; stroke-width: 2.2; stroke-linecap: round; transform-box: view-box; transform-origin: 60px 58px; animation: tu-needle 2.4s cubic-bezier(0.45, 0, 0.3, 1) infinite; }
-  .tu-hub { fill: #f6d7a0; }
-  .tu-lamp { fill: #2c3a30; animation: tu-lamp 2.4s linear infinite; }
-  @keyframes tu-needle { 0% { transform: rotate(-42deg); } 18% { transform: rotate(30deg); } 34% { transform: rotate(-17deg); } 50% { transform: rotate(9deg); } 63% { transform: rotate(-4deg); } 74%, 100% { transform: rotate(0deg); } }
-  @keyframes tu-lamp { 0%, 72% { fill: #2c3a30; filter: none; } 76%, 96% { fill: #5ef08f; filter: drop-shadow(0 0 4px #5ef08f); } 100% { fill: #2c3a30; } }
-  /* An octave of keys, pressed one after another and glowing gold, as the tuner tests each note. */
-  .pa-tuning-keys { position: relative; display: flex; gap: 2px; height: 34px; padding: 3px 4px 4px; border-radius: 4px; background: #1a1b1e; box-shadow: inset 0 3px 0 #7a1120, 0 2px 6px rgb(0 0 0 / 0.6); }
-  .pa-tuning-keys span { width: 13px; height: 100%; border-radius: 0 0 2px 2px; background: linear-gradient(180deg, #d9dbe0, #fbfbf9 30%, #ecece8); animation: tu-key 2.4s ease-in-out infinite; animation-delay: calc(var(--k) * 0.15s); }
-  .pa-tuning-keys i { position: absolute; top: 3px; left: calc(4px + (var(--b) + 1) * 15px - 4.5px); width: 9px; height: 58%; border-radius: 0 0 2px 2px; background: linear-gradient(180deg, #08090a, #2a2c31 85%, #111); }
-  @keyframes tu-key { 0%, 12%, 100% { transform: none; background: linear-gradient(180deg, #d9dbe0, #fbfbf9 30%, #ecece8); } 4% { transform: translateY(1.5px); background: linear-gradient(180deg, #e6cf9a, #fbeccb 30%, #f2d99f); box-shadow: 0 0 8px rgb(245 197 66 / 0.8); } }
+  /* Loader: a thin gold tuning fork that hums (a hair of a shiver), two rings of sound spreading and fading, the words
+     in a small spaced serif, and a hairline filling beneath. Transform and opacity only, on plain elements. */
+  .pa-fork { position: relative; display: grid; place-items: center; width: 24px; height: 60px; }
+  .pa-fork svg { position: relative; width: 24px; height: 60px; fill: none; stroke: #e8c98a; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; animation: pa-fork-hum 0.16s ease-in-out infinite alternate; }
+  .pa-fork-ring { position: absolute; left: 50%; top: 14px; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; border: 1px solid rgb(232 201 138 / 0.55); opacity: 0; animation: pa-fork-ring 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite; }
+  .pa-fork-ring-late { animation-delay: 1.2s; }
+  .pa-tuning-word { font-family: Georgia, "Times New Roman", serif; font-size: 0.74rem; font-weight: 400; letter-spacing: 0.34em; text-transform: uppercase; color: #ecd6a6; text-shadow: none; }
+  .pa-tuning-line { display: block; width: 132px; height: 1px; background: linear-gradient(90deg, transparent, #e8c98a 20%, #e8c98a 80%, transparent); transform-origin: left center; animation: pa-tuning-line 2.4s ease-in-out infinite; }
+  @keyframes pa-fork-hum { from { transform: translateX(-0.35px); } to { transform: translateX(0.35px); } }
+  @keyframes pa-fork-ring { 0% { opacity: 0; transform: scale(0.35); } 15% { opacity: 0.9; } 100% { opacity: 0; transform: scale(2.6); } }
+  @keyframes pa-tuning-line { 0% { transform: scaleX(0); opacity: 1; } 70% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
   /* Stop once the curtain parts, and keep still for people who ask for less motion. */
-  .pa-tear.pa-go .pa-tuning :is(.tu-needle, .tu-lamp, .pa-tuning-keys span) { animation: none; }
-  @media (prefers-reduced-motion: reduce) { .pa-tuning :is(.tu-needle, .tu-lamp, .pa-tuning-keys span) { animation: none; } }
+  .pa-tear.pa-go .pa-tuning :is(.pa-fork svg, .pa-fork-ring, .pa-tuning-line) { animation: none; }
+  @media (prefers-reduced-motion: reduce) { .pa-tuning :is(.pa-fork svg, .pa-fork-ring, .pa-tuning-line) { animation: none; } }
 
   /* Body */
   /* No entrance animation of its own: the curtain is the reveal. The instrument is drawn while the curtain is shut, so
@@ -1621,3 +1616,13 @@
 .pa-coach-sleepy .co-photo .co-img, .pa-coach-asleep .co-photo .co-img { filter: brightness(0.82) saturate(0.85); }
 .pa-coach-astonished .co-photo .co-act { animation: co-jump 0.5s ease-out; }
 @keyframes co-jump { 30% { transform: translateY(-8px) scale(1.04); } }
+
+/* The curtain as two drapes: each half is one pleated layer with the wavy meeting edge. They gather toward the sides
+   (the pleats squeeze together like bunched velvet) and fade, then the valance lifts. Two moving layers, transform and
+   opacity only: smooth on a 27-inch monitor as on a phone. */
+.pa-tear .pa-strip { left: 0; width: calc(100% + 12px); animation: none; will-change: auto; }
+.pa-tear .pa-drape { transform-origin: center center; }
+.pa-tear .pa-drape-left { animation: pa-drape-gather-left 1.3s cubic-bezier(0.55, 0, 0.25, 1) 0.05s forwards; }
+.pa-tear .pa-drape-right { animation: pa-drape-gather-right 1.3s cubic-bezier(0.55, 0, 0.25, 1) 0.05s forwards; }
+@keyframes pa-drape-gather-left { 0% { transform: none; opacity: 1; } 78% { transform: translateX(-42%) scaleX(0.16); opacity: 1; } 100% { transform: translateX(-47%) scaleX(0.06); opacity: 0; } }
+@keyframes pa-drape-gather-right { 0% { transform: scaleX(-1); opacity: 1; } 78% { transform: translateX(42%) scaleX(-0.16); opacity: 1; } 100% { transform: translateX(47%) scaleX(-0.06); opacity: 0; } }

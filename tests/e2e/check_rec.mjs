@@ -13,7 +13,7 @@ const send = (method, params = {}) => new Promise((r) => { pending.set(++id, r);
 const run = async (expression) => (await send('Runtime.evaluate', { expression: `(async()=>{${expression}})()`, awaitPromise: true, returnByValue: true, userGesture: true })).result?.result?.value;
 const key = async (code, k, vk, ms) => { await send('Input.dispatchKeyEvent', { type: 'keyDown', code, key: k, windowsVirtualKeyCode: vk }); await sleep(ms); await send('Input.dispatchKeyEvent', { type: 'keyUp', code, key: k, windowsVirtualKeyCode: vk }); await sleep(120); };
 await send('Page.enable');
-await send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: outDir.replace(/\//g, '\\') });
+await send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: process.platform === 'win32' ? outDir.replace(/\//g, '\\') : outDir });
 // A pretend USB keyboard: requestMIDIAccess returns one input whose messages the test sends.
 await send('Page.addScriptToEvaluateOnNewDocument', { source: `
   const input = { name: 'Test Piano', state: 'connected', onmidimessage: null };

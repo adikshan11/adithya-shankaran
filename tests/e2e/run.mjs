@@ -48,7 +48,7 @@ const checks = [
 
 const run = (command, args, minutes, options = {}) =>
   new Promise((resolve) => {
-    const child = spawn(command, args, { cwd: here, shell: process.platform === 'win32', ...options });
+    const child = spawn(command, args, { cwd: here, ...options }); // no shell: node's path can contain spaces
     let text = '';
     child.stdout?.on('data', (chunk) => (text += chunk));
     child.stderr?.on('data', (chunk) => (text += chunk));

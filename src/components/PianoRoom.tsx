@@ -1,11 +1,13 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { primeAudio } from '../piano/audioPrime';
+import { primeAudio, warmAudio } from '../piano/audioPrime';
 import type { CSSProperties } from 'react';
 
 // Each curtain half is drawn as velvet strips: they slide different distances and bunch at the side like real
 // fabric being drawn, using transform only (squashing one big layer with scaleX re-rasterised it every frame).
-const STRIPS = 4;
+// One pleated drape per side (it was four strips each): two moving layers instead of ten keep the curtain smooth on
+// big screens, where every full-screen layer costs the graphics chip.
+const STRIPS = 1;
 import { pianoStore } from '../piano/store';
 
 // The instrument is its own download. It is fetched when the browser is idle after the page loads (or on hover),
@@ -116,8 +118,14 @@ export default function PianoRoom() {
           aria-controls="piano-stage"
           aria-label={open ? 'Close the piano stage' : 'Open the curtain'}
           title={open ? 'Close the piano stage' : 'Open the curtain'}
-          onPointerEnter={() => void loadInstrument()}
-          onFocus={() => void loadInstrument()}
+          onPointerEnter={() => {
+            warmAudio();
+            void loadInstrument();
+          }}
+          onFocus={() => {
+            warmAudio();
+            void loadInstrument();
+          }}
           onClick={() => {
             if (!open) primeAudio(); // start phone audio inside this tap, so the piano can sound at once
             pianoStore.set(!open);
@@ -143,25 +151,18 @@ export default function PianoRoom() {
                   </span>
                 ))}
                 <span className="pa-tear-valance" />
-                {/* While the piano loads: a tuner whose needle swings and settles on pitch (the green lamp lights), over
-                    an octave of keys pressed one after another, as a tuner tests each note. */}
+                {/* While the piano loads: a thin gold tuning fork humming, two soft rings of sound spreading from it, the words
+                    in a small spaced serif and a hairline filling beneath. Vintage in its type and gold, modern and clean in
+                    its lines; it moves only by transform and opacity on plain elements, so it never competes with the
+                    curtain for the main thread. */}
                 <span className="pa-tuning">
-                  <svg className="pa-tuner" viewBox="0 0 120 66" aria-hidden="true">
-                    <path className="tu-arc" d="M16 58 A44 44 0 0 1 104 58" />
-                    {[-60, -45, -30, -15, 0, 15, 30, 45, 60].map((angle) => (
-                      <line key={angle} className={angle === 0 ? 'tu-tick tu-tick-mid' : 'tu-tick'} x1="60" y1="18" x2="60" y2={angle % 30 === 0 ? 25 : 22} transform={`rotate(${angle} 60 58)`} />
-                    ))}
-                    <text className="tu-flat" x="14" y="44">♭</text>
-                    <text className="tu-sharp" x="100" y="44">♯</text>
-                    <circle className="tu-lamp" cx="60" cy="9" r="3.2" />
-                    <line className="tu-needle" x1="60" y1="58" x2="60" y2="20" />
-                    <circle className="tu-hub" cx="60" cy="58" r="4" />
-                  </svg>
-                  <span className="pa-tuning-keys">
-                    {Array.from({ length: 8 }, (_, index) => <span key={index} style={{ '--k': index } as CSSProperties} />)}
-                    {[0, 1, 3, 4, 5].map((index) => <i key={index} style={{ '--b': index } as CSSProperties} />)}
+                  <span className="pa-fork" aria-hidden="true">
+                    <span className="pa-fork-ring" />
+                    <span className="pa-fork-ring pa-fork-ring-late" />
+                    <svg viewBox="0 0 24 60"><path d="M7 2 V24 Q7 33 12 33 Q17 33 17 24 V2 M12 33 V57" /></svg>
                   </span>
-                  Tuning the piano
+                  <span className="pa-tuning-word">Tuning the piano</span>
+                  <span className="pa-tuning-line" aria-hidden="true" />
                 </span>
               </div>
               <button ref={closer} type="button" className="pa-overlay-close" aria-label="Close the curtain" onClick={() => pianoStore.set(false)}>
